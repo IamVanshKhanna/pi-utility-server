@@ -12,3 +12,5 @@ tinybot/state/
 tinybot/queue/
 __pycache__/
 *.pyc
+.env
+pi/tinybot/.venv/
