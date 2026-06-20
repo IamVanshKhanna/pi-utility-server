@@ -1,7 +1,6 @@
-# STACK: NAS — Samba file sharing
+# STACK: NAS - Samba + Syncthing
 # Local network file storage for the homelab
-# Access via SMB (\\pi-homelab\data)
-
+# Access via SMB (\\autobot\shared)
 
 networks:
   proxy:
@@ -13,7 +12,6 @@ volumes:
 
 services:
   samba:
-    # Simple Samba on Alpine
     image: alpine:latest
     container_name: samba
     restart: unless-stopped
@@ -23,13 +21,17 @@ services:
       - "139:139"
       - "445:445"
     volumes:
-      - ${DATA_DIR:-/mnt/data}:/mnt/data:rw
+      - /mnt/nas/shared:/mnt/shared:rw
+      - /mnt/nas/media:/mnt/media:rw
+      - /mnt/nas/backup:/mnt/backup:rw
       - samba_config:/etc/samba
     command: >
       sh -c "
         apk add --no-cache samba &&
         echo -e '[global]\nworkgroup = HOMELAB\nsecurity = user\nmap to guest = bad user\n' > /etc/samba/smb.conf &&
-        echo -e '[data]\npath = /mnt/data\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
+        echo -e '[shared]\npath = /mnt/shared\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
+        echo -e '[media]\npath = /mnt/media\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
+        echo -e '[backup]\npath = /mnt/backup\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
         addgroup -g ${PGID:-1000} vansh &&
         adduser -u ${PUID:-1000} -G vansh -D -H -s /bin/false vansh &&
         echo -e '${SAMBA_PASSWORD:-changeme}\n${SAMBA_PASSWORD:-changeme}' | smbpasswd -a -s vansh &&
@@ -58,7 +60,7 @@ services:
       - "21027:21027/udp"
     volumes:
       - syncthing_data:/var/syncthing
-      - ${DATA_DIR:-/mnt/data}/sync:/data/sync:rw
+      - /mnt/nas/sync:/data/sync:rw
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
