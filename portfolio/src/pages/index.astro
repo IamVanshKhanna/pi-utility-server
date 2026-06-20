@@ -1,0 +1,74 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Home">
+  <section class="mb-16">
+    <h1 class="text-4xl font-bold mb-4 text-brand-light">homelab-ops-mesh</h1>
+    <p class="text-lg text-text-muted max-w-2xl">
+      Multi-node homelab built on a Raspberry Pi 4B (always-on core) and Windows (on-demand compute),
+      connected via Tailscale mesh VPN. Every stack defined in Docker Compose, version-controlled in Git.
+    </p>
+  </section>
+
+  <section class="mb-16">
+    <h2 class="text-2xl font-semibold mb-6 text-brand">Nodes</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="border border-surface-light rounded-lg p-6 bg-surface-light/30">
+        <h3 class="text-lg font-semibold mb-2">autobot</h3>
+        <p class="text-text-muted text-sm mb-3">Raspberry Pi 4B &mdash; 4GB RAM &mdash; Always-on core</p>
+        <ul class="text-sm space-y-1 text-text-muted">
+          <li>Traefik reverse proxy + Tailscale HTTPS</li>
+          <li>Pi-hole DNS ad-blocking</li>
+          <li>WireGuard VPN server</li>
+          <li>Vaultwarden password manager</li>
+          <li>Home Assistant automation</li>
+          <li>Syncthing + Samba file sharing</li>
+          <li>Telegram bot for remote management</li>
+        </ul>
+      </div>
+      <div class="border border-surface-light rounded-lg p-6 bg-surface-light/30">
+        <h3 class="text-lg font-semibold mb-2">mr-stranger</h3>
+        <p class="text-text-muted text-sm mb-3">Windows PC &mdash; 16GB RAM &mdash; Heavy compute (Phase 2)</p>
+        <ul class="text-sm space-y-1 text-text-muted">
+          <li>Grafana dashboards</li>
+          <li>Prometheus + Loki (metrics & logs)</li>
+          <li>CrowdSec intrusion detection</li>
+          <li>Authelia SSO portal</li>
+          <li>Infisical secrets management</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-16">
+    <h2 class="text-2xl font-semibold mb-6 text-brand">Key Stats</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
+        <div class="text-3xl font-bold text-brand-light">27</div>
+        <div class="text-sm text-text-muted mt-1">Containers</div>
+      </div>
+      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
+        <div class="text-3xl font-bold text-brand-light">14</div>
+        <div class="text-sm text-text-muted mt-1">Stacks</div>
+      </div>
+      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
+        <div class="text-3xl font-bold text-brand-light">1.9</div>
+        <div class="text-sm text-text-muted mt-1">TB Storage</div>
+      </div>
+      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
+        <div class="text-3xl font-bold text-brand-light">2</div>
+        <div class="text-sm text-text-muted mt-1">Nodes</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="text-2xl font-semibold mb-4 text-brand">Quick Links</h2>
+    <ul class="space-y-2 text-text-muted">
+      <li><a href="/architecture" class="text-brand-light hover:underline">Architecture diagram &rarr;</a></li>
+      <li><a href="/projects" class="text-brand-light hover:underline">All projects &rarr;</a></li>
+      <li><a href="https://github.com/IamVanshKhanna/homelab-ops-mesh" class="text-brand-light hover:underline">GitHub repo &rarr;</a></li>
+    </ul>
+  </section>
+</Base>

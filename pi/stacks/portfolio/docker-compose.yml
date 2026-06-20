@@ -1,0 +1,23 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  portfolio:
+    build:
+      context: ../../../portfolio
+      dockerfile: Dockerfile
+    container_name: portfolio
+    restart: unless-stopped
+    networks:
+      - proxy
+    expose:
+      - "8080"
+    mem_limit: 64m
+    cpus: 0.25
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portfolio.rule=Host(`portfolio.autobot.taila24d04.ts.net`)"
+      - "traefik.http.routers.portfolio.entrypoints=websecure"
+      - "traefik.http.routers.portfolio.tls.certresolver=letsencrypt"
+      - "traefik.http.services.portfolio.loadbalancer.server.port=8080"

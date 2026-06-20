@@ -1,0 +1,108 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Architecture">
+  <h1 class="text-4xl font-bold mb-4 text-brand-light">Architecture</h1>
+  <p class="text-lg text-text-muted mb-12 max-w-2xl">
+    Two nodes connected via Tailscale mesh VPN. The Pi 4B runs 27 containers as the always-on core.
+    Heavy stacks migrate to Windows in Phase 2.
+  </p>
+
+  <section class="mb-16">
+    <h2 class="text-2xl font-semibold mb-6 text-brand">Network Topology</h2>
+    <div class="border border-surface-light rounded-lg p-8 bg-surface-light/20 overflow-x-auto">
+      <pre class="text-sm text-text-muted font-mono leading-relaxed">
+ Internet
+    |
+    | HTTPS
+    v
+[ Tailscale Serve :443 ]
+    |
+    v
+[ Traefik (reverse proxy) ]  <--- Docker network: proxy
+    |
+    +--- vaultwarden.autobot.taila24d04.ts.net
+    +--- homeassistant.autobot.taila24d04.ts.net
+    +--- sync.autobot.taila24d04.ts.net
+    +--- grafana.autobot.taila24d04.ts.net      (Phase 2: Windows)
+    +--- auth.autobot.taila24d04.ts.net         (Phase 2: Windows)
+    +--- secrets.autobot.taila24d04.ts.net      (Phase 2: Windows)
+    |
+    +--- 27 containers total
+    |
+[ Pi 4B : 100.127.191.2 ]  <--- Tailscale mesh --->  [ Windows : 100.74.111.26 ]
+    |                                                      |
+    +-- Pi-hole (DNS:53)                                  +-- Docker Desktop
+    +-- WireGuard (VPN:51820)                             +-- Heavy compute
+    +-- TinyBot (Telegram)                                +-- Phase 2 targets
+    +-- /mnt/nas/ storage
+      </pre>
+    </div>
+  </section>
+
+  <section class="mb-16">
+    <h2 class="text-2xl font-semibold mb-6 text-brand">Traffic Flow</h2>
+    <ol class="list-decimal list-inside space-y-2 text-text-muted">
+      <li>User hits <code class="text-brand-light bg-surface-light px-1.5 py-0.5 rounded text-sm">https://app.autobot.taila24d04.ts.net</code></li>
+      <li>Tailscale Serve terminates TLS, proxies to Traefik on localhost:443</li>
+      <li>Traefik matches Host rule, routes to the correct Docker container on the proxy network</li>
+      <li>Internal container-to-container traffic stays on the Docker bridge</li>
+    </ol>
+  </section>
+
+  <section class="mb-16">
+    <h2 class="text-2xl font-semibold mb-6 text-brand">Stack Overview</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border border-surface-light rounded-lg overflow-hidden">
+        <thead class="bg-surface-light/50">
+          <tr>
+            <th class="text-left px-4 py-3 text-brand-light">Stack</th>
+            <th class="text-left px-4 py-3 text-brand-light">Services</th>
+            <th class="text-left px-4 py-3 text-brand-light">Purpose</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-surface-light">
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">core</td><td class="px-4 py-2 text-text-muted">traefik, portainer</td><td class="px-4 py-2 text-text-muted">Reverse proxy, Docker UI</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">network</td><td class="px-4 py-2 text-text-muted">pihole, wireguard</td><td class="px-4 py-2 text-text-muted">DNS ad-blocking, VPN</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">services</td><td class="px-4 py-2 text-text-muted">vaultwarden, uptime-kuma</td><td class="px-4 py-2 text-text-muted">Passwords, uptime monitoring</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">nas</td><td class="px-4 py-2 text-text-muted">samba, syncthing</td><td class="px-4 py-2 text-text-muted">File sharing, sync</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">apps</td><td class="px-4 py-2 text-text-muted">nextcloud, homeassistant, mariadb</td><td class="px-4 py-2 text-text-muted">Cloud, automation</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">monitoring</td><td class="px-4 py-2 text-text-muted">grafana, prometheus, loki, tempo</td><td class="px-4 py-2 text-text-muted">Observability (Phase 2: Windows)</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">auth</td><td class="px-4 py-2 text-text-muted">authelia, redis</td><td class="px-4 py-2 text-text-muted">SSO with 2FA (Phase 2: Windows)</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">security</td><td class="px-4 py-2 text-text-muted">crowdsec, crowdsec-db</td><td class="px-4 py-2 text-text-muted">Intrusion detection (Phase 2: Windows)</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">secrets</td><td class="px-4 py-2 text-text-muted">infisical, postgres, redis</td><td class="px-4 py-2 text-text-muted">Secrets management (Phase 2: Windows)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="mb-16">
+    <h2 class="text-2xl font-semibold mb-6 text-brand">Phase Plan</h2>
+    <div class="space-y-4">
+      <div class="border-l-4 border-green-500 pl-4">
+        <h3 class="font-semibold text-green-400">Phase 1 - Pi Core (Done)</h3>
+        <p class="text-sm text-text-muted">27 containers, NAS, TinyBot, Tailscale, automated backups. K3s removed, swap off, zram only.</p>
+      </div>
+      <div class="border-l-4 border-yellow-500 pl-4">
+        <h3 class="font-semibold text-yellow-400">Phase 2 - Windows Migration (Next)</h3>
+        <p class="text-sm text-text-muted">Move monitoring (Grafana, Prometheus, Loki), auth (Authelia), and secrets (Infisical) to Windows Docker Desktop. Frees ~9.8GB on Pi.</p>
+      </div>
+      <div class="border-l-4 border-text-muted pl-4">
+        <h3 class="font-semibold text-text-muted-foreground">Phase 3 - Polish (Todo)</h3>
+        <p class="text-sm text-text-muted">Portfolio site deployment, Windows docs, CI/CD pipeline, automated testing.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="text-2xl font-semibold mb-6 text-brand">Key Design Decisions</h2>
+    <ul class="space-y-3 text-text-muted">
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No K3s</span><span>K3s removed - saves ~575MB RAM and 50% idle CPU on 4GB Pi</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No disk swap</span><span>zram only - compressed RAM swap avoids SSD wear</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No domain</span><span>Tailscale MagicDNS provides HTTPS at zero cost</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No AI/LLM</span><span>Free Groq API as fallback - Pi cannot run models with 27 containers</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No repartitioning</span><span>Uses /mnt/nas/ folders - safer, simpler</span></li>
+    </ul>
+  </section>
+</Base>

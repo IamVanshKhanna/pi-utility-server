@@ -1,0 +1,78 @@
+---
+import Base from '../layouts/Base.astro';
+
+const projects = [
+  {
+    title: 'TinyBot - Telegram Remote Management',
+    description: 'Lightweight Telegram bot for remote Pi management. Health checks, fan control, Docker container management, web search - all from a phone.',
+    tech: ['Python', 'python-telegram-bot', 'systemd', 'vcgencmd'],
+    stack: 'tinybot/',
+  },
+  {
+    title: 'Traefik + Tailscale HTTPS',
+    description: 'Zero-cost HTTPS via Tailscale MagicDNS. Traefik v3 reverse proxy handles routing, Tailscale Serve terminates TLS. No paid domain or Let\'s Encrypt needed.',
+    tech: ['Traefik v3', 'Tailscale', 'Docker', 'WireGuard'],
+    stack: 'stacks/core/',
+  },
+  {
+    title: 'Full Observability Stack',
+    description: 'Prometheus metrics, Loki logs, Tempo traces, Grafana dashboards, Alertmanager alerts. OTel collector for unified instrumentation.',
+    tech: ['Prometheus', 'Grafana', 'Loki', 'Tempo', 'OTel', 'Alertmanager'],
+    stack: 'stacks/monitoring/',
+  },
+  {
+    title: 'CrowdSec + Authelia Security',
+    description: 'Intrusion detection with CrowdSec community blocklists. Authelia SSO with 2FA for all web services. Zero-trust network.',
+    tech: ['CrowdSec', 'Authelia', 'Redis', '2FA'],
+    stack: 'stacks/auth/',
+  },
+  {
+    title: 'Infisical Secrets Platform',
+    description: 'Self-hosted secrets management with Infisical. Centralized secrets for all stacks, replacing scattered .env files.',
+    tech: ['Infisical', 'PostgreSQL', 'Redis'],
+    stack: 'stacks/secrets/',
+  },
+  {
+    title: 'NAS - Samba + Syncthing',
+    description: 'Network-attached storage with Samba for LAN file sharing and Syncthing for cross-device sync. Organized under /mnt/nas/ with shared, media, sync, and backup directories.',
+    tech: ['Samba', 'Syncthing', 'Alpine Linux'],
+    stack: 'stacks/nas/',
+  },
+  {
+    title: 'Pi-hole DNS Ad Blocking',
+    description: 'Network-wide DNS ad blocking and local DNS resolution. Custom DNS entries for homelab services. Exporter feeds metrics to Prometheus.',
+    tech: ['Pi-hole', 'FTL DNS', 'Docker'],
+    stack: 'stacks/network/',
+  },
+  {
+    title: 'Automated OS Backups',
+    description: 'Weekly dd image backups via systemd timer. Sunday 3am, 4-week rolling retention. Restic + Backblaze B2 for off-site config and data backups.',
+    tech: ['systemd', 'bash', 'Restic', 'Backblaze B2'],
+    stack: 'scripts/',
+  },
+];
+---
+
+<Base title="Projects">
+  <h1 class="text-4xl font-bold mb-4 text-brand-light">Projects</h1>
+  <p class="text-lg text-text-muted mb-12 max-w-2xl">
+    Each project lives in its own Docker Compose stack, independently deployable and version-controlled.
+  </p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {projects.map((project) => (
+      <article class="border border-surface-light rounded-lg p-6 bg-surface-light/20 hover:bg-surface-light/40 transition-colors">
+        <h2 class="text-lg font-semibold mb-2">{project.title}</h2>
+        <p class="text-sm text-text-muted mb-4">{project.description}</p>
+        <div class="flex flex-wrap gap-2 mb-4">
+          {project.tech.map((t) => (
+            <span class="text-xs px-2 py-1 rounded-full bg-brand/20 text-brand-light">{t}</span>
+          ))}
+        </div>
+        <a href={`https://github.com/IamVanshKhanna/homelab-ops-mesh/tree/master/pi/${project.stack}`} class="text-xs text-text-muted hover:text-brand-light transition-colors">
+          View source on GitHub &rarr;
+        </a>
+      </article>
+    ))}
+  </div>
+</Base>

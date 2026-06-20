@@ -1,0 +1,108 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="About">
+  <h1 class="text-4xl font-bold mb-4 text-brand-light">About</h1>
+
+  <section class="mb-12">
+    <h2 class="text-2xl font-semibold mb-4 text-brand">Why this project?</h2>
+    <p class="text-text-muted leading-relaxed max-w-2xl mb-4">
+      This homelab started as a single Raspberry Pi 4B running Docker containers for personal services.
+      It evolved into a multi-node mesh architecture with automated deployments, remote management,
+      and full observability - all defined as code and version-controlled.
+    </p>
+    <p class="text-text-muted leading-relaxed max-w-2xl">
+      The project demonstrates infrastructure-as-code practices applied to a homelab:
+      Docker Compose orchestration, reverse proxy configuration, VPN mesh networking,
+      DNS filtering, security hardening, observability, and automated backup - all on a $35 board.
+    </p>
+  </section>
+
+  <section class="mb-12">
+    <h2 class="text-2xl font-semibold mb-6 text-brand">Tech Stack</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
+        <h3 class="font-semibold mb-2">Infrastructure</h3>
+        <ul class="text-sm text-text-muted space-y-1">
+          <li>Raspberry Pi 4B (4GB) + 1.9TB SSD</li>
+          <li>Debian Trixie (aarch64)</li>
+          <li>Docker Compose (no Kubernetes)</li>
+          <li>Tailscale mesh VPN</li>
+          <li>WireGuard fallback VPN</li>
+        </ul>
+      </div>
+      <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
+        <h3 class="font-semibold mb-2">Networking</h3>
+        <ul class="text-sm text-text-muted space-y-1">
+          <li>Traefik v3 reverse proxy</li>
+          <li>Pi-hole DNS ad-blocking</li>
+          <li>Tailscale MagicDNS + HTTPS</li>
+          <li>Docker proxy network</li>
+        </ul>
+      </div>
+      <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
+        <h3 class="font-semibold mb-2">Observability</h3>
+        <ul class="text-sm text-text-muted space-y-1">
+          <li>Prometheus (metrics)</li>
+          <li>Grafana (dashboards)</li>
+          <li>Loki (logs)</li>
+          <li>Tempo (traces)</li>
+          <li>Alertmanager (alerts)</li>
+        </ul>
+      </div>
+      <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
+        <h3 class="font-semibold mb-2">Security</h3>
+        <ul class="text-sm text-text-muted space-y-1">
+          <li>Authelia (SSO + 2FA)</li>
+          <li>CrowdSec (IPS)</li>
+          <li>Infisical (secrets management)</li>
+          <li>Vaultwarden (passwords)</li>
+          <li>WireGuard (VPN)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-12">
+    <h2 class="text-2xl font-semibold mb-4 text-brand">Timeline</h2>
+    <div class="space-y-4">
+      <div class="flex gap-4">
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.0</div>
+        <div class="border-l-2 border-brand pl-4">
+          <p class="font-medium">Initial setup</p>
+          <p class="text-sm text-text-muted">Docker Compose on Pi 4B with basic stacks</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v2.0</div>
+        <div class="border-l-2 border-brand pl-4">
+          <p class="font-medium">K3s experiment</p>
+          <p class="text-sm text-text-muted">Kubernetes with ArgoCD, Helmfile - too heavy for 4GB Pi</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v3.0</div>
+        <div class="border-l-2 border-brand pl-4">
+          <p class="font-medium">K3s removed, optimized</p>
+          <p class="text-sm text-text-muted">Docker Compose only, swap off, TinyBot, Tailscale mesh</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v4.0</div>
+        <div class="border-l-2 border-brand-light pl-4">
+          <p class="font-medium text-brand-light">Multi-node mesh (current)</p>
+          <p class="text-sm text-text-muted">Pi always-on core + Windows heavy compute, restructured repo</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="text-2xl font-semibold mb-4 text-brand">Links</h2>
+    <ul class="space-y-2 text-text-muted">
+      <li><a href="https://github.com/IamVanshKhanna/homelab-ops-mesh" class="text-brand-light hover:underline">GitHub Repository</a></li>
+      <li><a href="https://autobot.taila24d04.ts.net" class="text-brand-light hover:underline">Live Site (Tailscale MagicDNS)</a></li>
+    </ul>
+  </section>
+</Base>
