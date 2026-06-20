@@ -1,19 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
----
 
-<Base title="Architecture">
-  <h1 class="text-4xl font-bold mb-4 text-brand-light">Architecture</h1>
-  <p class="text-lg text-text-muted mb-12 max-w-2xl">
-    Two nodes connected via Tailscale mesh VPN. The Pi 4B runs 27 containers as the always-on core.
-    Heavy stacks migrate to Windows in Phase 2.
-  </p>
-
-  <section class="mb-16">
-    <h2 class="text-2xl font-semibold mb-6 text-brand">Network Topology</h2>
-    <div class="border border-surface-light rounded-lg p-8 bg-surface-light/20 overflow-x-auto">
-      <pre class="text-sm text-text-muted font-mono leading-relaxed">
- Internet
+const topologyDiagram = ` Internet
     |
     | HTTPS
     v
@@ -37,7 +25,20 @@ import Base from '../layouts/Base.astro';
     +-- WireGuard (VPN:51820)                             +-- Heavy compute
     +-- TinyBot (Telegram)                                +-- Phase 2 targets
     +-- /mnt/nas/ storage
-      </pre>
+`;
+---
+
+<Base title="Architecture">
+  <h1 class="text-4xl font-bold mb-4 text-brand-light">Architecture</h1>
+  <p class="text-lg text-text-muted mb-12 max-w-2xl">
+    Two nodes connected via Tailscale mesh VPN. The Pi 4B runs 27 containers as the always-on core.
+    Heavy stacks migrate to Windows in Phase 2.
+  </p>
+
+  <section class="mb-16">
+    <h2 class="text-2xl font-semibold mb-6 text-brand">Network Topology</h2>
+    <div class="border border-surface-light rounded-lg p-8 bg-surface-light/20 overflow-x-auto">
+      <pre class="text-sm text-text-muted font-mono leading-relaxed">{topologyDiagram}</pre>
     </div>
   </section>
 
