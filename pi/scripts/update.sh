@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # update.sh - Pull latest images and recreate all stacks with Telegram notifications
-# Schedule: 0 4 * * 0 bash /home/vansh/homelab-prod/scripts/update.sh >> /var/log/homelab-update.log 2>&1
+# Schedule: 0 4 * * 0 bash /home/vansh/pi4homelab/pi/scripts/update.sh >> /var/log/homelab-update.log 2>&1
 
 set -euo pipefail
 

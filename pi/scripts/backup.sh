@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # backup.sh - Restic backup to Backblaze B2 with Telegram notifications
-# Schedule: 0 3 * * * /home/vansh/homelab-prod/scripts/backup.sh >> /var/log/homelab-backup.log 2>&1
+# Schedule: 0 3 * * * /home/vansh/pi4homelab/pi/scripts/backup.sh >> /var/log/homelab-backup.log 2>&1
 # Requires: RESTIC_REPOSITORY, RESTIC_PASSWORD, B2_ACCOUNT_ID, B2_ACCOUNT_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID in .env
 
 set -euo pipefail
@@ -83,14 +83,14 @@ BACKUP_PATHS=(
   "${DATA_DIR}/grafana"
   "${DATA_DIR}/prometheus"
   "${ROOT_DIR}/config"
-  "${ROOT_DIR}/stacks"
-  "${ROOT_DIR}/scripts"
-  "${ROOT_DIR}/docs"
+  "${ROOT_DIR}/pi/stacks"
+  "${ROOT_DIR}/pi/scripts"
+  "${ROOT_DIR}/pi/docs"
   "${ROOT_DIR}/.env.example"
-  "${ROOT_DIR}/Makefile"
+  "${ROOT_DIR}/pi/Makefile"
   "${ROOT_DIR}/README.md"
-  "${ROOT_DIR}/CHANGELOG.md"
-  "${ROOT_DIR}/VERSION_ROADMAP.md"
+  "${ROOT_DIR}/pi/docs/CHANGELOG.md"
+  "${ROOT_DIR}/pi/docs/VERSION_ROADMAP.md"
   "${ROOT_DIR}/renovate.json"
 )
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # health-check.sh - Verify all homelab containers are running
-# Schedule: */15 * * * * /home/vansh/homelab-prod/scripts/health-check.sh >> /var/log/homelab-health.log 2>&1
+# Schedule: */15 * * * * /home/vansh/pi4homelab/pi/scripts/health-check.sh >> /var/log/homelab-health.log 2>&1
 # Usage: ./health-check.sh [--strict] [--quiet]
 
 set -euo pipefail
