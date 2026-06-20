@@ -1,4 +1,0 @@
-config/traefik/certs/
-config/traefik/dashboard.crt
-config/traefik/dashboard.key
-.env*
