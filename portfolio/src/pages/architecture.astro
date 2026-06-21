@@ -5,17 +5,17 @@ const topologyDiagram = ` Internet
     |
     | HTTPS
     v
-[ Tailscale Serve :443 ]
+[ Tailscale Serve :443 ]   (TLS termination)
     |
     v
-[ Traefik (reverse proxy) ]  <--- Docker network: proxy
+[ Traefik (reverse proxy) ]  <--- path-based routing (PathPrefix)
     |
-    +--- vaultwarden.autobot.taila24d04.ts.net
-    +--- homeassistant.autobot.taila24d04.ts.net
-    +--- sync.autobot.taila24d04.ts.net
-    +--- grafana.autobot.taila24d04.ts.net      (Phase 2: Windows)
-    +--- auth.autobot.taila24d04.ts.net         (Phase 2: Windows)
-    +--- secrets.autobot.taila24d04.ts.net      (Phase 2: Windows)
+    +--- /vault/
+    +--- /hass/ (homeassistant)
+    +--- /sync/
+    +--- /grafana/     (Phase 2: Windows)
+    +--- /auth/        (Phase 2: Windows)
+    +--- /secrets/     (Phase 2: Windows)
     |
     +--- 27 containers total
     |
@@ -45,10 +45,10 @@ const topologyDiagram = ` Internet
   <section class="mb-16">
     <h2 class="text-2xl font-semibold mb-6 text-brand">Traffic Flow</h2>
     <ol class="list-decimal list-inside space-y-2 text-text-muted">
-      <li>User hits <code class="text-brand-light bg-surface-light px-1.5 py-0.5 rounded text-sm">https://app.autobot.taila24d04.ts.net</code></li>
-      <li>Tailscale Serve terminates TLS, proxies to Traefik on localhost:443</li>
-      <li>Traefik matches Host rule, routes to the correct Docker container on the proxy network</li>
-      <li>Internal container-to-container traffic stays on the Docker bridge</li>
+      <li>User hits <code class="text-brand-light bg-surface-light px-1.5 py-0.5 rounded text-sm">https://autobot.taila24d04.ts.net/service/</code></li>
+      <li>Tailscale Serve terminates TLS, proxies to Traefik on localhost:8443</li>
+      <li>Traefik matches PathPrefix rule, routes to the correct Docker container on the proxy network</li>
+      <li>StripPrefix middleware removes the path prefix before forwarding to the backend</li>
     </ol>
   </section>
 
