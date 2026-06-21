@@ -33,8 +33,10 @@ services:
       - authelia-redis
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.authelia.rule=Host(`auth.${DOMAIN}`)"
+      - "traefik.http.routers.authelia.rule=PathPrefix(`/auth`)"
       - "traefik.http.routers.authelia.entrypoints=tailscale"
+      - "traefik.http.routers.authelia.middlewares=strip-authelia"
+      - "traefik.http.middlewares.strip-authelia.stripprefix.prefixes=/auth"
       - "traefik.http.services.authelia.loadbalancer.server.port=9091"
 
   authelia-redis:

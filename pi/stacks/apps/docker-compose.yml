@@ -86,8 +86,10 @@ services:
     cpus: 1.0
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud.rule=Host(`cloud.${DOMAIN}`)"
+      - "traefik.http.routers.nextcloud.rule=PathPrefix(`/cloud`)"
       - "traefik.http.routers.nextcloud.entrypoints=tailscale"
+      - "traefik.http.routers.nextcloud.middlewares=strip-cloud"
+      - "traefik.http.middlewares.strip-cloud.stripprefix.prefixes=/cloud"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
 
   vaultwarden:
@@ -102,7 +104,7 @@ services:
       - vaultwarden_data:/data
     environment:
       - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
-      - DOMAIN=http://192.168.68.59:8081
+      - DOMAIN=https://autobot.taila24d04.ts.net/vault
       - WEBSOCKET_ENABLED=true
       - SIGNUPS_ALLOWED=false
       - TZ=${TZ}
@@ -110,6 +112,8 @@ services:
     cpus: 0.5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.vaultwarden.rule=Host(`vault.${DOMAIN}`)"
-      - "traefik.http.routers.vaultwarden.entrypoints=tailscale"
+      - "traefik.http.routers.vaultwarden-apps.rule=PathPrefix(`/vault`)"
+      - "traefik.http.routers.vaultwarden-apps.entrypoints=tailscale"
+      - "traefik.http.routers.vaultwarden-apps.middlewares=strip-vault-apps"
+      - "traefik.http.middlewares.strip-vault-apps.stripprefix.prefixes=/vault"
       - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"

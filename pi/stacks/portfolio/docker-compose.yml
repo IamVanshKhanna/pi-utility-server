@@ -17,6 +17,7 @@ services:
     cpus: 0.25
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.portfolio.rule=Host(`portfolio.${DOMAIN}`)"
+      - "traefik.http.routers.portfolio.rule=PathPrefix(`/`)"
       - "traefik.http.routers.portfolio.entrypoints=tailscale"
+      - "traefik.http.routers.portfolio.priority=1"
       - "traefik.http.services.portfolio.loadbalancer.server.port=8080"

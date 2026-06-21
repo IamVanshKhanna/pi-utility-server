@@ -69,6 +69,8 @@ services:
     cpus: 0.25
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.syncthing.rule=Host(`sync.${DOMAIN}`)"
+      - "traefik.http.routers.syncthing.rule=PathPrefix(`/sync`)"
       - "traefik.http.routers.syncthing.entrypoints=tailscale"
+      - "traefik.http.routers.syncthing.middlewares=strip-sync"
+      - "traefik.http.middlewares.strip-sync.stripprefix.prefixes=/sync"
       - "traefik.http.services.syncthing.loadbalancer.server.port=8384"

@@ -1,8 +1,6 @@
 # STACK: TRACING — Tempo + OpenTelemetry Collector
 # Distributed tracing for homelab services (single Pi)
 
-version: "3.8"
-
 networks:
   proxy:
     external: true
@@ -31,8 +29,10 @@ services:
     cpus: 0.5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.tempo.rule=Host(`tempo.${DOMAIN}`)"
+      - "traefik.http.routers.tempo.rule=PathPrefix(`/tempo`)"
       - "traefik.http.routers.tempo.entrypoints=tailscale"
+      - "traefik.http.routers.tempo.middlewares=strip-tempo"
+      - "traefik.http.middlewares.strip-tempo.stripprefix.prefixes=/tempo"
       - "traefik.http.services.tempo.loadbalancer.server.port=3200"
 
   otel-collector:
@@ -42,9 +42,9 @@ services:
     networks:
       - proxy
     ports:
-      - "4317:4317"
-      - "4318:4318"
-      - "8888:8888"
+      - "4319:4317"
+      - "4320:4318"
+      - "8889:8888"
     command:
       - "--config=/etc/otel-config.yaml"
     mem_limit: 512m

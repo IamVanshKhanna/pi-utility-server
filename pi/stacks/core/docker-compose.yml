@@ -8,7 +8,6 @@ networks:
 
 volumes:
   portainer_data:
-  traefik_certs:
 
 services:
 
@@ -20,7 +19,6 @@ services:
       - proxy
     ports:
       - "80:80"
-      - "443:443"
       - "8443:8443"
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -28,18 +26,17 @@ services:
       - ../../config/traefik/traefik.yml:/traefik.yml:ro
       - ../../config/traefik/dynamic.yml:/dynamic.yml:ro
       - ../../config/traefik:/config:ro
-      - traefik_certs:/certs
     environment:
       - TZ=${TZ}
-      - ACME_EMAIL=${ACME_EMAIL}
     mem_limit: 128m
     cpus: 0.5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.rule=PathPrefix(`/dashboard`) || PathPrefix(`/api`)"
       - "traefik.http.routers.traefik.entrypoints=tailscale"
       - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.middlewares=basic-auth@file"
+      - "traefik.http.routers.traefik.middlewares=basic-auth@file,strip-traefik-dashboard"
+      - "traefik.http.middlewares.strip-traefik-dashboard.stripprefix.prefixes=/dashboard,/api"
 
   portainer:
     # Pin to specific version - update manually after testing
@@ -58,6 +55,8 @@ services:
     cpus: 0.5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`)"
+      - "traefik.http.routers.portainer.rule=PathPrefix(`/portainer`)"
       - "traefik.http.routers.portainer.entrypoints=tailscale"
+      - "traefik.http.routers.portainer.middlewares=strip-portainer"
+      - "traefik.http.middlewares.strip-portainer.stripprefix.prefixes=/portainer"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"

@@ -4,33 +4,17 @@ global:
 
 api:
   dashboard: true
-  insecure: false
 
 log:
   level: INFO
-  filePath: /logs/traefik.log
-
-accessLog:
-  filePath: /logs/access.log
-  bufferingSize: 100
 
 entryPoints:
   web:
     address: ":80"
-  websecure:
-    address: ":443"
   tailscale:
     address: ":8443"
   metrics:
     address: ":8082"
-
-certificatesResolvers:
-  letsencrypt:
-    acme:
-      email: "${ACME_EMAIL}"
-      storage: /certs/acme.json
-      httpChallenge:
-        entryPoint: web
 
 providers:
   docker:
