@@ -110,8 +110,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN}`)"
-      - "traefik.http.routers.grafana.entrypoints=websecure"
-      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.grafana.entrypoints=tailscale"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   node-exporter:

@@ -32,8 +32,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.tempo.rule=Host(`tempo.${DOMAIN}`)"
-      - "traefik.http.routers.tempo.entrypoints=websecure"
-      - "traefik.http.routers.tempo.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.tempo.entrypoints=tailscale"
       - "traefik.http.services.tempo.loadbalancer.server.port=3200"
 
   otel-collector:

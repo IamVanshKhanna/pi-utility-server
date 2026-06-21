@@ -17,7 +17,6 @@ services:
     cpus: 0.25
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.portfolio.rule=Host(`portfolio.autobot.taila24d04.ts.net`)"
-      - "traefik.http.routers.portfolio.entrypoints=websecure"
-      - "traefik.http.routers.portfolio.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.portfolio.rule=Host(`portfolio.${DOMAIN}`)"
+      - "traefik.http.routers.portfolio.entrypoints=tailscale"
       - "traefik.http.services.portfolio.loadbalancer.server.port=8080"

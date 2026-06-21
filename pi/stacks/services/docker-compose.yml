@@ -33,8 +33,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vaultwarden.rule=Host(`vault.${DOMAIN}`)"
-      - "traefik.http.routers.vaultwarden.entrypoints=websecure"
-      - "traefik.http.routers.vaultwarden.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.vaultwarden.entrypoints=tailscale"
       - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
 
   uptime-kuma:
@@ -54,6 +53,5 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.uptime.rule=Host(`status.${DOMAIN}`)"
-      - "traefik.http.routers.uptime.entrypoints=websecure"
-      - "traefik.http.routers.uptime.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.uptime.entrypoints=tailscale"
       - "traefik.http.services.uptime.loadbalancer.server.port=3001"

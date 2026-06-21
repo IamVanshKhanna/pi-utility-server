@@ -70,6 +70,5 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.syncthing.rule=Host(`sync.${DOMAIN}`)"
-      - "traefik.http.routers.syncthing.entrypoints=websecure"
-      - "traefik.http.routers.syncthing.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.syncthing.entrypoints=tailscale"
       - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
