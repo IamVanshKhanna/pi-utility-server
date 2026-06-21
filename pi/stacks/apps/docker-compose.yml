@@ -104,7 +104,7 @@ services:
       - vaultwarden_data:/data
     environment:
       - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
-      - DOMAIN=https://autobot.taila24d04.ts.net/vault
+      - DOMAIN=https://autobot.taila24d04.ts.net
       - WEBSOCKET_ENABLED=true
       - SIGNUPS_ALLOWED=false
       - TZ=${TZ}
