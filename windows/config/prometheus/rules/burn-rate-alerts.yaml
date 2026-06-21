@@ -1,0 +1,192 @@
+# Burn Rate Alerting Rules for Prometheus
+# Implements multi-window, multi-burn-rate alerting per Google SRE practices
+# Reference: https://sre.google/sre-book/alerting-on-slos/
+
+groups:
+  - name: slo-burn-rate-alerts
+    interval: 30s
+    rules:
+      # ============================================================
+      # MULTI-WINDOW, MULTI-BURN-RATE ALERTS
+      # ============================================================
+      # Critical: 2% budget in 1h (14.4x normal rate)
+      - alert: SLOBurnRateCritical
+        expr: |
+          sum by (service, slo) (
+            (1 - (sum(rate(requests_total{code=~"2..|3.."}[1h])) / sum(rate(requests_total[1h])))) 
+            / (1 - target_sli) * 100
+          ) > 2
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "{{ $labels.service }} {{ $labels.slo }}: Critical burn rate"
+          description: "{{ $value | printf \"%.1f\" }}% error budget consumed in 1h ({{ $value | printf \"%.1f\" }}x normal rate). Immediate action required."
+          runbook: "docs/runbooks/slo-violation.md"
+
+      # Warning: 5% budget in 6h (6x normal rate)
+      - alert: SLOBurnRateWarning
+        expr: |
+          sum by (service, slo) (
+            (1 - (sum(rate(requests_total{code=~"2..|3.."}[6h])) / sum(rate(requests_total[6h])))) 
+            / (1 - target_sli) * 100
+          ) > 5
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "{{ $labels.service }} {{ $labels.slo }}: Elevated burn rate"
+          description: "{{ $value | printf \"%.1f\" }}% error budget consumed in 6h ({{ $value | printf \"%.1f\" }}x normal rate). Investigate within 1 hour."
+          runbook: "docs/runbooks/slo-violation.md"
+
+      # Info: 10% budget in 1d (3x normal rate)
+      - alert: SLOBurnRateInfo
+        expr: |
+          sum by (service, slo) (
+            (1 - (sum(rate(requests_total{code=~"2..|3.."}[1d])) / sum(rate(requests_total[1d])))) 
+            / (1 - target_sli) * 100
+          ) > 10
+        for: 1h
+        labels:
+          severity: info
+          team: platform
+        annotations:
+          summary: "{{ $labels.service }} {{ $labels.slo }}: Sustained burn rate"
+          description: "{{ $value | printf \"%.1f\" }}% error budget consumed in 1d. Plan remediation."
+          runbook: "docs/runbooks/slo-violation.md"
+
+      # ============================================================
+      # SERVICE-SPECIFIC BURN RATE ALERTS
+      # ============================================================
+      # Traefik
+      - alert: TraefikSLOBurnRate
+        expr: |
+          (1 - (sum(rate(traefik_entrypoint_requests_total{code=~"2..|3.."}[5m])) / sum(rate(traefik_entrypoint_requests_total[5m]))) / (1 - 0.999)) * 100 > 2
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Traefik: Critical SLO burn rate"
+          description: "{{ $value | printf \"%.1f\" }}% budget consumed in 5m"
+
+      # Authelia
+      - alert: AutheliaSLOBurnRate
+        expr: |
+          (1 - (sum(rate(authelia_http_requests_total{code=~"2..|3.."}[5m])) / sum(rate(authelia_http_requests_total[5m]))) / (1 - 0.9995)) * 100 > 2
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Authelia: Critical SLO burn rate"
+          description: "{{ $value | printf \"%.1f\" }}% budget consumed in 5m"
+
+      # Nextcloud
+      - alert: NextcloudSLOBurnRate
+        expr: |
+          (1 - (sum(rate(nextcloud_http_requests_total{code=~"2..|3.."}[5m])) / sum(rate(nextcloud_http_requests_total[5m]))) / (1 - 0.995)) * 100 > 2
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nextcloud: Critical SLO burn rate"
+          description: "{{ $value | printf \"%.1f\" }}% budget consumed in 5m"
+
+      # Ollama
+      - alert: OllamaSLOBurnRate
+        expr: |
+          (1 - (sum(rate(ollama_requests_total{code=~"2..|3.."}[5m])) / sum(rate(ollama_requests_total[5m]))) / (1 - 0.99)) * 100 > 2
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Ollama: Critical SLO burn rate"
+          description: "{{ $value | printf \"%.1f\" }}% budget consumed in 5m"
+
+      # Infrastructure
+      - alert: KubeAPISLOBurnRate
+        expr: |
+          (1 - (sum(rate(apiserver_request_total{code=~"2..|3.."}[5m])) / sum(rate(apiserver_request_total[5m]))) / (1 - 0.999)) * 100 > 2
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kubernetes API: Critical SLO burn rate"
+          description: "{{ $value | printf \"%.1f\" }}% budget consumed in 5m"
+
+      - alert: LonghornVolumeBurnRate
+        expr: |
+          (1 - (count(longhorn_volume_actual_state{state="healthy"}) / count(longhorn_volume_actual_state))) * 100 > 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Longhorn: Volume health degradation"
+          description: "{{ $value | printf \"%.1f\" }}% volumes unhealthy"
+
+      # ============================================================
+      # ERROR BUDGET EXHAUSTION ALERTS
+      # ============================================================
+      - alert: ErrorBudgetExhausted
+        expr: |
+          sum by (service, slo) (
+            (1 - target_sli) - (1 - actual_sli)
+          ) < 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.service }} {{ $labels.slo }}: Error budget exhausted"
+          description: "Error budget is negative. Service has exceeded its SLO for the period."
+          runbook: "docs/runbooks/error-budget-exhausted.md"
+
+      - alert: ErrorBudgetCritical
+        expr: |
+          sum by (service, slo) (
+            ((1 - target_sli) - (1 - actual_sli)) / (1 - target_sli) * 100
+          ) < 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service }} {{ $labels.slo }}: Error budget < 5% remaining"
+          description: "Only {{ $value | printf \"%.1f\" }}% error budget left. Plan feature freeze."
+
+      # ============================================================
+      # LATENCY SLO BURN RATE
+      # ============================================================
+      - alert: LatencySLOBurnRate
+        expr: |
+          sum by (service) (
+            (histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) / latency_target_p99 - 1) * 100
+          ) > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service }}: Latency SLO burn rate"
+          description: "p99 latency is {{ $value | printf \"%.0f\" }}% above target"
+
+      # ============================================================
+      # CERTIFICATE EXPIRY BURN RATE (time-based)
+      # ============================================================
+      - alert: CertificateExpiryCritical
+        expr: |
+          (min(certmanager_cert_not_after_timestamp_seconds - time()) < 604800)
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "TLS certificate expiring within 7 days"
+          description: "Certificate for {{ $labels.cert_name }} expires in {{ $value | printf \"%.0f\" }} hours"
+
+      - alert: CertificateExpiryWarning
+        expr: |
+          (min(certmanager_cert_not_after_timestamp_seconds - time()) < 2592000)
+        for: 6h
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS certificate expiring within 30 days"
+          description: "Certificate for {{ $labels.cert_name }} expires in {{ $value | printf \"%.0f\" }} days"

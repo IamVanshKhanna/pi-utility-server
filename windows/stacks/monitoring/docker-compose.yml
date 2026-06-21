@@ -1,5 +1,5 @@
 # STACK: MONITORING (Windows)
-# Services: Grafana — dashboards for Pi + Windows metrics
+# Services: Grafana + Prometheus + Alertmanager
 # Access via Pi Traefik: https://autobot.taila24d04.ts.net/grafana/
 
 networks:
@@ -9,6 +9,8 @@ networks:
 
 volumes:
   grafana_data:
+  prometheus_data:
+  alertmanager_data:
 
 services:
   grafana:
@@ -30,3 +32,38 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
       - TZ=${TZ:-Australia/Melbourne}
     mem_limit: 256m
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus-win
+    restart: unless-stopped
+    networks:
+      - proxy
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../../config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../config/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    mem_limit: 512m
+
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: alertmanager-win
+    restart: unless-stopped
+    networks:
+      - proxy
+    ports:
+      - "9093:9093"
+    volumes:
+      - ../../config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    mem_limit: 64m

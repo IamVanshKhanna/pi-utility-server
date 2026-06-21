@@ -1,0 +1,121 @@
+# Pi Power Exporter - Prometheus Alerting Rules
+
+groups:
+- name: pi-power
+  rules:
+  - alert: PiHighPowerConsumption
+    expr: node_power_watts > 15
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Pi {{ $labels.instance }} high power consumption"
+      description: "Node {{ $labels.instance }} consuming {{ $value | printf \"%.1f\" }}W (threshold: 15W)"
+
+  - alert: PiCriticalPowerConsumption
+    expr: node_power_watts > 20
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Pi {{ $labels.instance }} critical power consumption"
+      description: "Node {{ $labels.instance }} consuming {{ $value | printf \"%.1f\" }}W (threshold: 20W)"
+
+  - alert: PiHighTemperature
+    expr: pi_cpu_temp_C > 75
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Pi {{ $labels.instance }} high temperature"
+      description: "CPU temperature {{ $value | printf \"%.0f\" }}°C (threshold: 75°C)"
+
+  - alert: PiCriticalTemperature
+    expr: pi_cpu_temp_C > 80
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Pi {{ $labels.instance }} critical temperature"
+      description: "CPU temperature {{ $value | printf \"%.0f\" }}°C (threshold: 80°C)"
+
+  - alert: PiHighCPUUsage
+    expr: pi_cpu_percent > 90
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Pi {{ $labels.instance }} high CPU usage"
+      description: "CPU usage {{ $value | printf \"%.0f\" }}% (threshold: 90%)"
+
+  - alert: PiLowPowerEfficiency
+    expr: (sum(rate(http_requests_total[5m])) / sum(node_power_watts)) < 10
+    for: 30m
+    labels:
+      severity: info
+    annotations:
+      summary: "Low power efficiency"
+      description: "Only {{ $value | printf \"%.1f\" }} requests per watt"
+
+  - alert: PiHighPowerCost
+    expr: (sum(node_power_watts) * 24 * 30 * 0.15 / 1000) > 50
+    for: 1h
+    labels:
+      severity: warning
+    annotations:
+      summary: "High monthly power cost"
+      description: "Estimated monthly power cost: ${{ $value | printf \"%.2f\" }} (threshold: $50)"
+
+  - alert: PiPowerMeterOffline
+    expr: up{job="pi-power-exporter"} == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Pi Power Exporter offline"
+      description: "Power exporter for {{ $labels.instance }} has been down for 5 minutes"
+
+  - alert: PiHighCurrentDraw
+    expr: pi_current_mA > 3000
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Pi {{ $labels.instance }} high current draw"
+      description: "Drawing {{ $value | printf \"%.0f\" }}mA (threshold: 3000mA)"
+
+  - alert: PiLowVoltage
+    expr: pi_voltage_V < 4.7
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Pi {{ $labels.instance }} low voltage"
+      description: "Bus voltage {{ $value | printf \"%.2f\" }}V (threshold: 4.7V)"
+
+  - alert: PiHighMemoryUsage
+    expr: pi_memory_percent > 90
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Pi {{ $labels.instance }} high memory usage"
+      description: "Memory usage {{ $value | printf \"%.0f\" }}% (threshold: 90%)"
+
+  - alert: PiHighDiskUsage
+    expr: pi_disk_percent > 90
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Pi {{ $labels.instance }} high disk usage"
+      description: "Disk usage {{ $value | printf \"%.0f\" }}% (threshold: 90%)"
+
+  - alert: PiCPUThrottling
+    expr: pi_cpu_freq_cur_MHz < pi_cpu_freq_max_MHz * 0.8
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Pi {{ $labels.instance }} CPU throttling"
+      description: "CPU running at {{ $value | printf \"%.0f\" }}MHz (max: {{ pi_cpu_freq_max_MHz | printf \"%.0f\" }}MHz)"

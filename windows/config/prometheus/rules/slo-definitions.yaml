@@ -1,0 +1,224 @@
+# SLO/SLI Definitions — homelab-ops-mesh
+# Service Level Objectives and Indicators for all services
+# Used for: Alerting, Dashboards, Error Budgets, Incident Response
+
+# SLO Framework (based on Google SRE Handbook):
+# SLI = Service Level Indicator (measurable metric)
+# SLO = Service Level Objective (target for SLI)
+# Error Budget = 1 - SLO (how much failure is acceptable)
+# Burn Rate = Rate at which error budget is consumed
+
+# ============================================================
+# SERVICE: Traefik (Ingress/Load Balancer)
+# ============================================================
+traefik:
+  slos:
+    # Availability: % of successful HTTP requests
+    - name: "Availability"
+      sli: "sum(rate(traefik_entrypoint_requests_total{code=~'2..|3..'}[5m])) / sum(rate(traefik_entrypoint_requests_total[5m]))"
+      target: 0.999  # 99.9% (43.8 min downtime/month)
+      window: "30d"
+      error_budget: 0.001
+      burn_rate_alert:
+        window_1h: 14.4   # 1% budget in 1h
+        window_6h: 6      # 5% budget in 6h
+        window_1d: 3      # 10% budget in 1d
+
+    # Latency: p99 < 200ms for HTTP requests
+    - name: "Latency p99"
+      sli: "histogram_quantile(0.99, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le))"
+      target: 0.95  # 95% of requests < 200ms
+      threshold: 0.2  # 200ms
+      window: "7d"
+
+    # TLS Certificate Health
+    - name: "TLS Cert Validity"
+      sli: "min(traefik_tls_cert_not_after_timestamp_seconds - time())"
+      target: 1.0  # All certs valid
+      threshold: 604800  # 7 days warning
+
+# ============================================================
+# SERVICE: Authelia (Authentication/SSO)
+# ============================================================
+authelia:
+  slos:
+    - name: "Authentication Availability"
+      sli: "sum(rate(authelia_http_requests_total{code=~'2..|3..'}[5m])) / sum(rate(authelia_http_requests_total[5m]))"
+      target: 0.9995  # 99.95% (21.9 min/month)
+      window: "30d"
+
+    - name: "Login Latency p95"
+      sli: "histogram_quantile(0.95, sum(rate(authelia_login_duration_seconds_bucket[5m])) by (le))"
+      target: 0.95
+      threshold: 1.0  # 1 second
+      window: "7d"
+
+    - name: "2FA Success Rate"
+      sli: "sum(rate(authelia_totp_verify_success_total[5m])) / sum(rate(authelia_totp_verify_total[5m]))"
+      target: 0.99  # 99% 2FA success
+      window: "7d"
+
+# ============================================================
+# SERVICE: Nextcloud (File Sync/Share)
+# ============================================================
+nextcloud:
+  slos:
+    - name: "API Availability"
+      sli: "sum(rate(nextcloud_http_requests_total{code=~'2..|3..'}[5m])) / sum(rate(nextcloud_http_requests_total[5m]))"
+      target: 0.995  # 99.5% (3.65h/month)
+      window: "30d"
+
+    - name: "File Upload Latency p95"
+      sli: "histogram_quantile(0.95, sum(rate(nextcloud_upload_duration_seconds_bucket[5m])) by (le))"
+      target: 0.9
+      threshold: 30.0  # 30 seconds for large files
+      window: "7d"
+
+    - name: "Sync Success Rate"
+      sli: "sum(rate(nextcloud_sync_success_total[5m])) / sum(rate(nextcloud_sync_total[5m]))"
+      target: 0.99
+      window: "7d"
+
+# ============================================================
+# SERVICE: Vaultwarden (Password Manager)
+# ============================================================
+vaultwarden:
+  slos:
+    - name: "API Availability"
+      sli: "sum(rate(vaultwarden_http_requests_total{code=~'2..|3..'}[5m])) / sum(rate(vaultwarden_http_requests_total[5m]))"
+      target: 0.999  # 99.9%
+      window: "30d"
+
+    - name: "Vault Access Latency p95"
+      sli: "histogram_quantile(0.95, sum(rate(vaultwarden_request_duration_seconds_bucket[5m])) by (le))"
+      target: 0.95
+      threshold: 0.5  # 500ms
+      window: "7d"
+
+# ============================================================
+# SERVICE: Ollama (LLM Inference)
+# ============================================================
+ollama:
+  slos:
+    - name: "Inference Availability"
+      sli: "sum(rate(ollama_requests_total{code=~'2..|3..'}[5m])) / sum(rate(ollama_requests_total[5m]))"
+      target: 0.99  # 99% (7.3h/month)
+      window: "30d"
+
+    - name: "Inference Latency p95"
+      sli: "histogram_quantile(0.95, sum(rate(ollama_inference_duration_seconds_bucket[5m])) by (le))"
+      target: 0.9
+      threshold: 30.0  # 30 seconds for generation
+      window: "7d"
+
+    - name: "Model Load Success"
+      sli: "sum(rate(ollama_model_loaded_total[5m])) / sum(rate(ollama_model_load_attempts_total[5m]))"
+      target: 0.995
+      window: "7d"
+
+# ============================================================
+# SERVICE: Home Assistant (Smart Home)
+# ============================================================
+homeassistant:
+  slos:
+    - name: "API Availability"
+      sli: "sum(rate(homeassistant_http_requests_total{code=~'2..|3..'}[5m])) / sum(rate(homeassistant_http_requests_total[5m]))"
+      target: 0.999  # 99.9%
+      window: "30d"
+
+    - name: "Automation Execution Success"
+      sli: "sum(rate(homeassistant_automation_executed_total{result='success'}[5m])) / sum(rate(homeassistant_automation_executed_total[5m]))"
+      target: 0.995
+      window: "7d"
+
+    - name: "State Update Latency p95"
+      sli: "histogram_quantile(0.95, sum(rate(homeassistant_state_update_duration_seconds_bucket[5m])) by (le))"
+      target: 0.95
+      threshold: 0.5  # 500ms
+      window: "7d"
+
+# ============================================================
+# SERVICE: Infrastructure (Kubernetes/Longhorn/PostgreSQL)
+# ============================================================
+infrastructure:
+  slos:
+    - name: "Kubernetes API Server Availability"
+      sli: "sum(rate(apiserver_request_total{code=~'2..|3..'}[5m])) / sum(rate(apiserver_request_total[5m]))"
+      target: 0.999
+      window: "30d"
+
+    - name: "Longhorn Volume Health"
+      sli: "count(longhorn_volume_actual_state{state='healthy'}) / count(longhorn_volume_actual_state)"
+      target: 0.999
+      window: "7d"
+
+    - name: "PostgreSQL Primary Availability"
+      sli: "sum(rate(patroni_replication_lag{role='primary'}[5m]) == 0) or on () vector(0)"
+      target: 1.0
+      window: "7d"
+
+    - name: "Certificate Expiry Warning"
+      sli: "min(certmanager_cert_not_after_timestamp_seconds - time())"
+      target: 1.0
+      threshold: 2592000  # 30 days
+      window: "1d"
+
+# ============================================================
+# ERROR BUDGET BURN RATE ALERTS
+# ============================================================
+# Based on: https://sre.google/sre-book/alerting-on-slos/
+
+burn_rate_alerts:
+  # Critical: 2% error budget consumed in 1 hour (14.4x budget rate)
+  - alert: "SLOBurnRateCritical"
+    expr: |
+      sum by (service, slo) (
+        (1 - (actual_sli / target_sli)) * 100
+      ) > 2
+    for: "5m"
+    labels:
+      severity: "critical"
+    annotations:
+      summary: "{{ $labels.service }} {{ $labels.slo }}: {{ $value }}% error budget consumed in 1h"
+      description: "Error budget burn rate is {{ $value | printf \"%.1f\" }}x normal. Immediate action required."
+
+  # Warning: 5% error budget consumed in 6 hours (6x budget rate)
+  - alert: "SLOBurnRateWarning"
+    expr: |
+      sum by (service, slo) (
+        (1 - (actual_sli / target_sli)) * 100
+      ) > 5
+    for: "15m"
+    labels:
+      severity: "warning"
+    annotations:
+      summary: "{{ $labels.service }} {{ $labels.slo }}: {{ $value }}% error budget consumed in 6h"
+      description: "Error budget burn rate is elevated. Investigate within 1 hour."
+
+  # Info: 10% error budget consumed in 1 day (3x budget rate)
+  - alert: "SLOBurnRateInfo"
+    expr: |
+      sum by (service, slo) (
+        (1 - (actual_sli / target_sli)) * 100
+      ) > 10
+    for: "1h"
+    labels:
+      severity: "info"
+    annotations:
+      summary: "{{ $labels.service }} {{ $labels.slo }}: {{ $value }}% error budget consumed in 1d"
+
+# ============================================================
+# GRAFANA DASHBOARD ANNOTATIONS
+# ============================================================
+grafana_annotations:
+  - name: "SLO Violation"
+    expr: |
+      sum by (service, slo) (slack(1 - (actual_sli / target_sli)) > 0)
+    labels:
+      alert_type: "slo_violation"
+  
+  - name: "Error Budget Exhausted"
+    expr: |
+      sum by (service, slo) (error_budget_remaining < 0)
+    labels:
+      alert_type: "error_budget_exhausted"
