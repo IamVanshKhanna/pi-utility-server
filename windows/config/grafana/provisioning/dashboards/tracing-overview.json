@@ -1,0 +1,350 @@
+{
+  "dashboard": {
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+      {
+        "datasource": "Tempo",
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"lineWidth": 1}
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "id": 1,
+        "options": {
+          "legend": {"displayMode": "list", "placement": "bottom"},
+          "tooltip": {"mode": "single"}
+        },
+        "pluginVersion": "10.0.0",
+        "targets": [
+          {
+            "format": "time_series",
+            "queryType": "traceql",
+            "refId": "A",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=~\"ollama|nextcloud|vaultwarden|homeassistant|grafana\"} | count() over 1m"
+          }
+        ],
+        "title": "Request Rate by Service",
+        "type": "timeseries"
+      },
+      {
+        "datasource": "Tempo",
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 500},
+                {"color": "red", "value": 2000}
+              ]
+            },
+            "unit": "ms"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "id": 2,
+        "options": {
+          "legend": {"displayMode": "list", "placement": "bottom"},
+          "tooltip": {"mode": "single"}
+        },
+        "pluginVersion": "10.0.0",
+        "targets": [
+          {
+            "queryType": "traceql",
+            "refId": "A",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=~\"ollama|nextcloud|vaultwarden|homeassistant|grafana\"} | quantile(0.95, duration) over 1m",
+            "legendFormat": "{{service.name}} - p95"
+          }
+        ],
+        "title": "p95 Latency by Service",
+        "type": "timeseries"
+      },
+      {
+        "datasource": "Tempo",
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.01},
+                {"color": "red", "value": 0.05}
+              ]
+            },
+            "unit": "percentunit"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "id": 3,
+        "options": {
+          "legend": {"displayMode": "list", "placement": "bottom"},
+          "tooltip": {"mode": "single"}
+        },
+        "pluginVersion": "10.0.0",
+        "targets": [
+          {
+            "queryType": "traceql",
+            "refId": "A",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{.status == \"error\"} | count() / count() * 100 by (service.name)",
+            "legendFormat": "{{service.name}} Error Rate"
+          }
+        ],
+        "title": "Error Rate by Service",
+        "type": "timeseries"
+      },
+      {
+        "datasource": "Tempo",
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"stacking": {"mode": "normal"}}
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "id": 4,
+        "options": {
+          "legend": {"displayMode": "table", "placement": "bottom"}
+        },
+        "pluginVersion": "10.0.0",
+        "title": "Trace Duration Distribution",
+        "targets": [
+          {
+            "queryType": "traceql",
+            "refId": "A",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=~\"ollama|nextcloud|vaultwarden|homeassistant|grafana\"} | histogram(duration)"
+          }
+        ],
+        "type": "barchart"
+      },
+      {
+        "datasource": "Tempo",
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"lineWidth": 1}
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+        "id": 5,
+        "options": {
+          "legend": {"displayMode": "list", "placement": "bottom"},
+          "tooltip": {"mode": "single"}
+        },
+        "pluginVersion": "10.0.0",
+        "targets": [
+          {
+            "queryType": "traceql",
+            "refId": "A",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=\"ollama\"} | count() by (operation) over 5m",
+            "legendFormat": "Ollama - {{operation}}"
+          },
+          {
+            "queryType": "traceql",
+            "refId": "B",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=\"nextcloud\"} | count() by (operation) over 5m",
+            "legendFormat": "Nextcloud - {{operation}}"
+          }
+        ],
+        "title": "Operation Frequency - Ollama & Nextcloud",
+        "type": "timeseries"
+      },
+      {
+        "datasource": "Tempo",
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1000},
+                {"color": "red", "value": 5000}
+              ]
+            },
+            "unit": "ms"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "id": 6,
+        "options": {
+          "legend": {"displayMode": "list", "placement": "bottom"},
+          "tooltip": {"mode": "single"}
+        },
+        "pluginVersion": "10.0.0",
+        "targets": [
+          {
+            "queryType": "traceql",
+            "refId": "A",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=\"ollama\"} | quantile(0.50, duration) over 5m",
+            "legendFormat": "p50"
+          },
+          {
+            "queryType": "traceql",
+            "refId": "B",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=\"ollama\"} | quantile(0.95, duration) over 5m",
+            "legendFormat": "p95"
+          },
+          {
+            "queryType": "traceql",
+            "refId": "C",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=\"ollama\"} | quantile(0.99, duration) over 5m",
+            "legendFormat": "p99"
+          }
+        ],
+        "title": "Ollama Latency Percentiles",
+        "type": "timeseries"
+      },
+      {
+        "datasource": "Tempo",
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1000},
+                {"color": "red", "value": 5000}
+              ]
+            },
+            "unit": "ms"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "id": 7,
+        "options": {
+          "legend": {"displayMode": "list", "placement": "bottom"},
+          "tooltip": {"mode": "single"}
+        },
+        "pluginVersion": "10.0.0",
+        "targets": [
+          {
+            "queryType": "traceql",
+            "refId": "A",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=\"nextcloud\"} | quantile(0.50, duration) over 5m",
+            "legendFormat": "p50"
+          },
+          {
+            "queryType": "traceql",
+            "refId": "B",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=\"nextcloud\"} | quantile(0.95, duration) over 5m",
+            "legendFormat": "p95"
+          },
+          {
+            "queryType": "traceql",
+            "refId": "C",
+            "datasource": {"type": "tempo", "uid": "tempo"},
+            "expr": "{service.name=\"nextcloud\"} | quantile(0.99, duration) over 5m",
+            "legendFormat": "p99"
+          }
+        ],
+        "title": "Nextcloud Latency Percentiles",
+        "type": "timeseries"
+      }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": ["homelab", "tracing", "distributed-tracing", "correlation-id"],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "datasource": {"type": "tempo", "uid": "tempo"},
+          "definition": "{__name__=~\"service.name\"}",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Service",
+          "multi": true,
+          "name": "service",
+          "options": [],
+          "query": {
+            "queryType": "traceql",
+            "expr": "{__name__=~\"service.name\"} | distinct(service.name)"
+          },
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 1,
+          "tag": "",
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "datasource": {"type": "tempo", "uid": "tempo"},
+          "definition": "{service.name=~\"$service\"}",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Operation",
+          "multi": true,
+          "name": "operation",
+          "options": [],
+          "query": {
+            "queryType": "traceql",
+            "expr": "{service.name=~\"$service\"} | distinct(name)"
+          },
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 1,
+          "tag": "",
+          "type": "query"
+        }
+      ],
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Homelab Distributed Tracing Overview",
+      "uid": "homelab-tracing-overview",
+      "version": 1,
+      "weekStart": ""
+    },
+    "meta": {
+      "created": "2026-06-09T15:00:00Z",
+      "updated": "2026-06-09T15:00:00Z"
+    }
+  }
+}

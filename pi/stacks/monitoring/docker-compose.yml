@@ -107,10 +107,7 @@ services:
     mem_limit: 256m
     cpus: 0.5
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=PathPrefix(`/grafana`)"
-      - "traefik.http.routers.grafana.entrypoints=tailscale"
-      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.enable=false"
 
   node-exporter:
     # Check latest: https://hub.docker.com/r/prom/node-exporter/tags

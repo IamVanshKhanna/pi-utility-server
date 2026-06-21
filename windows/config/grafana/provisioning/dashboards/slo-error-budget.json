@@ -1,0 +1,249 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 50},
+              {"color": "red", "value": 90}
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "(1 - (sum(rate(traefik_entrypoint_requests_total{code=~\"2..|3..\"}[30d])) / sum(rate(traefik_entrypoint_requests_total[30d])))) / (1 - 0.999) * 100",
+          "legendFormat": "Traefik",
+          "refId": "A"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "(1 - (sum(rate(authelia_http_requests_total{code=~\"2..|3..\"}[30d])) / sum(rate(authelia_http_requests_total[30d])))) / (1 - 0.9995) * 100",
+          "legendFormat": "Authelia",
+          "refId": "B"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "(1 - (sum(rate(nextcloud_http_requests_total{code=~\"2..|3..\"}[30d])) / sum(rate(nextcloud_http_requests_total[30d])))) / (1 - 0.995) * 100",
+          "legendFormat": "Nextcloud",
+          "refId": "C"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "(1 - (sum(rate(vaultwarden_http_requests_total{code=~\"2..|3..\"}[30d])) / sum(rate(vaultwarden_http_requests_total[30d])))) / (1 - 0.999) * 100",
+          "legendFormat": "Vaultwarden",
+          "refId": "D"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "(1 - (sum(rate(ollama_requests_total{code=~\"2..|3..\"}[30d])) / sum(rate(ollama_requests_total[30d])))) / (1 - 0.99) * 100",
+          "legendFormat": "Ollama",
+          "refId": "E"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "(1 - (sum(rate(homeassistant_http_requests_total{code=~\"2..|3..\"}[30d])) / sum(rate(homeassistant_http_requests_total[30d])))) / (1 - 0.999) * 100",
+          "legendFormat": "HomeAssistant",
+          "refId": "F"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "(1 - (sum(rate(apiserver_request_total{code=~\"2..|3..\"}[30d])) / sum(rate(apiserver_request_total[30d])))) / (1 - 0.999) * 100",
+          "legendFormat": "K8sAPI",
+          "refId": "G"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "(1 - (count(longhorn_volume_actual_state{state=\"healthy\"}) / count(longhorn_volume_actual_state))) * 100",
+          "legendFormat": "Longhorn",
+          "refId": "H"
+        }
+      ],
+      "title": "Error Budget Consumption (30d) - % of budget used",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 50},
+              {"color": "red", "value": 90}
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "(1 - (sum(rate(traefik_entrypoint_requests_total{code=~\"2..|3..\"}[30d])) / sum(rate(traefik_entrypoint_requests_total[30d]))) / (1 - 0.999)) * 100",
+          "legendFormat": "Traefik",
+          "refId": "A"
+        }
+      ],
+      "title": "Traefik Error Budget Remaining",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"lineWidth": 1}
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "id": 3,
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "single"}
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.99, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "Traefik",
+          "refId": "A"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.99, sum(rate(authelia_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "Authelia",
+          "refId": "B"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.99, sum(rate(nextcloud_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "Nextcloud",
+          "refId": "C"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.99, sum(rate(ollama_inference_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "Ollama",
+          "refId": "D"
+        }
+      ],
+      "title": "p99 Latency (5m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0.01},
+              {"color": "red", "value": 0.05}
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "id": 4,
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "single"}
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"5..\"}[5m])) / sum(rate(traefik_entrypoint_requests_total[5m]))",
+          "legendFormat": "Traefik",
+          "refId": "A"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(rate(authelia_http_requests_total{code=~\"5..\"}[5m])) / sum(rate(authelia_http_requests_total[5m]))",
+          "legendFormat": "Authelia",
+          "refId": "B"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(rate(nextcloud_http_requests_total{code=~\"5..\"}[5m])) / sum(rate(nextcloud_http_requests_total[5m]))",
+          "legendFormat": "Nextcloud",
+          "refId": "C"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(rate(vaultwarden_http_requests_total{code=~\"5..\"}[5m])) / sum(rate(vaultwarden_http_requests_total[5m]))",
+          "legendFormat": "Vaultwarden",
+          "refId": "D"
+        }
+      ],
+      "title": "5xx Error Rate (5m)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["homelab", "slo", "error-budget", "burn-rate"],
+  "templating": {"list": []},
+  "time": {"from": "now-30d", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "SLO Error Budget Dashboard",
+  "uid": "homelab-slo-error-budget",
+  "version": 1,
+  "weekStart": ""
+}

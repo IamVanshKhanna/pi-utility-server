@@ -1,0 +1,411 @@
+{
+  "dashboard": {
+    "title": "Capacity Planning",
+    "uid": "capacity-planning",
+    "tags": ["capacity", "planning", "forecasting", "homelab"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "1h",
+    "time": {
+      "from": "now-30d",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Disk Usage - /mnt/data",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"} / node_filesystem_size_bytes{mountpoint=\"/mnt/data\"})) * 100",
+            "legendFormat": "Disk Usage %",
+            "refId": "A"
+          },
+          {
+            "expr": "80",
+            "legendFormat": "Warning Threshold (80%)",
+            "refId": "B"
+          },
+          {
+            "expr": "90",
+            "legendFormat": "Critical Threshold (90%)",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "Usage %"},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 80, "colorMode": "warning", "label": "Warning"},
+          {"value": 90, "colorMode": "critical", "label": "Critical"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Disk Space - Available vs Total",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"} / 1024 / 1024 / 1024",
+            "legendFormat": "Available (GB)",
+            "refId": "A"
+          },
+          {
+            "expr": "node_filesystem_size_bytes{mountpoint=\"/mnt/data\"} / 1024 / 1024 / 1024",
+            "legendFormat": "Total (GB)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "GB"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Disk Growth Rate (30-day trend)",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(node_filesystem_size_bytes{mountpoint=\"/mnt/data\"} - node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d]) * 86400 * 1024 * 1024 * 1024",
+            "legendFormat": "Growth Rate (GB/day)",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "GB/day"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+            "legendFormat": "Memory Usage %",
+            "refId": "A"
+          },
+          {
+            "expr": "85",
+            "legendFormat": "Warning Threshold (85%)",
+            "refId": "B"
+          },
+          {
+            "expr": "95",
+            "legendFormat": "Critical Threshold (95%)",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "Usage %"},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 85, "colorMode": "warning", "label": "Warning"},
+          {"value": 95, "colorMode": "critical", "label": "Critical"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Memory Available vs Total",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "node_memory_MemAvailable_bytes / 1024 / 1024 / 1024",
+            "legendFormat": "Available (GB)",
+            "refId": "A"
+          },
+          {
+            "expr": "node_memory_MemTotal_bytes / 1024 / 1024 / 1024",
+            "legendFormat": "Total (GB)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "GB"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "avg by (instance) (irate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) * 100",
+            "legendFormat": "CPU Usage % - {{instance}}",
+            "refId": "A"
+          },
+          {
+            "expr": "80",
+            "legendFormat": "Warning Threshold (80%)",
+            "refId": "B"
+          },
+          {
+            "expr": "90",
+            "legendFormat": "Critical Threshold (90%)",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "Usage %"},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 80, "colorMode": "warning", "label": "Warning"},
+          {"value": 90, "colorMode": "critical", "label": "Critical"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Disk Exhaustion Prediction (30/60/90 days)",
+        "type": "table",
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "predict_linear(node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d], 30*24*3600) / 1024 / 1024 / 1024",
+            "legendFormat": "30 Days",
+            "refId": "A",
+            "format": "table"
+          },
+          {
+            "expr": "predict_linear(node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d], 60*24*3600) / 1024 / 1024 / 1024",
+            "legendFormat": "60 Days",
+            "refId": "B",
+            "format": "table"
+          },
+          {
+            "expr": "predict_linear(node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d], 90*24*3600) / 1024 / 1024 / 1024",
+            "legendFormat": "90 Days",
+            "refId": "C",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "type": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true,
+                "__name__": true
+              },
+              "renameByName": {
+                "Value #A": "Predicted Available (GB) - 30d",
+                "Value #B": "Predicted Available (GB) - 60d",
+                "Value #C": "Predicted Available (GB) - 90d"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Pod Count Trend",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "count(kube_pod_info)",
+            "legendFormat": "Total Pods",
+            "refId": "A"
+          },
+          {
+            "expr": "predict_linear(count(kube_pod_info)[30d], 30*24*3600)",
+            "legendFormat": "Predicted (30d)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Pods"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Network I/O Rate",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 32, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(node_network_receive_bytes_total[5m]) / 1024 / 1024",
+            "legendFormat": "Receive (MB/s) - {{device}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(node_network_transmit_bytes_total[5m]) / 1024 / 1024",
+            "legendFormat": "Transmit (MB/s) - {{device}}",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "Bps", "label": "MB/s"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "PVC Usage by Volume",
+        "type": "table",
+        "gridPos": {"x": 12, "y": 32, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100",
+            "legendFormat": "{{persistentvolumeclaim}} - {{namespace}}",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "type": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true,
+                "__name__": true
+              },
+              "renameByName": {
+                "Value #A": "Usage %"
+              }
+            }
+          },
+          {
+            "type": "filter",
+            "options": {
+              "conditions": [
+                {"evaluator": {"params": ["90"], "type": "gt"}, "id": "A", "type": "query", "query": {"params": ["A"]}}
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Capacity Alerts Status",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 40, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "count(ALERTS{alertname=~\"Disk|Memory|CPU.*Capacity\"})",
+            "legendFormat": "Active Capacity Alerts",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Days Until Disk Exhaustion",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 40, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"} / (rate(node_filesystem_size_bytes{mountpoint=\"/mnt/data\"} - node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d]) * 86400)",
+            "legendFormat": "Days Remaining",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 30},
+                {"color": "green", "value": 90}
+              ]
+            },
+            "unit": "short",
+            "decimals": 1
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "Memory Exhaustion Prediction (30d)",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 40, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "predict_linear((1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100[30d], 30*24*3600)",
+            "legendFormat": "Predicted Memory % (30d)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 85},
+                {"color": "red", "value": 95}
+              ]
+            },
+            "unit": "percent",
+            "decimals": 1
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "Pod Growth Prediction (30d)",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 40, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "predict_linear(count(kube_pod_info)[30d], 30*24*3600)",
+            "legendFormat": "Predicted Pod Count (30d)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 100},
+                {"color": "red", "value": 200}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "datasource",
+          "type": "datasource",
+          "label": "Data Source",
+          "default": "Prometheus",
+          "hide": 0
+        }
+      ]
+    }
+  },
+  "overwrite": true
+}

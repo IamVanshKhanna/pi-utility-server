@@ -1,0 +1,32 @@
+# STACK: MONITORING (Windows)
+# Services: Grafana — dashboards for Pi + Windows metrics
+# Access via Pi Traefik: https://autobot.taila24d04.ts.net/grafana/
+
+networks:
+  proxy:
+    name: homelab_win
+    driver: bridge
+
+volumes:
+  grafana_data:
+
+services:
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana-win
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - proxy
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../../config/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_SERVER_ROOT_URL=https://autobot.taila24d04.ts.net/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - TZ=${TZ:-Australia/Melbourne}
+    mem_limit: 256m
