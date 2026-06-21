@@ -186,13 +186,13 @@ crontab -e
 Add:
 ```bash
 # Daily backup at 3am (with alerting on failure)
-0 3 * * * /home/vansh/homelab-prod/scripts/backup-wrapper.sh >> /var/log/homelab-backup.log 2>&1
+0 3 * * * /home/vansh/pi4homelab/pi/scripts/backup-wrapper.sh >> /var/log/homelab-backup.log 2>&1
 
 # Health check every 15 minutes
-*/15 * * * * /home/vansh/homelab-prod/scripts/health-check.sh >> /var/log/homelab-health.log 2>&1
+*/15 * * * * /home/vansh/pi4homelab/pi/scripts/health-check.sh >> /var/log/homelab-health.log 2>&1
 
 # Weekly update Sunday 4am
-0 4 * * 0 /home/vansh/homelab-prod/scripts/update.sh >> /var/log/homelab-update.log 2>&1
+0 4 * * 0 /home/vansh/pi4homelab/pi/scripts/update.sh >> /var/log/homelab-update.log 2>&1
 
 # DuckDNS update every 5 minutes
 */5 * * * * ~/duckdns/duck.sh >/dev/null 2>&1
@@ -272,7 +272,7 @@ Configure Telegram:
 # Manual backup (with alerting on failure)
 make backup
 # Or use wrapper for cron:
-# /home/vansh/homelab-prod/scripts/backup-wrapper.sh
+# /home/vansh/pi4homelab/pi/scripts/backup-wrapper.sh
 
 # Verify backup
 make verify-backup
@@ -295,7 +295,7 @@ make down-all
 make up-all
 
 # Or use update script
-/home/vansh/homelab-prod/scripts/update.sh
+/home/vansh/pi4homelab/pi/scripts/update.sh
 ```
 
 ---

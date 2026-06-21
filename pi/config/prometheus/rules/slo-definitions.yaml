@@ -1,4 +1,4 @@
-# SLO/SLI Definitions — homelab-prod v2.1
+# SLO/SLI Definitions — homelab-ops-mesh
 # Service Level Objectives and Indicators for all services
 # Used for: Alerting, Dashboards, Error Budgets, Incident Response
 
