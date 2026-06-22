@@ -11,6 +11,7 @@ volumes:
   grafana_data:
   prometheus_data:
   alertmanager_data:
+  loki_data:
 
 services:
   grafana:
@@ -67,3 +68,18 @@ services:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
     mem_limit: 64m
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki-win
+    restart: unless-stopped
+    networks:
+      - proxy
+    ports:
+      - "3100:3100"
+    volumes:
+      - ../../config/loki/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command:
+      - '-config.file=/etc/loki/local-config.yaml'
+    mem_limit: 256m
