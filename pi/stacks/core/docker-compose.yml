@@ -20,6 +20,7 @@ services:
     ports:
       - "80:80"
       - "8443:8443"
+      - "8084:8082"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
