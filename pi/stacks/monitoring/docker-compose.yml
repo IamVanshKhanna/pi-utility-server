@@ -1,74 +1,16 @@
 # STACK: MONITORING v1.1
-# Services: Prometheus + Grafana + Node Exporter + cAdvisor + Loki + Promtail + Alertmanager
-# Gives full visibility into Pi hardware, containers, logs, and alerts.
+# Services: Grafana + Node Exporter + cAdvisor + Promtail
+# Prometheus + Alertmanager + Loki migrated to Windows (homelab-ops-mesh)
+# Gives full visibility into Pi hardware, containers, and sends logs to Windows Loki.
 
 networks:
   proxy:
     external: true
 
 volumes:
-  prometheus_data:
   grafana_data:
-  loki_data:
-  alertmanager_data:
 
 services:
-  prometheus:
-    # Check latest: https://hub.docker.com/r/prom/prometheus/tags
-    image: prom/prometheus:v2.53.0
-    container_name: prometheus
-    restart: unless-stopped
-    networks:
-      - proxy
-    # Bind to localhost only - access via Traefik
-    ports:
-      - "9090:9090"
-    volumes:
-      - ../../config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
-      - '--web.enable-lifecycle'
-    mem_limit: 512m
-    cpus: 0.5
-
-  alertmanager:
-    # Check latest: https://hub.docker.com/r/prom/alertmanager/tags
-    image: prom/alertmanager:v0.26.0
-    container_name: alertmanager
-    restart: unless-stopped
-    networks:
-      - proxy
-    ports:
-      - "9093:9093"
-    volumes:
-      - ../../config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-      - alertmanager_data:/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
-    mem_limit: 64m
-    cpus: 0.1
-
-  loki:
-    # Check latest: https://hub.docker.com/r/grafana/loki/tags
-    image: grafana/loki:2.9.0
-    container_name: loki
-    restart: unless-stopped
-    networks:
-      - proxy
-    ports:
-      - "3100:3100"
-    volumes:
-      - ../../config/loki/loki.yml:/etc/loki/local-config.yaml:ro
-      - loki_data:/loki
-    command:
-      - '-config.file=/etc/loki/local-config.yaml'
-    mem_limit: 256m
-    cpus: 0.25
-
   promtail:
     # Check latest: https://hub.docker.com/r/grafana/promtail/tags
     image: grafana/promtail:2.9.0
