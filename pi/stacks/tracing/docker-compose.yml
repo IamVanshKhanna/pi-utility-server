@@ -1,55 +1,5 @@
-# STACK: TRACING — Tempo + OpenTelemetry Collector
-# Distributed tracing for homelab services (single Pi)
+# STACK: TRACING
+# Tempo migrated to Windows (homelab-ops-mesh).
+# Applications send traces to 100.74.111.26:4317 (OTLP gRPC) directly.
 
-networks:
-  proxy:
-    external: true
-
-volumes:
-  tempo_data:
-
-services:
-  tempo:
-    image: grafana/tempo:2.4.0
-    container_name: tempo
-    restart: unless-stopped
-    networks:
-      - proxy
-    ports:
-      - "3200:3200"
-      - "4317:4317"
-      - "4318:4318"
-      - "9411:9411"
-    volumes:
-      - tempo_data:/var/tempo
-      - ../../config/tempo/tempo.yaml:/etc/tempo.yaml:ro
-    command:
-      - '-config.file=/etc/tempo.yaml'
-    mem_limit: 512m
-    cpus: 0.5
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.tempo.rule=PathPrefix(`/tempo`)"
-      - "traefik.http.routers.tempo.entrypoints=tailscale"
-      - "traefik.http.routers.tempo.middlewares=strip-tempo"
-      - "traefik.http.middlewares.strip-tempo.stripprefix.prefixes=/tempo"
-      - "traefik.http.services.tempo.loadbalancer.server.port=3200"
-
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.106.0
-    container_name: otel-collector
-    restart: unless-stopped
-    networks:
-      - proxy
-    ports:
-      - "4319:4317"
-      - "4320:4318"
-      - "8889:8888"
-    command:
-      - "--config=/etc/otel-config.yaml"
-    mem_limit: 512m
-    cpus: 0.25
-    depends_on:
-      - tempo
-    volumes:
-      - ../../config/otel-collector-config.yaml:/etc/otel-config.yaml:ro
+services: {}

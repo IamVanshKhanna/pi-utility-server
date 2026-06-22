@@ -22,3 +22,28 @@ datasources:
         - name: container
           matcherRegex: "container_name=\"(.*?)\""
           url: "$${__value.raw}"
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        tags: ["container", "pod", "namespace"]
+        mappedTags:
+          - key: "service.name"
+            value: "service"
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        filterByTraceID: false
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        tags:
+          - key: "service.name"
+            value: "application"
+          - key: "http.method"

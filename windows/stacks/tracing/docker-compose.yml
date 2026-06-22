@@ -1,0 +1,29 @@
+# STACK: TRACING (Windows)
+# Services: Tempo
+# Distributed tracing backend for homelab services.
+# Sends traces to Grafana on Windows via Docker DNS (tempo:3200).
+
+networks:
+  proxy:
+    name: homelab_win
+    external: true
+
+volumes:
+  tempo_data:
+
+services:
+  tempo:
+    image: grafana/tempo:2.4.0
+    container_name: tempo-win
+    restart: unless-stopped
+    networks:
+      - proxy
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+    volumes:
+      - ../../config/tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    command:
+      - '-config.file=/etc/tempo.yaml'
+    mem_limit: 256m
