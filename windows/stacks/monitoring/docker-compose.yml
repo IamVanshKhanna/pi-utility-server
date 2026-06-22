@@ -62,11 +62,12 @@ services:
     ports:
       - "9093:9093"
     volumes:
-      - ../../config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ../../config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ../../config/alertmanager/entrypoint.sh:/entrypoint.sh:ro
       - alertmanager_data:/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     mem_limit: 64m
 
   loki:

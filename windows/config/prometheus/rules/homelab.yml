@@ -12,7 +12,7 @@ groups:
           description: "{{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
 
       - alert: HighMemoryUsage
-        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.85
+        expr: container_memory_usage_bytes{container_label_com_docker_compose_service!=""} / container_spec_memory_limit_bytes{container_label_com_docker_compose_service!=""} > 0.85
         for: 5m
         labels:
           severity: warning
@@ -21,7 +21,7 @@ groups:
           description: "{{ $labels.container }} memory usage is above 85% limit."
 
       - alert: HighCPUUsage
-        expr: (rate(container_cpu_usage_seconds_total[5m]) * 100) > 80
+        expr: (rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service!=""}[5m]) * 100) > 80
         for: 10m
         labels:
           severity: warning
@@ -51,7 +51,7 @@ groups:
     interval: 30s
     rules:
       - alert: ContainerRestartLoop
-        expr: increase(container_start_time_seconds[10m]) > 3
+        expr: increase(container_start_time_seconds{container_label_com_docker_compose_service!=""}[10m]) > 3
         for: 2m
         labels:
           severity: critical
