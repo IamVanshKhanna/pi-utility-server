@@ -2,8 +2,6 @@
 # https://docs.crowdsec.net/
 # Deploy for log parsing and threat intelligence
 
-version: "3.8"
-
 networks:
   proxy:
     external: true
@@ -11,12 +9,10 @@ networks:
 volumes:
   crowdsec_data:
   crowdsec_config:
-  crowdsec_pgdata:
 
 services:
   crowdsec:
-    # Check latest: https://github.com/crowdsecurity/crowdsec/releases
-    image: crowdsecurity/crowdsec:v1.6.0
+    image: crowdsecurity/crowdsec:v1.7.8
     container_name: crowdsec
     restart: unless-stopped
     networks:
@@ -24,6 +20,7 @@ services:
     volumes:
       - crowdsec_data:/var/lib/crowdsec/data
       - crowdsec_config:/etc/crowdsec
+      - ../../config/crowdsec/profiles.yaml:/etc/crowdsec/profiles.yaml:ro
       - ../../config/crowdsec/notifications:/etc/crowdsec/notifications
       - /var/log:/var/log/host:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -36,19 +33,18 @@ services:
       - NET_ADMIN
       - SYS_RESOURCE
     depends_on:
-      - crowdsec-db
+      - relay
 
-  crowdsec-db:
-    image: postgres:15-alpine
-    container_name: crowdsec-db
+  relay:
+    image: python:3-alpine
+    container_name: crowdsec-relay
     restart: unless-stopped
-    networks:
-      - proxy
+    network_mode: host
     volumes:
-      - crowdsec_pgdata:/var/lib/postgresql/data
+      - ../../config/crowdsec/webhook-relay:/relay:ro
+    command: python /relay/relay.py
     environment:
-      - POSTGRES_USER=crowdsec
-      - POSTGRES_PASSWORD=${CROWDSEC_DB_PASSWORD}
-      - POSTGRES_DB=crowdsec
-    mem_limit: 128m
+      - ALERTMANAGER_URL=http://100.74.111.26:9093/api/v1/alerts
+      - PYTHONUNBUFFERED=1
+    mem_limit: 64m
     cpus: 0.1

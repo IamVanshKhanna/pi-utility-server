@@ -1,0 +1,9 @@
+type: http
+name: http_default
+log_level: info
+
+format: |
+  {{.|toJson}}
+
+url: http://192.168.68.59:8085/
+method: POST
