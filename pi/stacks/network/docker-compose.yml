@@ -61,7 +61,7 @@ services:
       - PIHOLE_PORT=8053
       - PORT=9617
     ports:
-      - "127.0.0.1:9617:9617"
+      - "9617:9617"
     mem_limit: 32m
     cpus: 0.05
 

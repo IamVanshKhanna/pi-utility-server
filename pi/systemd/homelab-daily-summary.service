@@ -10,16 +10,9 @@ Group=vansh
 WorkingDirectory=/home/vansh/pi4homelab/pi
 ExecStart=/home/vansh/pi4homelab/pi/scripts/daily-health-summary.sh
 Environment=HOME=/home/vansh
-EnvironmentFile=/home/vansh/pi4homelab/.env
 
 NoNewPrivileges=true
 ProtectSystem=strict
-ProtectHome=read-only
-PrivateTmp=true
-ProtectKernelModules=true
-ProtectKernelTunables=true
-ProtectHostname=true
-RestrictNamespaces=true
 ReadWritePaths=/home/vansh/pi4homelab /mnt/nas/backup/logs
 
 [Install]

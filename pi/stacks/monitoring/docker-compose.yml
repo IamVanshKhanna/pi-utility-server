@@ -42,7 +42,7 @@ services:
     networks:
       - proxy
     ports:
-      - "127.0.0.1:9100:9100"
+      - "9100:9100"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -67,7 +67,7 @@ services:
     networks:
       - proxy
     ports:
-      - "127.0.0.1:8083:8080"
+      - "8083:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
