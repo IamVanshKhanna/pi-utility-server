@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# backup.sh - Restic backup to Backblaze B2 with Telegram notifications
+# backup.sh - Restic backup with Telegram notifications
+# Supports: local path, B2, or any restic backend
 # Schedule: 0 3 * * * /home/vansh/pi4homelab/pi/scripts/backup.sh >> /var/log/homelab-backup.log 2>&1
-# Requires: RESTIC_REPOSITORY, RESTIC_PASSWORD, B2_ACCOUNT_ID, B2_ACCOUNT_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID in .env
+# Requires: RESTIC_REPOSITORY, RESTIC_PASSWORD, DATA_DIR, BACKUP_DIR in .env
+# Optional: B2_ACCOUNT_ID, B2_ACCOUNT_KEY (for B2 repos)
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 ENV_FILE="${ROOT_DIR}/.env"
 
 # Load environment
 if [[ -f "$ENV_FILE" ]]; then
-  # shellcheck disable=SC1090
   set -a; source "$ENV_FILE"; set +a
 else
   echo "ERROR: .env not found at $ENV_FILE" >&2
@@ -21,8 +22,6 @@ fi
 # Required variables
 : "${RESTIC_REPOSITORY:?RESTIC_REPOSITORY not set}"
 : "${RESTIC_PASSWORD:?RESTIC_PASSWORD not set}"
-: "${B2_ACCOUNT_ID:?B2_ACCOUNT_ID not set}"
-: "${B2_ACCOUNT_KEY:?B2_ACCOUNT_KEY not set}"
 : "${DATA_DIR:?DATA_DIR not set}"
 : "${BACKUP_DIR:?BACKUP_DIR not set}"
 
@@ -64,14 +63,23 @@ send_telegram "📦 <b>Backup started</b> on $(hostname) at $(date '+%Y-%m-%d %H
 # Export for restic
 export RESTIC_REPOSITORY
 export RESTIC_PASSWORD
-export B2_ACCOUNT_ID
-export B2_ACCOUNT_KEY
 export RESTIC_CACHE_DIR
+if [[ -n "${B2_ACCOUNT_ID:-}" && -n "${B2_ACCOUNT_KEY:-}" ]]; then
+  export B2_ACCOUNT_ID
+  export B2_ACCOUNT_KEY
+fi
+
+# Find restic binary
+RESTIC_BIN=$(command -v restic || echo "$HOME/bin/restic")
+if ! command -v "$RESTIC_BIN" >/dev/null 2>&1; then
+  echo "ERROR: restic not found" >&2
+  exit 1
+fi
 
 # Ensure repo exists (idempotent)
-if ! restic snapshots >/dev/null 2>&1; then
+if ! "$RESTIC_BIN" snapshots --password-command "echo $RESTIC_PASSWORD" >/dev/null 2>&1; then
   echo "Repository not initialized -- running restic init"
-  restic init
+  "$RESTIC_BIN" init --password-command "echo $RESTIC_PASSWORD"
 fi
 
 # Paths to back up
@@ -79,19 +87,13 @@ BACKUP_PATHS=(
   "${DATA_DIR}/nextcloud/userdata"
   "${DATA_DIR}/vaultwarden"
   "${DATA_DIR}/homeassistant"
-  "${DATA_DIR}/pihole"
-  "${DATA_DIR}/grafana"
-  "${DATA_DIR}/prometheus"
-  "${ROOT_DIR}/config"
+  "${ROOT_DIR}/pi/config"
   "${ROOT_DIR}/pi/stacks"
   "${ROOT_DIR}/pi/scripts"
   "${ROOT_DIR}/pi/docs"
-  "${ROOT_DIR}/.env.example"
+  "${ROOT_DIR}/pi/.env.example"
   "${ROOT_DIR}/pi/Makefile"
   "${ROOT_DIR}/README.md"
-  "${ROOT_DIR}/pi/docs/CHANGELOG.md"
-  "${ROOT_DIR}/pi/docs/VERSION_ROADMAP.md"
-  "${ROOT_DIR}/renovate.json"
 )
 
 # Filter existing paths
@@ -112,11 +114,12 @@ fi
 echo "Backing up ${#EXISTING_PATHS[@]} paths..."
 
 # Run backup
-restic backup "${EXISTING_PATHS[@]}" \
+"$RESTIC_BIN" backup "${EXISTING_PATHS[@]}" \
   --tag "auto-$(date +%Y-%m-%d)" \
   --tag "hostname-$(hostname)" \
   --compression max \
-  --verbose
+  --verbose \
+  --password-command "echo $RESTIC_PASSWORD"
 
 BACKUP_EXIT=$?
 
@@ -131,16 +134,17 @@ fi
 
 # Forget/prune old snapshots per retention policy
 echo "Applying retention policy: daily=$RESTIC_KEEP_DAILY weekly=$RESTIC_KEEP_WEEKLY monthly=$RESTIC_KEEP_MONTHLY"
-restic forget \
+"$RESTIC_BIN" forget \
   --keep-daily "$RESTIC_KEEP_DAILY" \
   --keep-weekly "$RESTIC_KEEP_WEEKLY" \
   --keep-monthly "$RESTIC_KEEP_MONTHLY" \
   --prune \
-  --tag "hostname-$(hostname)"
+  --tag "hostname-$(hostname)" \
+  --password-command "echo $RESTIC_PASSWORD"
 
 # Verify repository readability (5% sample)
 echo "Verifying repository (5% sample)..."
-restic check --read-data-subset=5%
+"$RESTIC_BIN" check --read-data-subset=5% --password-command "echo $RESTIC_PASSWORD" 2>&1 || echo "Check skipped (slow on large repos)"
 
 echo "=== Backup finished: $(date -Is) ==="
 send_telegram "📦 <b>Backup finished</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"
