@@ -1,5 +1,7 @@
 # STACK: NETWORK
-# Services: Pi-hole (DNS ad-blocking) + WireGuard (VPN)
+# Services: Pi-hole (DNS ad-blocking)
+# WireGuard removed: host-level WG + Tailscale cover VPN needs; Docker WG
+# conflicts on port 51820/udp.
 # IMPORTANT: Disable systemd-resolved first:
 #   sudo systemctl disable --now systemd-resolved
 
@@ -10,7 +12,6 @@ networks:
 volumes:
   pihole_data:
   pihole_dnsmasq:
-  wireguard_data:
 
 services:
 
@@ -64,38 +65,3 @@ services:
       - "9617:9617"
     mem_limit: 32m
     cpus: 0.05
-
-  wireguard:
-    # Check latest: https://github.com/linuxserver/docker-wireguard/releases
-    image: linuxserver/wireguard:1.0.20250521
-    container_name: wireguard
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - proxy
-    ports:
-      - "51820:51820/udp"
-    volumes:
-      - wireguard_data:/config
-      - /lib/modules:/lib/modules:ro
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - SERVERURL=${WG_HOST}
-      - SERVERPORT=51820
-      - PEERS=${WG_PEERS}
-      - PEERDNS=${WG_DEFAULT_DNS}
-      - ALLOWEDIPS=${WG_ALLOWED_IPS}
-      - LOG_CONFS=false
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-    mem_limit: 64m
-    cpus: 0.1
