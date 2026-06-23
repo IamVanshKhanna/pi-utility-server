@@ -8,14 +8,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 ENV_FILE="${ROOT_DIR}/.env"
 
-# Load environment
-if [[ -f "$ENV_FILE" ]]; then
-  # shellcheck disable=SC1090
-  set -a; source "$ENV_FILE"; set +a
-else
-  echo "ERROR: .env not found at $ENV_FILE" >&2
-  exit 1
-fi
+load_env() {
+  local f="$1"
+  if [[ ! -f "$f" ]]; then
+    echo "ERROR: .env not found at $f" >&2
+    exit 1
+  fi
+  while IFS='=' read -r key val; do
+    [[ -z "$key" || "$key" == \#* ]] && continue
+    val="${val#\"}" val="${val%\"}"
+    val="${val#\'}" val="${val%\'}"
+    export "$key=$val"
+  done < "$f"
+}
+
+load_env "$ENV_FILE"
 
 # Required
 : "${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN not set}"
@@ -40,7 +47,7 @@ generate_summary() {
   if command -v restic >/dev/null 2>&1; then
     restic_bin=$(command -v restic)
   fi
-  local last_backup=$("$restic_bin" snapshots --latest 1 --json --password-command "echo $RESTIC_PASSWORD" 2>/dev/null | jq -r '.[0].time' 2>/dev/null | cut -dT -f1 || echo "Unknown")
+  local last_backup=$("$restic_bin" snapshots --latest 1 --json 2>/dev/null | jq -r '.[0].time' 2>/dev/null | cut -dT -f1 || echo "Unknown")
   
   cat <<EOF
 🏠 <b>Daily Homelab Health Summary</b>

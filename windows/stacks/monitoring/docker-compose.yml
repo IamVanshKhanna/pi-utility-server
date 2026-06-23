@@ -18,8 +18,13 @@ services:
     image: grafana/grafana:11.1.0
     container_name: grafana-win
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     networks:
       - proxy
     volumes:
@@ -38,10 +43,15 @@ services:
     image: prom/prometheus:v2.53.0
     container_name: prometheus-win
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - proxy
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ../../config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ../../config/prometheus/rules:/etc/prometheus/rules:ro
@@ -57,10 +67,15 @@ services:
     image: prom/alertmanager:v0.26.0
     container_name: alertmanager-win
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - proxy
     ports:
-      - "9093:9093"
+      - "127.0.0.1:9093:9093"
     volumes:
       - ../../config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
       - ../../config/alertmanager/entrypoint.sh:/entrypoint.sh:ro
@@ -74,10 +89,15 @@ services:
     image: grafana/loki:2.9.0
     container_name: loki-win
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - proxy
     ports:
-      - "3100:3100"
+      - "127.0.0.1:3100:3100"
     volumes:
       - ../../config/loki/loki.yml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki

@@ -15,6 +15,11 @@ services:
     image: alpine:latest
     container_name: samba
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - proxy
     ports:
@@ -29,13 +34,13 @@ services:
       sh -c "
         apk add --no-cache samba &&
         echo -e '[global]\nworkgroup = HOMELAB\nsecurity = user\nmap to guest = bad user\n' > /etc/samba/smb.conf &&
-        echo -e '[shared]\npath = /mnt/shared\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
-        echo -e '[media]\npath = /mnt/media\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
-        echo -e '[backup]\npath = /mnt/backup\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
+        echo -e '[shared]\npath = /mnt/shared\nbrowseable = yes\nread only = no' >> /etc/samba/smb.conf &&
+        echo -e '[media]\npath = /mnt/media\nbrowseable = yes\nread only = yes\nguest ok = yes\nforce user = nobody' >> /etc/samba/smb.conf &&
+        echo -e '[backup]\npath = /mnt/backup\nbrowseable = yes\nread only = no' >> /etc/samba/smb.conf &&
         addgroup -g ${PGID:-1000} vansh 2>/dev/null || true &&
         adduser -u ${PUID:-1000} -G vansh -D -H -s /bin/false vansh 2>/dev/null || true &&
         echo -e '${SAMBA_PASSWORD:-changeme}\n${SAMBA_PASSWORD:-changeme}' | smbpasswd -a -s vansh &&
-        smbd -F -d 2
+        smbd -F
       "
     environment:
       - TZ=${TZ:-Australia/Melbourne}
@@ -52,6 +57,11 @@ services:
     image: syncthing/syncthing:latest
     container_name: syncthing
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - proxy
     ports:

@@ -19,6 +19,11 @@ services:
     image: mariadb:11.4
     container_name: mariadb
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - apps_internal
     volumes:
@@ -42,6 +47,11 @@ services:
     image: redis:7.2-alpine
     container_name: redis
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - apps_internal
     volumes:
@@ -59,6 +69,11 @@ services:
     image: nextcloud:30.0.5
     container_name: nextcloud
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8080:80"
     networks:
@@ -96,6 +111,11 @@ services:
     image: vaultwarden/server:1.32.0
     container_name: vaultwarden
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8081:80"
     networks:

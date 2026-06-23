@@ -4,13 +4,23 @@
 
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 ENV_FILE="${REPO_DIR}/.env"
 
-# Load environment for Telegram
-if [[ -f "$ENV_FILE" ]]; then
-  set -a; source "$ENV_FILE"; set +a
-fi
+load_env() {
+  local f="$1"
+  if [[ -f "$f" ]]; then
+    while IFS='=' read -r key val; do
+      [[ -z "$key" || "$key" == \#* ]] && continue
+      val="${val#\"}" val="${val%\"}"
+      val="${val#\'}" val="${val%\'}"
+      export "$key=$val"
+    done < "$f"
+  fi
+}
+
+load_env "$ENV_FILE"
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 
@@ -27,25 +37,23 @@ send_telegram() {
 }
 
 STACKS=(
-  "stacks/core/docker-compose.yml"
-  "stacks/network/docker-compose.yml"
-  "stacks/secrets/docker-compose.yml"
-  "stacks/auth/docker-compose.yml"
-  "stacks/monitoring/docker-compose.yml"
-  "stacks/apps/docker-compose.yml"
-  "stacks/smarthome/docker-compose.yml"
-  "stacks/uptime-kuma/docker-compose.yml"
-  "stacks/crowdsec/docker-compose.yml"
-  "stacks/tracing/docker-compose.yml"
-  "stacks/nas/docker-compose.yml"
+  "pi/stacks/core/docker-compose.yml"
+  "pi/stacks/network/docker-compose.yml"
+  "pi/stacks/apps/docker-compose.yml"
+  "pi/stacks/smarthome/docker-compose.yml"
+  "pi/stacks/uptime-kuma/docker-compose.yml"
+  "pi/stacks/crowdsec/docker-compose.yml"
+  "pi/stacks/nas/docker-compose.yml"
+  "pi/stacks/portfolio/docker-compose.yml"
+  "pi/stacks/monitoring/docker-compose.yml"
 )
 
 log "Starting pre-update health check..."
 send_telegram "🔄 <b>Update started</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"
-bash "$REPO_DIR/scripts/health-check.sh" || log "WARNING: Pre-update health check had failures"
+bash "$REPO_DIR/pi/scripts/health-check.sh" || log "WARNING: Pre-update health check had failures"
 
 log "Running pre-update backup..."
-bash "$REPO_DIR/scripts/backup.sh" || log "WARNING: Pre-update backup had failures"
+bash "$REPO_DIR/pi/scripts/backup.sh" || log "WARNING: Pre-update backup had failures"
 
 log "Starting update of all stacks..."
 
@@ -66,7 +74,13 @@ docker image prune -f
 
 log "Running post-update health check..."
 sleep 30
-bash "$REPO_DIR/scripts/health-check.sh" || log "WARNING: Post-update health check had failures"
+HEALTH_OK=true
+bash "$REPO_DIR/pi/scripts/health-check.sh" || HEALTH_OK=false
 
-send_telegram "✅ <b>Update completed</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"
-log "All stacks updated successfully."
+if $HEALTH_OK; then
+  send_telegram "✅ <b>Update completed</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"
+  log "All stacks updated successfully."
+else
+  send_telegram "⚠️ <b>Update completed with health check failures</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S') — investigate immediately"
+  log "WARNING: Post-update health check had failures"
+fi

@@ -11,13 +11,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 ENV_FILE="${ROOT_DIR}/.env"
 
-# Load environment
-if [[ -f "$ENV_FILE" ]]; then
-  set -a; source "$ENV_FILE"; set +a
-else
-  echo "ERROR: .env not found at $ENV_FILE" >&2
-  exit 1
-fi
+load_env() {
+  local f="$1"
+  if [[ ! -f "$f" ]]; then
+    echo "ERROR: .env not found at $f" >&2
+    exit 1
+  fi
+  while IFS='=' read -r key val; do
+    [[ -z "$key" || "$key" == \#* ]] && continue
+    val="${val#\"}" val="${val%\"}"
+    val="${val#\'}" val="${val%\'}"
+    export "$key=$val"
+  done < "$f"
+}
+
+load_env "$ENV_FILE"
 
 # Required variables
 : "${RESTIC_REPOSITORY:?RESTIC_REPOSITORY not set}"
@@ -77,9 +85,9 @@ if ! command -v "$RESTIC_BIN" >/dev/null 2>&1; then
 fi
 
 # Ensure repo exists (idempotent)
-if ! "$RESTIC_BIN" snapshots --password-command "echo $RESTIC_PASSWORD" >/dev/null 2>&1; then
+if ! "$RESTIC_BIN" snapshots >/dev/null 2>&1; then
   echo "Repository not initialized -- running restic init"
-  "$RESTIC_BIN" init --password-command "echo $RESTIC_PASSWORD"
+  "$RESTIC_BIN" init
 fi
 
 # Paths to back up
@@ -118,8 +126,7 @@ echo "Backing up ${#EXISTING_PATHS[@]} paths..."
   --tag "auto-$(date +%Y-%m-%d)" \
   --tag "hostname-$(hostname)" \
   --compression max \
-  --verbose \
-  --password-command "echo $RESTIC_PASSWORD"
+  --verbose
 
 BACKUP_EXIT=$?
 
@@ -138,13 +145,11 @@ echo "Applying retention policy: daily=$RESTIC_KEEP_DAILY weekly=$RESTIC_KEEP_WE
   --keep-daily "$RESTIC_KEEP_DAILY" \
   --keep-weekly "$RESTIC_KEEP_WEEKLY" \
   --keep-monthly "$RESTIC_KEEP_MONTHLY" \
-  --prune \
-  --tag "hostname-$(hostname)" \
-  --password-command "echo $RESTIC_PASSWORD"
+  --prune
 
 # Verify repository readability (5% sample)
 echo "Verifying repository (5% sample)..."
-"$RESTIC_BIN" check --read-data-subset=5% --password-command "echo $RESTIC_PASSWORD" 2>&1 || echo "Check skipped (slow on large repos)"
+"$RESTIC_BIN" check --read-data-subset=5% 2>&1 || echo "Check skipped (slow on large repos)"
 
 echo "=== Backup finished: $(date -Is) ==="
 send_telegram "📦 <b>Backup finished</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"

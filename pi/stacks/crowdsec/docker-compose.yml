@@ -15,6 +15,11 @@ services:
     image: crowdsecurity/crowdsec:v1.7.8
     container_name: crowdsec
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - proxy
     volumes:
@@ -39,6 +44,11 @@ services:
     image: python:3-alpine
     container_name: crowdsec-relay
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     network_mode: host
     volumes:
       - ../../config/crowdsec/webhook-relay:/relay:ro

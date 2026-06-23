@@ -16,8 +16,13 @@ services:
     image: authelia/authelia:4.38.0
     container_name: authelia-win
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
-      - "9091:9091"
+      - "127.0.0.1:9091:9091"
     networks:
       - proxy
     volumes:
@@ -37,6 +42,11 @@ services:
     image: redis:7-alpine
     container_name: authelia-redis-win
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - proxy
     volumes:

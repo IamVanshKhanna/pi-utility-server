@@ -17,7 +17,7 @@ authentication_backend:
       iterations: 3
       salt_length: 16
       parallelism: 4
-      memory: 64
+      memory: 65536
 
 access_control:
   default_policy: deny

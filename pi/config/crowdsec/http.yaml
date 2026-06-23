@@ -5,5 +5,7 @@ log_level: info
 format: |
   {{.|toJson}}
 
-url: http://192.168.68.59:8085/
+url: http://127.0.0.1:8085/
 method: POST
+headers:
+  Authorization: "Bearer ${RELAY_TOKEN}"
