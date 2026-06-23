@@ -29,7 +29,7 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - TZ=${TZ}
-    mem_limit: 512m
+    mem_limit: 256m
     cpus: 0.5
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
@@ -47,7 +47,7 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --save 60 1 --loglevel warning
-    mem_limit: 128m
+    mem_limit: 64m
     cpus: 0.25
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -82,7 +82,7 @@ services:
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS}
       - TZ=${TZ}
-    mem_limit: 1g
+    mem_limit: 256m
     cpus: 1.0
     labels:
       - "traefik.enable=true"
@@ -108,7 +108,7 @@ services:
       - WEBSOCKET_ENABLED=true
       - SIGNUPS_ALLOWED=false
       - TZ=${TZ}
-    mem_limit: 256m
+    mem_limit: 64m
     cpus: 0.5
     labels:
       - "traefik.enable=true"

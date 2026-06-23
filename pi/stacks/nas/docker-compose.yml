@@ -32,8 +32,8 @@ services:
         echo -e '[shared]\npath = /mnt/shared\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
         echo -e '[media]\npath = /mnt/media\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
         echo -e '[backup]\npath = /mnt/backup\nbrowseable = yes\nread only = no\nguest ok = yes\nforce user = root\nforce group = root' >> /etc/samba/smb.conf &&
-        addgroup -g ${PGID:-1000} vansh &&
-        adduser -u ${PUID:-1000} -G vansh -D -H -s /bin/false vansh &&
+        addgroup -g ${PGID:-1000} vansh 2>/dev/null || true &&
+        adduser -u ${PUID:-1000} -G vansh -D -H -s /bin/false vansh 2>/dev/null || true &&
         echo -e '${SAMBA_PASSWORD:-changeme}\n${SAMBA_PASSWORD:-changeme}' | smbpasswd -a -s vansh &&
         smbd -F -d 2
       "
@@ -42,8 +42,8 @@ services:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
       - SAMBA_PASSWORD=${SAMBA_PASSWORD:-changeme}
-    mem_limit: 256m
-    cpus: 0.5
+    mem_limit: 128m
+    cpus: 0.25
     labels:
       - "traefik.enable=false"
 
@@ -65,7 +65,7 @@ services:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
       - TZ=${TZ}
-    mem_limit: 128m
+    mem_limit: 64m
     cpus: 0.25
     labels:
       - "traefik.enable=true"

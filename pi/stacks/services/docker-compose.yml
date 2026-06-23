@@ -1,5 +1,0 @@
-# STACK: SERVICES (placeholder)
-# Vaultwarden moved to apps/ stack, Uptime Kuma moved to uptime-kuma/ stack
-# Kept for reference — do not deploy (container name conflicts with those stacks)
-
-services: {}

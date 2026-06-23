@@ -18,7 +18,7 @@ services:
       - proxy
     volumes:
       - uptime_kuma_data:/app/data
-    mem_limit: 128m
+    mem_limit: 192m
     cpus: 0.25
     labels:
       - "traefik.enable=true"

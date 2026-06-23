@@ -32,7 +32,7 @@ services:
       - WEB_PORT=8053
     cap_add:
       - NET_ADMIN
-    mem_limit: 256m
+    mem_limit: 64m
     cpus: 0.25
 
   pihole-exporter:
@@ -83,4 +83,4 @@ services:
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
     mem_limit: 64m
-    cpus: 0.25
+    cpus: 0.1

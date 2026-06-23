@@ -1,5 +1,0 @@
-# STACK: TRACING
-# Tempo migrated to Windows (homelab-ops-mesh).
-# Applications send traces to 100.74.111.26:4317 (OTLP gRPC) directly.
-
-services: {}

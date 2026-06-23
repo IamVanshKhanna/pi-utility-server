@@ -27,7 +27,7 @@ services:
     environment:
       - TZ=${TZ}
       - CROWDSEC_AGENCY_KEY=${CROWDSEC_API_KEY:-}
-    mem_limit: 256m
+    mem_limit: 128m
     cpus: 0.5
     cap_add:
       - NET_ADMIN

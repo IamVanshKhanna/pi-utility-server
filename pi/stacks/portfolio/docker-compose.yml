@@ -13,7 +13,7 @@ services:
       - proxy
     expose:
       - "8080"
-    mem_limit: 64m
+    mem_limit: 32m
     cpus: 0.25
     labels:
       - "traefik.enable=true"
