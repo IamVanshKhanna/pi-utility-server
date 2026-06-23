@@ -11,3 +11,9 @@ restep2.sh
 # Container-generated default configs (root-owned)
 pi/config/crowdsec/notifications/
 pi/config/crowdsec/webhook-relay/__init__.py
+
+# Secrets — contain real credentials (use .template versions instead)
+pi/config/authelia/users_database.yml
+windows/config/authelia/users_database.yml
+pi/config/traefik/dynamic.yml
+windows/config/alertmanager/alertmanager.yml

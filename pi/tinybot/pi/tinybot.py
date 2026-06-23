@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import asyncio
+import subprocess
 import urllib.request
 import urllib.parse
 import re
@@ -18,15 +19,44 @@ logger = logging.getLogger(__name__)
 TINYBOT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENV_PATH = os.path.join(TINYBOT_ROOT, ".env")
 
-BOT_TOKEN = None
-if os.path.exists(ENV_PATH):
-    with open(ENV_PATH) as f:
+
+def load_env(path):
+    data = {}
+    if not os.path.exists(path):
+        return data
+    with open(path) as f:
         for line in f:
             line = line.strip()
-            if line.startswith("TELEGRAM_BOT_TOKEN="):
-                BOT_TOKEN = line.split("=", 1)[1].strip().strip('"').strip("'")
-if not BOT_TOKEN:
-    BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+            if not line or line.startswith("#"):
+                continue
+            if "=" in line:
+                key, val = line.split("=", 1)
+                data[key.strip()] = val.strip().strip('"').strip("'")
+    return data
+
+
+_env = load_env(ENV_PATH)
+BOT_TOKEN = _env.get("TELEGRAM_BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN")
+ADMIN_CHAT_IDS = set()
+raw_ids = _env.get("ADMIN_CHAT_IDS") or os.environ.get("ADMIN_CHAT_IDS", "")
+for cid in raw_ids.split(","):
+    cid = cid.strip()
+    if cid:
+        ADMIN_CHAT_IDS.add(int(cid))
+
+
+def admin_only(func):
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not ADMIN_CHAT_IDS:
+            await update.message.reply_text("Bot misconfigured: no ADMIN_CHAT_IDS set.")
+            return
+        if update.message.chat_id not in ADMIN_CHAT_IDS:
+            logger.warning(f"Unauthorized access from chat_id={update.message.chat_id}")
+            await update.message.reply_text("Unauthorized.")
+            return
+        return await func(update, context)
+    wrapper.__name__ = func.__name__
+    return wrapper
 
 
 def search_web(query, max_results=4):
@@ -62,6 +92,7 @@ def search_web(query, max_results=4):
         return None
 
 
+@admin_only
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Hey! I'm TinyBot on a Raspberry Pi 4B.\n"
@@ -69,6 +100,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@admin_only
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "/help          - This message\n"
@@ -85,15 +117,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@admin_only
 async def fan_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    import subprocess
-
     args = " ".join(context.args).strip()
 
     FAN_STATE = "/tmp/fan_speed_val"
 
     if args == "auto":
-        subprocess.getoutput("sudo systemctl start deskpi.service 2>/dev/null")
+        subprocess.run(["sudo", "systemctl", "start", "deskpi.service"], capture_output=True, timeout=15)
         try:
             os.remove(FAN_STATE)
         except Exception:
@@ -104,8 +135,8 @@ async def fan_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if args in ("100", "75", "50", "25", "0"):
         speed = args
         speeds = {"100": "pwm_100", "75": "pwm_075", "50": "pwm_050", "25": "pwm_025", "0": "pwm_000"}
-        subprocess.getoutput("sudo systemctl stop deskpi.service 2>/dev/null")
-        subprocess.getoutput(f"echo {speeds[speed]} | sudo tee /dev/ttyUSB0 2>/dev/null")
+        subprocess.run(["sudo", "systemctl", "stop", "deskpi.service"], capture_output=True, timeout=15)
+        subprocess.run(["sudo", "tee", "/dev/ttyUSB0"], input=(speeds[speed] + "\n").encode(), capture_output=True, timeout=10)
         with open(FAN_STATE, "w") as f:
             f.write(speed)
         await update.message.reply_text(f"Fan set to {speed}%")
@@ -121,15 +152,18 @@ async def fan_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             temp = f"{val / 1000:.1f}C"
     except Exception:
         pass
-    raw = subprocess.getoutput("pinctrl 12 2>/dev/null").strip()
+    gpio_result = subprocess.run(["pinctrl", "12"], capture_output=True, text=True, timeout=10)
+    raw = gpio_result.stdout.strip()
     if "hi" in raw:
         gpio = "HIGH"
     elif "lo" in raw:
         gpio = "LOW"
     else:
         gpio = raw or "N/A"
-    deskpi = subprocess.getoutput("systemctl is-active deskpi.service 2>/dev/null").strip()
-    load = open("/proc/loadavg").read().split()[:3]
+    deskpi_result = subprocess.run(["systemctl", "is-active", "deskpi.service"], capture_output=True, text=True, timeout=10)
+    deskpi = deskpi_result.stdout.strip()
+    with open("/proc/loadavg") as f:
+        load = f.read().split()[:3]
     if deskpi == "active":
         fan_status = "AUTO (DeskPi PWM)"
     else:
@@ -150,6 +184,7 @@ async def fan_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@admin_only
 async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     import psutil
     cpu = psutil.cpu_percent(interval=1)
@@ -161,6 +196,9 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         temp = None
 
+    uptime_result = subprocess.run(["uptime", "-p"], capture_output=True, text=True, timeout=10)
+    uptime_str = uptime_result.stdout.strip() or "N/A"
+
     msg = (
         f"CPU: {cpu}%\n"
         f"RAM: {mem.percent}% ({mem.used // 1024 // 1024}MB / {mem.total // 1024 // 1024}MB)\n"
@@ -168,7 +206,7 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     if temp is not None:
         msg += f"Temp: {temp:.1f}C\n"
-    msg += f"Uptime: {os.popen('uptime -p 2>/dev/null').read().strip() or 'N/A'}"
+    msg += f"Uptime: {uptime_str}"
     await update.message.reply_text(msg.strip())
 
 
@@ -204,26 +242,36 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@admin_only
 async def docker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    import subprocess
     args = " ".join(context.args).strip().split(None, 1)
     action = args[0].lower() if args else "list"
     logger.info(f"/docker called with action={action} args={args}")
 
     if action == "close" and len(args) > 1:
         name = args[1]
-        logger.info(f"Stopping container: {name}")
-        out = subprocess.getoutput(f"docker stop {name} 2>&1")
+        ps_result = subprocess.run(["docker", "ps", "--format", "{{.Names}}"], capture_output=True, text=True, timeout=30)
+        running = ps_result.stdout.strip().splitlines()
+        if name not in running:
+            await update.message.reply_text(f"Container '{name}' not found in running containers.")
+            return
+        result = subprocess.run(["docker", "stop", name], capture_output=True, text=True, timeout=60)
+        out = result.stdout.strip() or result.stderr.strip()
         logger.info(f"Stop result: {out[:100]}")
-        await update.message.reply_text(f"Stopped: {name}\n{out}" if len(out) < 200 else f"Stopped: {name}")
+        await update.message.reply_text(f"Stopped: {name}" if len(out) < 200 else f"Stopped: {name}")
         return
 
     if action == "restart" and len(args) > 1:
         name = args[1]
-        logger.info(f"Restarting container: {name}")
-        out = subprocess.getoutput(f"docker restart {name} 2>&1")
+        ps_result = subprocess.run(["docker", "ps", "--format", "{{.Names}}"], capture_output=True, text=True, timeout=30)
+        running = ps_result.stdout.strip().splitlines()
+        if name not in running:
+            await update.message.reply_text(f"Container '{name}' not found in running containers.")
+            return
+        result = subprocess.run(["docker", "restart", name], capture_output=True, text=True, timeout=60)
+        out = result.stdout.strip() or result.stderr.strip()
         logger.info(f"Restart result: {out[:100]}")
-        await update.message.reply_text(f"Restarted: {name}\n{out}" if len(out) < 200 else f"Restarted: {name}")
+        await update.message.reply_text(f"Restarted: {name}" if len(out) < 200 else f"Restarted: {name}")
         return
 
     if action not in ("list", "close", "restart"):
@@ -231,7 +279,11 @@ async def docker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     logger.info("Listing containers")
-    raw = subprocess.getoutput("docker ps --format '{{.Names}}|{{.Status}}|{{.Ports}}' 2>&1")
+    ps_result = subprocess.run(
+        ["docker", "ps", "--format", "{{.Names}}|{{.Status}}|{{.Ports}}"],
+        capture_output=True, text=True, timeout=30
+    )
+    raw = ps_result.stdout
     logger.info(f"Raw output length: {len(raw)}")
     if not raw or raw.startswith("Cannot") or "error" in raw.lower():
         logger.warning(f"Docker list failed: {raw[:200]}")
@@ -264,6 +316,9 @@ async def docker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     if not BOT_TOKEN:
         logger.error("TELEGRAM_BOT_TOKEN not set.")
+        sys.exit(1)
+    if not ADMIN_CHAT_IDS:
+        logger.error("ADMIN_CHAT_IDS not set. Add comma-separated chat IDs to .env")
         sys.exit(1)
 
     import telegram

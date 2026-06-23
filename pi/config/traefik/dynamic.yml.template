@@ -1,0 +1,114 @@
+# dynamic.yml — Traefik dynamic configuration
+# Copy this template: cp dynamic.yml.template dynamic.yml
+# Generate basic-auth hash: echo $(htpasswd -nB admin) | sed -e 's/\$/\$\$/g'
+# NEVER commit the real dynamic.yml (it is in .gitignore)
+http:
+  middlewares:
+    authelia-forwardauth:
+      forwardAuth:
+        address: http://${WINDOWS_IP:-100.74.111.26}:9091/auth/api/verify
+        authResponseHeaders:
+        - Remote-User
+        - Remote-Groups
+        - Remote-Name
+        - Remote-Email
+        trustForwardHeader: false
+    authelia-forwardauth-2fa:
+      forwardAuth:
+        address: http://${WINDOWS_IP:-100.74.111.26}:9091/auth/api/verify?x=2
+        authResponseHeaders:
+        - Remote-User
+        - Remote-Groups
+        - Remote-Name
+        - Remote-Email
+        trustForwardHeader: false
+    basic-auth:
+      basicAuth:
+        users:
+        - REPLACE_WITH_htpasswd_hash
+    local-only:
+      ipWhiteList:
+        sourceRange:
+        - 127.0.0.1/32
+        - 192.168.0.0/16
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 200
+    secure-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        customResponseHeaders:
+          X-Robots-Tag: none,noarchive,nosnippet,notranslate,noimageindex
+          server: ''
+        forceSTSHeader: true
+        frameDeny: true
+        referrerPolicy: strict-origin-when-cross-origin
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+    strip-tempo:
+      stripPrefix:
+        prefixes:
+        - /tempo
+  routers:
+    authelia:
+      entrypoints:
+      - tailscale
+      rule: PathPrefix(`/auth`)
+      middlewares:
+      - secure-headers
+      service: authelia
+    infisical:
+      entrypoints:
+      - tailscale
+      rule: PathPrefix(`/secrets`)
+      middlewares:
+      - authelia-forwardauth
+      - secure-headers
+      service: infisical
+    grafana-win:
+      entrypoints:
+      - tailscale
+      rule: PathPrefix(`/grafana`)
+      middlewares:
+      - authelia-forwardauth
+      - secure-headers
+      service: grafana-win
+    tempo:
+      entrypoints:
+      - tailscale
+      rule: PathPrefix(`/tempo`)
+      middlewares:
+      - strip-tempo
+      - authelia-forwardauth
+      - secure-headers
+      service: tempo
+    traefik-dashboard:
+      entrypoints:
+      - web
+      middlewares:
+      - basic-auth
+      - local-only
+      rule: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+      service: api@internal
+  services:
+    authelia:
+      loadBalancer:
+        servers:
+        - url: http://${WINDOWS_IP:-100.74.111.26}:9091
+    infisical:
+      loadBalancer:
+        servers:
+        - url: http://${WINDOWS_IP:-100.74.111.26}:8083
+    grafana-win:
+      loadBalancer:
+        servers:
+        - url: http://${WINDOWS_IP:-100.74.111.26}:3000
+    tempo:
+      loadBalancer:
+        servers:
+        - url: http://${WINDOWS_IP:-100.74.111.26}:3200
