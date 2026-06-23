@@ -21,7 +21,7 @@ services:
       - crowdsec_data:/var/lib/crowdsec/data
       - crowdsec_config:/etc/crowdsec
       - ../../config/crowdsec/profiles.yaml:/etc/crowdsec/profiles.yaml:ro
-      - ../../config/crowdsec/notifications:/etc/crowdsec/notifications
+      - ../../config/crowdsec/http.yaml:/etc/crowdsec/notifications/http.yaml:ro
       - /var/log:/var/log/host:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     environment:

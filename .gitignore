@@ -7,3 +7,7 @@ __pycache__/
 *.pyc
 .gitignore_bak/
 restep2.sh
+
+# Container-generated default configs (root-owned)
+pi/config/crowdsec/notifications/
+pi/config/crowdsec/webhook-relay/__init__.py
