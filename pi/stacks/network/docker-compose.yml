@@ -40,6 +40,11 @@ services:
       - NET_ADMIN
     mem_limit: 64m
     cpus: 0.25
+    healthcheck:
+      test: ["CMD", "pihole-FTL", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   pihole-exporter:
     # Check latest: https://github.com/eko/pihole-exporter/releases
@@ -65,3 +70,8 @@ services:
       - "9617:9617"
     mem_limit: 32m
     cpus: 0.05
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9617/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

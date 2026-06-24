@@ -28,6 +28,11 @@ services:
       - '-config.file=/etc/promtail/config.yml'
     mem_limit: 96m
     cpus: 0.1
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   node-exporter:
     # Check latest: https://hub.docker.com/r/prom/node-exporter/tags
@@ -53,6 +58,11 @@ services:
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     mem_limit: 32m
     cpus: 0.1
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   cadvisor:
     # Check latest: https://github.com/google/cadvisor/releases
@@ -79,3 +89,8 @@ services:
       - /dev/kmsg
     mem_limit: 128m
     cpus: 0.25
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

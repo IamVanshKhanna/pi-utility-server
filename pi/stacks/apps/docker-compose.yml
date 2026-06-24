@@ -16,7 +16,7 @@ volumes:
 services:
 
   mariadb:
-    image: mariadb:11.4
+    image: mariadb:11.4.12
     container_name: mariadb
     restart: unless-stopped
     logging:
@@ -99,6 +99,12 @@ services:
       - TZ=${TZ}
     mem_limit: 256m
     cpus: 1.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/status.php"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nextcloud.rule=PathPrefix(`/cloud`)"
@@ -130,6 +136,11 @@ services:
       - TZ=${TZ}
     mem_limit: 64m
     cpus: 0.5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/alive"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vaultwarden-apps.rule=PathPrefix(`/vault`)"
