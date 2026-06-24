@@ -26,11 +26,11 @@ services:
     mem_limit: 192m
     cpus: 0.25
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 30s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.uptime-kuma.rule=PathPrefix(`/uptime`)"
