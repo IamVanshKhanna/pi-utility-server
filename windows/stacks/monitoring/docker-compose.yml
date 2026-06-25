@@ -89,7 +89,7 @@ services:
     ports:
       - "127.0.0.1:9093:9093"
     volumes:
-      - ../../config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ../../config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - ../../config/alertmanager/entrypoint.sh:/entrypoint.sh:ro
       - alertmanager_data:/alertmanager
     environment:
