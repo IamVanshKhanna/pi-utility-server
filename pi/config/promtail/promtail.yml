@@ -8,8 +8,7 @@ server:
 positions:
   filename: /tmp/positions.yaml
 
-clients:
-  - url: http://100.74.111.26:3100/loki/api/v1/push
+clients: []
 
 scrape_configs:
   - job_name: docker-containers

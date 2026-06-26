@@ -5,7 +5,7 @@ import signal
 import sys
 import urllib.request
 
-ALERTMANAGER_URL = os.environ.get("ALERTMANAGER_URL", "http://100.74.111.26:9093/api/v1/alerts")
+ALERTMANAGER_URL = os.environ.get("ALERTMANAGER_URL", "")
 RELAY_TOKEN = os.environ.get("RELAY_TOKEN", "")
 TIMEOUT = int(os.environ.get("TIMEOUT", "10"))
 MAX_BODY = 1 * 1024 * 1024  # 1MB
