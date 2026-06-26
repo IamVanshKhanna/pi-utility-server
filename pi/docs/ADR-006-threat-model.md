@@ -4,10 +4,10 @@
 Accepted
 
 ## Context
-The homelab-prod v1.4 introduces authentication (Authelia), DNS-01 TLS, intrusion detection (CrowdSec), and supply chain security (Syft+Cosign). We need a documented threat model.
+The homelab-ops-mesh v1.4 introduces authentication (Authelia), DNS-01 TLS, intrusion detection (CrowdSec), and supply chain security (Syft+Cosign). We need a documented threat model.
 
 ## Decision
-Use **STRIDE** methodology to model threats to the homelab-prod system.
+Use **STRIDE** methodology to model threats to the homelab-ops-mesh system.
 
 ## STRIDE Analysis
 

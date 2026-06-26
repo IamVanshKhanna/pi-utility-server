@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Rewrite help_command and add setMyCommands to the Hermes bot."""
-path = "/home/vansh/pi4homelab/pi/tinybot/pi/telegram_bot.py"
+path = "/home/vansh/homelab-ops-mesh/pi/tinybot/pi/telegram_bot.py"
 with open(path) as f:
     lines = f.readlines()
 

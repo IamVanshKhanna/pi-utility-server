@@ -1,17 +1,17 @@
-# Step-by-Step Setup Guide — homelab-prod v1.2
+# Step-by-Step Setup Guide — homelab-ops-mesh
 
-> Full setup from blank SSD to fully running homelab on Raspberry Pi 4B 4GB.
+> Full setup from blank SSD to fully running multi-node homelab on Raspberry Pi 4B 4GB + Windows Docker Desktop.
 
 ---
 
 ## Phase 1 — Flash OS to SSD
 
 1. Download **Raspberry Pi Imager** on your computer
-2. Select: `Raspberry Pi OS Lite (64-bit)` — Bookworm
+2. Select: `Raspberry Pi OS Lite (64-bit)` — Bookworm/Trixie
 3. Select your 2TB SSD as target (via USB adapter)
 4. Click gear icon and set:
-   - Hostname: `homelab`
-   - Enable SSH with password
+   - Hostname: `autobot`
+   - Enable SSH with publickey only
    - Username: `vansh`, strong password
    - Timezone: `Australia/Melbourne`
 5. Flash and insert SSD into DeskPi3 Pro
@@ -38,8 +38,8 @@ Set static IP via router DHCP reservation (preferred) OR:
 sudo nano /etc/dhcpcd.conf
 # Add:
 interface eth0
-static ip_address=192.168.1.50/24
-static routers=192.168.1.1
+static ip_address=192.168.68.59/24
+static routers=192.168.68.1
 static domain_name_servers=1.1.1.1 8.8.8.8
 ```
 
@@ -53,21 +53,21 @@ sudo reboot
 
 ```bash
 sudo apt-get install -y git
-git clone https://github.com/IamVanshKhanna/homelab-prod.git
-cd homelab-prod
-chmod +x scripts/setup.sh
-sudo bash scripts/setup.sh
+git clone https://github.com/IamVanshKhanna/homelab-ops-mesh.git
+cd homelab-ops-mesh/pi
+chmod +x scripts/*.sh
+bash scripts/setup.sh
 ```
 
 Log out and back in after completion (Docker group permissions):
 ```bash
 exit
-ssh vansh@192.168.1.50
+ssh vansh@192.168.68.59
 ```
 
 ---
 
-## Phase 5 — Configure Environment (v1.2)
+## Phase 5 — Configure Environment
 
 ```bash
 cp .env.example .env
@@ -78,101 +78,110 @@ Fill in every value. Generate strong passwords:
 ```bash
 openssl rand -base64 32           # general passwords
 openssl rand -base64 48           # Vaultwarden admin token
-openssl rand -base64 32           # Restore backup password
-echo $(htpasswd -nB admin) | sed -e 's/$/$$/g'  # Traefik basic auth
+openssl rand -base64 32           # Restic encryption password
 ```
 
 > Never commit your `.env` — it is in `.gitignore`
 
-**Required variables for v1.2:**
-- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` — for Alertmanager alerts
+**Required variables:**
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` — for Alertmanager alerts + TinyBot
+- `ADMIN_CHAT_IDS` — TinyBot admin authorization
+- `RELAY_TOKEN` — CrowdSec relay bearer token
 - `RESTIC_PASSWORD` — Restic repo encryption
-- `B2_ACCOUNT_ID`, `B2_ACCOUNT_KEY`, `B2_BUCKET` — Backblaze B2
-- `RESTIC_REPOSITORY=b2:${B2_BUCKET}:homelab-prod`
+- `BACKUP_DIR` — Backup destination (default: `/mnt/nas/backup`)
+- `WINDOWS_IP` — Windows Tailscale IP for cross-node routing
+- `DOMAIN` — Tailscale MagicDNS domain (e.g. `autobot.taila24d04.ts.net`)
+- `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` — Nextcloud/MariaDB
+- `NEXTCLOUD_ADMIN_USER`, `NEXTCLOUD_ADMIN_PASSWORD`, `NEXTCLOUD_TRUSTED_DOMAINS`
+- `CROWDSEC_API_KEY` — CrowdSec API key
+- `PI_IP` — Pi's Tailscale IP for Prometheus scrape targets
 
-**Infisical variables (generated on first deploy):**
-- `INFISICAL_AUTH_SECRET` — `openssl rand -base64 32`
-- `INFISICAL_ENCRYPTION_KEY` — `openssl rand -base64 32`
-- `INFISICAL_REDIS_PASSWORD` — `openssl rand -base64 32`
-- `INFISICAL_DB_PASSWORD` — `openssl rand -base64 32`
-
-> Never commit your `.env` — it is in `.gitignore`
-
----
-
-## Phase 6 — Free Domain (DuckDNS) + TLS
-
-1. Sign in at https://www.duckdns.org
-2. Create subdomain e.g. `myhomelab.duckdns.org`
-3. Point to your home public IP
-4. Auto-update cron on Pi:
-```bash
-mkdir -p ~/duckdns
-nano ~/duckdns/duck.sh
-# Paste:
-echo url="https://www.duckdns.org/update?domains=YOUR_SUBDOMAIN&token=YOUR_TOKEN&ip=" | curl -k -o ~/duckdns/duck.log -K -
-chmod +x ~/duckdns/duck.sh
-crontab -e
-# Add: */5 * * * * ~/duckdns/duck.sh >/dev/null 2>&1
-```
-5. Forward on router: `80 TCP`, `443 TCP`, `51820 UDP` → `192.168.1.50`
+> Also copy `.template` files to real files and fill in real values:
+> - `pi/config/traefik/dynamic.yml.template` → `dynamic.yml`
+> - `pi/config/authelia/users_database.yml.template` → `users_database.yml`
+> - `pi/config/alertmanager/alertmanager.yml.template` → `alertmanager.yml`
+> - `windows/config/alertmanager/alertmanager.yml.template` → `alertmanager.yml`
+> - `windows/config/authelia/users_database.yml.template` → `users_database.yml`
 
 ---
 
-## Phase 7 — Deploy Stacks In Order (v1.2)
+## Phase 6 — Tailscale Setup + HTTPS
 
 ```bash
-cd ~/homelab-prod
-
-# 1. Core (Traefik + Portainer) - ALWAYS FIRST
-make up-phase1
-docker logs traefik --tail 20
-
-# Wait for Traefik certs (check logs for ACME success)
-
-# 2. Secrets (Infisical) - NEW in v1.2
-make up-phase2
-docker logs infisical --tail 20
-# Wait for Infisical to be healthy
-
-# On first Infisical deploy:
-# 1. Visit https://infisical.yourdomain.com
-# 2. Create admin account
-# 3. Create project "homelab-prod"
-# 4. Add all .env secrets as Infisical secrets (see docs/ADR-004-secrets.md)
-# 4. Generate AUTH_SECRET, ENCRYPTION_KEY, REDIS_PASSWORD in Infisical if not in .env
-
-# 3. Monitoring (Prometheus, Grafana, Loki, Promtail, Alertmanager, Node Exporter, cAdvisor)
-make up-phase3
-docker logs grafana --tail 10
-
-# 4. Apps (Nextcloud + MariaDB + Redis, Vaultwarden, Ollama)
-make up-phase4
-# Wait 2-3 mins for Nextcloud DB init
-docker logs nextcloud --tail 20
-
-# Pull Ollama model (use small models on 4GB RAM)
-docker exec ollama ollama pull gemma:2b
-
-# 5. Smart Home (Home Assistant)
-make up-phase5
-
-# 6. Uptime Kuma (external monitoring)
-make up-phase6
-```
-
----
-
-## Phase 8 — Tailscale Remote Access
-
-```bash
-# Run on Pi (after setup.sh, which installs Tailscale)
-sudo tailscale up --ssh --advertise-exit-node --hostname=AutoBot
+# On Pi (after setup.sh, which installs Tailscale)
+sudo tailscale up --ssh --advertise-exit-node --hostname=autobot
 # Visit the auth URL, login to Tailscale
+
+# Enable Tailscale Serve for HTTPS
+sudo tailscale serve https+insecure://localhost:8443
 
 # On your laptop/phone:
 # Install Tailscale app, login to same tailnet
-# ssh vansh@AutoBot  # Works via MagicDNS!
+# ssh vansh@autobot  # Works via MagicDNS!
+```
+
+No domain purchase needed — Tailscale MagicDNS provides zero-cost HTTPS.
+
+---
+
+## Phase 7 — Deploy Pi Stacks In Order
+
+```bash
+cd ~/homelab-ops-mesh/pi
+
+# 1. Core (Traefik + Portainer) - ALWAYS FIRST
+docker compose -f stacks/core/docker-compose.yml --env-file ../../.env up -d
+docker logs traefik --tail 20
+
+# Wait for Traefik to be healthy
+
+# 2. Network (Pi-hole + exporter)
+docker compose -f stacks/network/docker-compose.yml --env-file ../../.env up -d
+
+# 3. Monitoring (Promtail + cAdvisor + Node Exporter)
+docker compose -f stacks/monitoring/docker-compose.yml --env-file ../../.env up -d
+
+# 4. NAS (Samba + Syncthing)
+docker compose -f stacks/nas/docker-compose.yml --env-file ../../.env up -d
+
+# 5. Apps (Nextcloud + MariaDB + Vaultwarden)
+docker compose -f stacks/apps/docker-compose.yml --env-file ../../.env up -d
+# Wait 2-3 mins for Nextcloud DB init
+docker logs nextcloud --tail 20
+
+# 6. Smart Home (Home Assistant)
+docker compose -f stacks/smarthome/docker-compose.yml --env-file ../../.env up -d
+
+# 7. Uptime Kuma
+docker compose -f stacks/uptime-kuma/docker-compose.yml --env-file ../../.env up -d
+
+# 8. CrowdSec + Relay
+docker compose -f stacks/crowdsec/docker-compose.yml --env-file ../../.env up -d
+
+# 9. Portfolio
+docker compose -f stacks/portfolio/docker-compose.yml --env-file ../../.env up -d
+```
+
+---
+
+## Phase 8 — Deploy Windows Stacks
+
+On your Windows machine with Docker Desktop:
+
+```bash
+cd homelab-ops-mesh/windows
+
+# 1. Auth (Authelia + Redis) - creates homelab_win network
+docker compose -f stacks/auth/docker-compose.yml --env-file ../.env up -d
+
+# 2. Monitoring (Grafana, Prometheus, Alertmanager, Loki)
+docker compose -f stacks/monitoring/docker-compose.yml --env-file ../.env up -d
+
+# 3. Secrets (Infisical + PostgreSQL + Redis)
+docker compose -f stacks/secrets/docker-compose.yml --env-file ../.env up -d
+
+# 4. Tracing (Tempo)
+docker compose -f stacks/tracing/docker-compose.yml --env-file ../.env up -d
 ```
 
 ---
@@ -186,32 +195,22 @@ crontab -e
 Add:
 ```bash
 # Daily backup at 3am (with alerting on failure)
-0 3 * * * /home/vansh/pi4homelab/pi/scripts/backup-wrapper.sh >> /var/log/homelab-backup.log 2>&1
+0 3 * * * /home/vansh/homelab-ops-mesh/pi/scripts/backup-wrapper.sh >> /var/log/homelab-backup.log 2>&1
 
 # Health check every 15 minutes
-*/15 * * * * /home/vansh/pi4homelab/pi/scripts/health-check.sh >> /var/log/homelab-health.log 2>&1
+*/15 * * * * /home/vansh/homelab-ops-mesh/pi/scripts/health-check.sh >> /var/log/homelab-health.log 2>&1
 
 # Weekly update Sunday 4am
-0 4 * * 0 /home/vansh/pi4homelab/pi/scripts/update.sh >> /var/log/homelab-update.log 2>&1
-
-# DuckDNS update every 5 minutes
-*/5 * * * * ~/duckdns/duck.sh >/dev/null 2>&1
+0 4 * * 0 /home/vansh/homelab-ops-mesh/pi/scripts/update.sh >> /var/log/homelab-update.log 2>&1
 ```
 
 ---
 
-## Phase 10 — Verify (v1.2)
+## Phase 10 — Verify
 
 ```bash
-# Full health check (includes Infisical, Loki, Alertmanager, Uptime Kuma)
-make verify-v1
-
-# Or individually:
-bash scripts/health-check.sh --strict
-
-# Check backup
-make verify-backup
-make restore-test
+# Full health check
+bash scripts/health-check.sh
 
 # Check key metrics
 docker ps
@@ -222,67 +221,36 @@ free -h                 # Check RAM + ZRAM
 
 ---
 
-## Service Access URLs (v1.2)
+## Service Access URLs
 
-| Service | URL |
-|---------|-----|
-| Traefik dashboard | https://traefik.yourdomain.com |
-| Portainer | https://portainer.yourdomain.com |
-| **Infisical** | https://infisical.yourdomain.com |
-| Nextcloud | https://cloud.yourdomain.com |
-| Vaultwarden | https://vault.yourdomain.com |
-| Grafana | https://grafana.yourdomain.com |
-| Home Assistant | http://192.168.1.50:8123 |
-| Pi-hole | http://192.168.1.50:8053/admin |
-| Ollama API | http://192.168.1.50:11434 |
-| Prometheus | http://192.168.1.50:9090 |
-| Alertmanager | http://192.168.1.50:9093 |
-| Loki | http://192.168.1.50:3100 |
-| Uptime Kuma | https://uptime.yourdomain.com |
-| Promtail | http://192.168.1.50:9080 |
+All services accessible via Tailscale MagicDNS at `https://autobot.taila24d04.ts.net/<path>`:
+
+| Service | Path | Notes |
+|---------|------|-------|
+| Traefik dashboard | `/dashboard/` | Basic auth |
+| Portainer | 127.0.0.1:9000 | Local only |
+| Pi-hole admin | 127.0.0.1:8053 | Local only |
+| Nextcloud | `/nextcloud/` | File cloud |
+| Vaultwarden | `/vault/` | Password manager |
+| Home Assistant | `/hass/` | Home automation |
+| Grafana | `/grafana/` | Dashboards (Windows) |
+| Authelia | `/auth/` | SSO login (Windows) |
+| Infisical | `/secrets/` | Secrets management (Windows) |
+| Uptime Kuma | 127.0.0.1:8082 | Local only |
 
 ---
 
-## Grafana Dashboards (pre-provisioned)
-
-- **Homelab System Overview** — RAM, CPU, temp, disk
-- **Homelab Containers** — per-container resources, network, disk I/O
-
-Access via Grafana → Dashboards → Homelab folder.
-
----
-
-## Logs & Alerts
-
-- **Loki + Promtail**: Centralized container logs in Grafana (Explore → Loki)
-- **Alertmanager**: Telegram alerts for critical/warning rules
-- **Prometheus Rules**: See `config/prometheus/rules/homelab.yml`
-
-Configure Telegram:
-1. Message @BotFather on Telegram → `/newbot`
-2. Copy `TELEGRAM_BOT_TOKEN` to `.env`
-3. Message @userinfobot → copy `TELEGRAM_CHAT_ID` to `.env`
-4. Restart Alertmanager: `docker compose -f stacks/monitoring/docker-compose.yml restart alertmanager`
-
----
-
-## Backup & Restore (v1.2)
+## Backup & Restore
 
 ```bash
-# Manual backup (with alerting on failure)
-make backup
-# Or use wrapper for cron:
-# /home/vansh/pi4homelab/pi/scripts/backup-wrapper.sh
+# Manual backup (with Telegram alerting on failure)
+bash ~/homelab-ops-mesh/pi/scripts/backup.sh
 
 # Verify backup
-make verify-backup
+restic -r /mnt/nas/backup/restic-repo check
 
-# Test restore (to /mnt/restore-test)
-make restore-test
-# Or:
-make restore SNAPSHOT=latest
-# Or manual:
-restic -r b2:bucket:pi4b restore latest --target /mnt/restore-test
+# Test restore
+restic -r /mnt/nas/backup/restic-repo restore latest --target /mnt/restore-test
 ```
 
 ---
@@ -290,34 +258,10 @@ restic -r b2:bucket:pi4b restore latest --target /mnt/restore-test
 ## Updates
 
 ```bash
-# Pull latest images and restart
-make down-all
-make up-all
+# Use update script
+bash ~/homelab-ops-mesh/pi/scripts/update.sh
 
-# Or use update script
-/home/vansh/pi4homelab/pi/scripts/update.sh
+# Or manually per stack
+docker compose -f stacks/<stack>/docker-compose.yml --env-file ../../.env pull
+docker compose -f stacks/<stack>/docker-compose.yml --env-file ../../.env up -d
 ```
-
----
-
-## Infisical Setup (Post-Deploy)
-
-After `make up-phase2`:
-
-1. Visit https://infisical.yourdomain.com
-2. Create admin account
-3. Create project: **homelab-prod**
-4. Add secrets from your `.env`:
-   - Copy each secret from `.env` to Infisical project
-   - Use same names (e.g., `MYSQL_PASSWORD`, `VAULTWARDEN_ADMIN_TOKEN`)
-5. (Optional) Generate in Infisical:
-   - `AUTH_SECRET`, `ENCRYPTION_KEY`, `REDIS_PASSWORD`, `DB_PASSWORD`
-   - Update `.env` with Infisical-generated values if desired
-6. For CI/CD deploy, use Infisical CLI:
-   ```bash
-   # Install: brew install infisical/get-cli/infisical
-   infisical login
-   infisical run --projectId=... --env=production -- docker compose up -d
-   ```
-
-See `docs/ADR-004-secrets.md` for architecture decisions.

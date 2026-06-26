@@ -11,7 +11,7 @@ const projects = [
   {
     title: 'Traefik + Tailscale HTTPS',
     description: 'Zero-cost HTTPS via Tailscale MagicDNS. Traefik v3 reverse proxy handles routing, Tailscale Serve terminates TLS. No paid domain or Let\'s Encrypt needed.',
-    tech: ['Traefik v3', 'Tailscale', 'Docker', 'WireGuard'],
+    tech: ['Traefik v3', 'Tailscale', 'Docker'],
     stack: 'stacks/core/',
   },
   {
@@ -19,18 +19,21 @@ const projects = [
     description: 'Prometheus metrics, Loki logs, Tempo traces, Grafana dashboards, Alertmanager alerts. OTel collector for unified instrumentation.',
     tech: ['Prometheus', 'Grafana', 'Loki', 'Tempo', 'OTel', 'Alertmanager'],
     stack: 'stacks/monitoring/',
+    host: 'windows',
   },
   {
     title: 'CrowdSec + Authelia Security',
     description: 'Intrusion detection with CrowdSec community blocklists. Authelia SSO with 2FA for all web services. Zero-trust network.',
     tech: ['CrowdSec', 'Authelia', 'Redis', '2FA'],
     stack: 'stacks/auth/',
+    host: 'windows',
   },
   {
     title: 'Infisical Secrets Platform',
     description: 'Self-hosted secrets management with Infisical. Centralized secrets for all stacks, replacing scattered .env files.',
     tech: ['Infisical', 'PostgreSQL', 'Redis'],
     stack: 'stacks/secrets/',
+    host: 'windows',
   },
   {
     title: 'NAS - Samba + Syncthing',
@@ -69,7 +72,7 @@ const projects = [
             <span class="text-xs px-2 py-1 rounded-full bg-brand/20 text-brand-light">{t}</span>
           ))}
         </div>
-        <a href={`https://github.com/IamVanshKhanna/homelab-ops-mesh/tree/master/pi/${project.stack}`} class="text-xs text-text-muted hover:text-brand-light transition-colors">
+        <a href={`https://github.com/IamVanshKhanna/homelab-ops-mesh/tree/master/${project.host || 'pi'}/${project.stack}`} class="text-xs text-text-muted hover:text-brand-light transition-colors">
           View source on GitHub &rarr;
         </a>
       </article>

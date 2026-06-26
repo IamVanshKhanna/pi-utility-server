@@ -36,7 +36,7 @@ Use **Infisical** (self-hosted) for v1.2+.
 ## Implementation Plan (v1.2)
 1. Deploy Infisical stack (PostgreSQL + Redis + Infisical) in new `secrets` phase
 2. Generate `AUTH_SECRET`, `ENCRYPTION_KEY`, `REDIS_PASSWORD` in `.env`
-3. On first login, create project "homelab-prod", add all `.env` secrets
+3. On first login, create project "homelab-ops-mesh", add all `.env` secrets
 4. Update deploy: `infisical run --projectId=... --env=production -- docker compose up -d`
 5. Remove plaintext secrets from `.env` (keep only Infisical config)
 6. Document rotation procedure

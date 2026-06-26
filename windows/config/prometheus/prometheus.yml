@@ -25,6 +25,7 @@ scrape_configs:
     static_configs:
       - targets: ['loki:3100']
 
+  # Pi scrape targets — update these if Pi's Tailscale IP changes
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['100.127.191.2:9100']

@@ -1,10 +1,10 @@
 # Secret Rotation Procedure
 
-> This document describes how to rotate secrets in the homelab-prod infrastructure using Infisical.
+> This document describes how to rotate secrets in the homelab-ops-mesh infrastructure.
 
 ## Overview
 
-All secrets are managed in **Infisical** (https://infisical.yourdomain.com). Rotation involves:
+All secrets are managed in **Infisical** (accessible at `https://autobot.taila24d04.ts.net/secrets/`). Rotation involves:
 1. Generating new secret values
 2. Updating in Infisical
 3. Restarting affected services
@@ -33,7 +33,7 @@ All secrets are managed in **Infisical** (https://infisical.yourdomain.com). Rot
 NEW_PASS=$(openssl rand -base64 32)
 
 # 2. Update in Infisical UI
-# Navigate to: Project → homelab-prod → Secrets
+# Navigate to: Project → homelab-ops-mesh → Secrets
 # Update: MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD, POSTGRES_PASSWORD
 
 # 3. Update database users
@@ -56,17 +56,17 @@ make verify-health
 **Steps:**
 1. Generate new token in provider's console
 2. Update in Infisical: `TELEGRAM_BOT_TOKEN`, `B2_ACCOUNT_KEY`, `CF_DNS_API_TOKEN`
-3. Restart affected services:
+3.    Restart affected services:
    ```bash
-   # For Telegram (alertmanager, backup-alert, daily-summary)
+   # For Telegram (alertmanager on Windows)
+   # From the Windows machine:
    docker compose -f stacks/monitoring/docker-compose.yml restart alertmanager
-   systemctl restart homelab-daily-summary.timer
    
-   # For B2 (backup)
-   ./scripts/backup-wrapper.sh  # test
+   # For daily-summary timer (on Pi)
+   systemctl --user restart homelab-daily-summary.timer
    
-   # For Cloudflare (Traefik DNS-01)
-   docker compose -f stacks/core/docker-compose.yml restart traefik
+   # For backup (on Pi)
+   bash ~/homelab-ops-mesh/pi/scripts/backup.sh  # test
    ```
 4. Verify: `make verify-v1`
 
@@ -88,7 +88,8 @@ STORAGE_ENCRYPTION_KEY=$(openssl rand -base64 32)
 # Generate new argon2id hashes:
 # docker run --rm authelia/authelia:4.38.0 authelia crypto hash generate argon2id --password 'new-password'
 
-# 3. Restart Authelia
+# 3. Restart Authelia (on Windows)
+# From the Windows machine:
 docker compose -f stacks/auth/docker-compose.yml restart authelia
 
 # 3. Verify
@@ -102,9 +103,10 @@ curl -sf http://localhost:9091/api/healthz
 **Steps:**
 1. Generate new key at https://app.crowdsec.net
 2. Update `CROWDSEC_API_KEY` in Infisical
-3. Restart CrowdSec:
-   ```bash
-   docker compose -f stacks/crowdsec/docker-compose.yml restart crowdsec
+3. Restart CrowdSec (on Pi):
+    ```bash
+    cd ~/homelab-ops-mesh/pi
+    docker compose -f stacks/crowdsec/docker-compose.yml --env-file ../../.env restart crowdsec
    ```
 4. Verify: `cscli decisions list`
 

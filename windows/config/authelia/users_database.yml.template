@@ -1,0 +1,8 @@
+users:
+  vansh:
+    displayname: "Vansh"
+    password: "$argon2id$v=19$m=65536,t=3,p=4$<replace-with-your-salt>$<replace-with-your-hash>"
+    email: your-email@example.com
+    groups:
+      - admins
+      - users

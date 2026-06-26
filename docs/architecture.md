@@ -18,7 +18,6 @@ graph TB
     subgraph PiStacks["Pi 4B (always-on)"]
         TRAEFIK[Traefik - Reverse Proxy]
         DNS[Pi-hole - DNS Filter]
-        WG[WireGuard - VPN]
         VW[Vaultwarden - Passwords]
         HA[Home Assistant - Automation]
         ST[Syncthing - File Sync]
@@ -44,13 +43,6 @@ graph TB
         INF[Infisical - Secrets]
     end
 
-    subgraph NAS["/mnt/nas/ storage"]
-        SHARED[/mnt/nas/shared]
-        MEDIA[/mnt/nas/media]
-        SYNC[/mnt/nas/sync]
-        BACKUP[/mnt/nas/backup]
-    end
-
     TL -->|HTTPS:443| TRAEFIK
     TRAEFIK -->|port 80/443| TS
     TRAEFIK -->|pi stacks| VW
@@ -68,7 +60,6 @@ graph TB
     PI -->|OTLP| TEMPO
 
     DNS -->|DNS:53| TL
-    WG -->|VPN:51820| TL
 ```
 
 ## Traffic flow
@@ -104,7 +95,6 @@ Scheduled health reports sent every 6 hours via cron -> `send_health.py`.
 ### Pi 4B (always-on, 4GB RAM)
 - Traefik (reverse proxy, TLS termination, Tailscale entrypoint)
 - Pi-hole (DNS filtering)
-- WireGuard (VPN)
 - Vaultwarden (password manager)
 - Home Assistant (home automation)
 - Syncthing (file sync)

@@ -46,8 +46,8 @@ This is primarily a personal homelab project, but improvements, fixes, and sugge
 
 ```bash
 # Clone the repo
-git clone https://github.com/IamVanshKhanna/homelab-prod.git
-cd homelab-prod
+git clone https://github.com/IamVanshKhanna/homelab-ops-mesh.git
+cd homelab-ops-mesh
 
 # Copy env example
 cp .env.example .env

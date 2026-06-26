@@ -17,22 +17,20 @@ const topologyDiagram = ` Internet
     +--- /auth/        (Phase 2: Windows)
     +--- /secrets/     (Phase 2: Windows)
     |
-    +--- 27 containers total
+    +--- 28 containers total
     |
 [ Pi 4B : 100.127.191.2 ]  <--- Tailscale mesh --->  [ Windows : 100.74.111.26 ]
     |                                                      |
     +-- Pi-hole (DNS:53)                                  +-- Docker Desktop
-    +-- WireGuard (VPN:51820)                             +-- Heavy compute
-    +-- TinyBot (Telegram)                                +-- Phase 2 targets
-    +-- /mnt/nas/ storage
+    +-- TinyBot (Telegram)                                +-- Heavy compute
+    +-- /mnt/nas/ storage                                 +-- Phase 2 targets
 `;
 ---
 
 <Base title="Architecture">
   <h1 class="text-4xl font-bold mb-4 text-brand-light">Architecture</h1>
   <p class="text-lg text-text-muted mb-12 max-w-2xl">
-    Two nodes connected via Tailscale mesh VPN. The Pi 4B runs 27 containers as the always-on core.
-    Heavy stacks migrate to Windows in Phase 2.
+    Two nodes connected via Tailscale mesh VPN. The Pi 4B runs 18 containers as the always-on core, Windows runs 10 for heavy compute.
   </p>
 
   <section class="mb-16">
@@ -65,14 +63,14 @@ const topologyDiagram = ` Internet
         </thead>
         <tbody class="divide-y divide-surface-light">
           <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">core</td><td class="px-4 py-2 text-text-muted">traefik, portainer</td><td class="px-4 py-2 text-text-muted">Reverse proxy, Docker UI</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">network</td><td class="px-4 py-2 text-text-muted">pihole, wireguard</td><td class="px-4 py-2 text-text-muted">DNS ad-blocking, VPN</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">services</td><td class="px-4 py-2 text-text-muted">vaultwarden, uptime-kuma</td><td class="px-4 py-2 text-text-muted">Passwords, uptime monitoring</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">network</td><td class="px-4 py-2 text-text-muted">pihole, pihole-exporter</td><td class="px-4 py-2 text-text-muted">DNS ad-blocking + metrics</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">apps</td><td class="px-4 py-2 text-text-muted">nextcloud, vaultwarden, mariadb</td><td class="px-4 py-2 text-text-muted">Cloud, passwords</td></tr>
           <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">nas</td><td class="px-4 py-2 text-text-muted">samba, syncthing</td><td class="px-4 py-2 text-text-muted">File sharing, sync</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">apps</td><td class="px-4 py-2 text-text-muted">nextcloud, homeassistant, mariadb</td><td class="px-4 py-2 text-text-muted">Cloud, automation</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">monitoring</td><td class="px-4 py-2 text-text-muted">grafana, prometheus, loki, tempo</td><td class="px-4 py-2 text-text-muted">Observability (Phase 2: Windows)</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">auth</td><td class="px-4 py-2 text-text-muted">authelia, redis</td><td class="px-4 py-2 text-text-muted">SSO with 2FA (Phase 2: Windows)</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">security</td><td class="px-4 py-2 text-text-muted">crowdsec, crowdsec-db</td><td class="px-4 py-2 text-text-muted">Intrusion detection (Phase 2: Windows)</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">secrets</td><td class="px-4 py-2 text-text-muted">infisical, postgres, redis</td><td class="px-4 py-2 text-text-muted">Secrets management (Phase 2: Windows)</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">smarthome</td><td class="px-4 py-2 text-text-muted">homeassistant</td><td class="px-4 py-2 text-text-muted">Home automation</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">monitoring</td><td class="px-4 py-2 text-text-muted">promtail, cadvisor, node-exporter</td><td class="px-4 py-2 text-text-muted">Log shipping, metrics (Pi side)</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">crowdsec</td><td class="px-4 py-2 text-text-muted">crowdsec, relay</td><td class="px-4 py-2 text-text-muted">Intrusion detection + alert relay</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">uptime-kuma</td><td class="px-4 py-2 text-text-muted">uptime-kuma</td><td class="px-4 py-2 text-text-muted">Uptime monitoring</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">portfolio</td><td class="px-4 py-2 text-text-muted">astro site</td><td class="px-4 py-2 text-text-muted">Project showcase</td></tr>
         </tbody>
       </table>
     </div>
@@ -83,11 +81,11 @@ const topologyDiagram = ` Internet
     <div class="space-y-4">
       <div class="border-l-4 border-green-500 pl-4">
         <h3 class="font-semibold text-green-400">Phase 1 - Pi Core (Done)</h3>
-        <p class="text-sm text-text-muted">27 containers, NAS, TinyBot, Tailscale, automated backups. K3s removed, swap off, zram only.</p>
+        <p class="text-sm text-text-muted">18 containers, NAS, TinyBot, Tailscale, automated backups. K3s removed, swap off, zram only.</p>
       </div>
-      <div class="border-l-4 border-yellow-500 pl-4">
-        <h3 class="font-semibold text-yellow-400">Phase 2 - Windows Migration (Next)</h3>
-        <p class="text-sm text-text-muted">Move monitoring (Grafana, Prometheus, Loki), auth (Authelia), and secrets (Infisical) to Windows Docker Desktop. Frees ~9.8GB on Pi.</p>
+      <div class="border-l-4 border-green-500 pl-4">
+        <h3 class="font-semibold text-green-400">Phase 2 - Windows Migration (Done)</h3>
+        <p class="text-sm text-text-muted">Monitoring (Grafana, Prometheus, Loki, Tempo, Alertmanager), auth (Authelia), and secrets (Infisical) on Windows Docker Desktop. 10 containers.</p>
       </div>
       <div class="border-l-4 border-text-muted pl-4">
         <h3 class="font-semibold text-text-muted-foreground">Phase 3 - Polish (Todo)</h3>

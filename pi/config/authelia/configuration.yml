@@ -7,7 +7,7 @@ log:
   level: info
 
 totp:
-  issuer: homelab-prod
+  issuer: homelab-ops-mesh
 
 authentication_backend:
   file:
@@ -22,7 +22,7 @@ authentication_backend:
 access_control:
   default_policy: deny
   rules:
-    - domain: "192.168.68.59"
+    - domain: "autobot.taila24d04.ts.net"
       policy: one_factor
 
 session:
@@ -30,7 +30,7 @@ session:
   secret: "${AUTHELIA_SESSION_SECRET}"
   expiration: 3600
   inactivity: 1800
-  domain: "192.168.68.59"
+  domain: "autobot.taila24d04.ts.net"
   same_site: lax
   remember_me: 2592000s
 

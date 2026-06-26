@@ -7,8 +7,8 @@ Wants=network-online.target
 Type=simple
 User=vansh
 Group=vansh
-WorkingDirectory=/home/vansh/pi4homelab/pi/tinybot/pi
-ExecStart=/home/vansh/pi4homelab/pi/tinybot/.venv/bin/python3 tinybot.py
+WorkingDirectory=/home/vansh/homelab-ops-mesh/pi/tinybot/pi
+ExecStart=/home/vansh/homelab-ops-mesh/pi/tinybot/.venv/bin/python3 tinybot.py
 Environment=HOME=/home/vansh
 Restart=on-failure
 RestartSec=30

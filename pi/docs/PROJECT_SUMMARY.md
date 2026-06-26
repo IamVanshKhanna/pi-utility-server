@@ -1,4 +1,4 @@
-# homelab-prod — Complete Project Summary
+# homelab-ops-mesh — Complete Project Summary
 
 ## 🎯 Project Vision
 A production-grade, constraint-driven homelab on a **single Raspberry Pi 4B (4GB RAM, 2TB SSD, DeskPi 3B Pro)** demonstrating:
@@ -119,7 +119,7 @@ Runs locally on Pi — no Ollama, no external AI dependencies. Telegram API only
 
 ```bash
 # On Pi (after setup.sh)
-cd homelab-prod
+cd homelab-ops-mesh
 make up-all          # Deploy all 9 phases
 make verify-v1       # Full health check
 make backup          # Run backup
@@ -175,7 +175,7 @@ make restore-test    # Test restore
 
 | Repo | URL | Visibility |
 |------|-----|------------|
-| **homelab-prod** | https://github.com/IamVanshKhanna/homelab-prod | Private |
+| **homelab-ops-mesh** | https://github.com/IamVanshKhanna/homelab-ops-mesh | Private |
 | **homelab-options-lab** | https://github.com/IamVanshKhanna/homelab-options-lab | Public |
 
 ---

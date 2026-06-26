@@ -40,14 +40,9 @@ free -h
 - Check Traefik logs: `docker logs traefik`
 
 ### SSL certificate not generating
-- Ensure ports 80 and 443 are forwarded from your router to the Pi
-- Check the email in `traefik.yml` is valid
-- Verify `/opt/homelab/data/traefik/certs/acme.json` has permissions `600`:
-  ```bash
-  chmod 600 /opt/homelab/data/traefik/certs/acme.json
-  ```
-- Let's Encrypt has rate limits - check logs for rate limit errors
-- For testing, switch to `caServer: https://acme-staging-v02.api.letsencrypt.org/directory`
+- Tailscale Serve handles TLS termination — no Let's Encrypt or ACME needed
+- If using a custom domain, ensure Tailscale Serve is configured: `sudo tailscale serve https+insecure://localhost:8443`
+- Check Tailscale Serve status: `sudo tailscale serve status`
 
 ### Service not being routed by Traefik
 - Ensure the service is on the `proxy` network
@@ -80,13 +75,10 @@ docker volume prune
 ### Permission denied errors on volumes
 ```bash
 # Check ownership
-ls -la /opt/homelab/data/<service>
+ls -la /mnt/nas/<service>
 
-# Fix permissions (example for Grafana)
-sudo chown -R 1000:1000 /opt/homelab/data/grafana
-
-# Fix permissions for Prometheus
-sudo chown -R 65534:65534 /opt/homelab/data/prometheus
+# Fix permissions using Docker (no sudo needed)
+docker run --rm -v /mnt/nas/shared/nextcloud/userdata:/data alpine chown -R 33:33 /data
 ```
 
 ### Docker daemon not starting after reboot
@@ -113,21 +105,6 @@ sudo systemctl start docker
 ### Pi-hole web UI unreachable
 - Check port 8053 is accessible: `curl http://localhost:8053/admin`
 - Verify the `WEBPASSWORD` env variable is set in `.env`
-
----
-
-## WireGuard Issues
-
-### VPN not connecting
-- Check WireGuard logs: `docker logs wireguard`
-- Ensure UDP port 51820 is forwarded from router
-- Verify peer public keys match
-- Check firewall rules: `sudo iptables -L`
-
-### Regenerate peer configs
-```bash
-docker exec -it wireguard /app/show-peer 1
-```
 
 ---
 
@@ -174,7 +151,7 @@ vcgencmd get_throttled
 # 0x0 = no throttling
 ```
 - Add a heatsink or fan
-- Reduce `OLLAMA` usage during peak hours
+- Reduce container memory: edit `mem_limit` in the stack's docker-compose.yml
 
 ### Low memory
 ```bash

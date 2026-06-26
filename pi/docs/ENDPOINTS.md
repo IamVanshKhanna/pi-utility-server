@@ -16,7 +16,7 @@ ssh vansh@192.168.68.59
 
 Once logged in, run:
 ```bash
-cd ~/homelab-prod && bash scripts/health-check.sh
+cd ~/homelab-ops-mesh && bash scripts/health-check.sh
 ```
 
 This checks if all services are running. Green = OK, Red = problem.
