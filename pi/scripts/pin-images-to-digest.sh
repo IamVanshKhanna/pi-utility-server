@@ -15,7 +15,8 @@ for arg in "$@"; do
   esac
 done
 
-COMPOSE_DIR="stacks"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPOSE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")/pi/stacks"
 BACKUP_DIR=".backup-$(date +%Y%m%d-%H%M%S)"
 
 # Find all compose files
@@ -76,7 +77,7 @@ for file in "${COMPOSE_FILES[@]}"; do
 
       # Try to get digest from local Docker or registry
       DIGEST=""
-      if ! "$DRY_RUN"; then
+      if [[ "$DRY_RUN" == false ]]; then
         # Try local image first
         DIGEST=$(docker image inspect "$IMAGE:$TAG" --format='{{index .RepoDigests 0}}' 2>/dev/null | cut -d@ -f2 || true)
       fi

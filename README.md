@@ -39,7 +39,7 @@ Instead of paying monthly for services like Dropbox, LastPass, or a monitoring s
 | Duo Security / Okta | **Authelia** — login with 2-factor auth | Extra lock on all your services |
 | AWS Secrets Manager | **Infisical** — store API keys safely | Keep tokens out of code |
 | Google Nest / Alexa | **Home Assistant** — smart home hub | Automate lights, sensors, everything |
-| NordVPN / ExpressVPN | **WireGuard** — private VPN to your home | Access your home network from anywhere |
+| NordVPN / ExpressVPN | **Tailscale** — zero-config mesh VPN to your home | Access your home network from anywhere, auto HTTPS certs |
 
 ---
 
@@ -67,6 +67,7 @@ Think of this as the reception desk. It's always there, uses almost no electrici
 - **CrowdSec** — watches for hackers trying to break in
 - **Samba** — shared folders on your home network (like a NAS)
 - **Syncthing** — keeps files in sync between your devices automatically
+- **Tailscale** — zero-config mesh VPN connecting both machines with auto HTTPS
 
 **Power usage**: ~5 watts (about $5/year in electricity)
 
@@ -92,7 +93,6 @@ This does the heavy work when your PC is on:
 |---|---|---|
 | **Traefik** | The person at the front desk who points visitors to the right room | Every request comes here first; it routes to the correct service |
 | **Pi-hole** | An ad blocker for your entire house — not just one browser | Blocks ads on phones, smart TVs, game consoles, everything |
-| **WireGuard** | A private tunnel from anywhere in the world back to your home | Check your security cameras or files while traveling |
 | **Vaultwarden** | Store all your passwords in one safe place | Works with the Bitwarden app on your phone |
 | **Nextcloud** | Your own Google Drive — files, photos, calendar, contacts | Access your files from anywhere, share with family |
 | **Home Assistant** | Ties all your smart home gadgets together | "Goodnight" button that turns off lights, locks doors, sets thermostat |
@@ -108,6 +108,7 @@ This does the heavy work when your PC is on:
 | **Syncthing** | Syncs folders between devices automatically | Keep your Documents folder identical on laptop, desktop, phone |
 | **Samba** | Shared folders on your home network | Like the shared drive at an office — drag and drop files |
 | **Portainer** | A visual dashboard for Docker | See which containers are running, restart them, view logs |
+| **Tailscale** | A private road between your devices that nobody else can use | Access all services from anywhere with automatic HTTPS |
 | **cAdvisor** | Watches containers' resource usage | See which app is using too much memory |
 
 ---
@@ -131,14 +132,13 @@ Nothing is exposed to the public internet — everything goes through the secure
 
 All secret values (passwords, tokens, API keys) are stored in `.env` files that are NOT included in the repository. The `.env.example` files show you which values you need to set. Never commit real secrets to Git.
 
-### Pi Services (19 services, always running)
+### Pi Services (18 services, always running)
 
 | Service | How To Access | What You Need To Log In |
 |---|---|---|
 | **Traefik Dashboard** | `https://your-domain/dashboard` | Username: `admin`, Password: set in `pi/.env` |
 | **Portainer** | `https://your-domain/portainer` | Create an account on first visit |
 | **Pi-hole** | `http://pi-ip-address:8053` | Password set in `pi/.env` |
-| **WireGuard** | VPN — connect with the config file | Configs are generated automatically on first run |
 | **Vaultwarden** | `https://your-domain/vault` | Register your account; admin panel at `/vault/admin` with token from `pi/.env` |
 | **Nextcloud** | `https://your-domain/cloud` | Username: `admin`, Password: set in `pi/.env` |
 | **Home Assistant** | `http://pi-ip-address:8123` | Create an account on first visit |
@@ -153,6 +153,7 @@ All secret values (passwords, tokens, API keys) are stored in `.env` files that 
 | **Promtail** | Internal | No login needed |
 | **CrowdSec Relay** | Internal | No login needed |
 | **Portfolio** | `https://your-domain/` | Public website, no login needed |
+| **Tailscale** | Host-level (not a container) | Manages mesh networking and HTTPS certificates |
 
 ### Windows Services (10 services, need PC to be on)
 
@@ -203,7 +204,7 @@ cp windows\.env.example windows\.env
 
 ```bash
 docker compose -f pi/stacks/core/docker-compose.yml up -d      # Traffic cop + management
-docker compose -f pi/stacks/network/docker-compose.yml up -d   # Ad blocker + VPN
+docker compose -f pi/stacks/network/docker-compose.yml up -d   # Ad blocker
 docker compose -f pi/stacks/monitoring/docker-compose.yml up -d  # Health checks
 docker compose -f pi/stacks/nas/docker-compose.yml up -d       # File sharing
 docker compose -f pi/stacks/apps/docker-compose.yml up -d      # Cloud storage + passwords
@@ -227,16 +228,16 @@ docker compose -f windows/stacks/secrets/docker-compose.yml up -d
 ## Skills This Project Shows Employers
 
 ### Infrastructure & DevOps
-- **Docker Compose** — managing 29 containers across 13 stacks with dependencies, health checks, and resource limits
+- **Docker Compose** — managing 28 containers across 13 stacks with dependencies, health checks, resource limits, and pinned image tags
 - **Git & config management** — `.env`/`.env.example` pattern, secrets never committed, bundle deployments to offline servers
 - **Cross-platform** — deploying and networking Linux ARM64 + Windows amd64 in a single system
+- **Container hardening** — `:ro` config mounts, CPU/memory limits, healthchecks on all non-distroless services, image tag pinning, log rotation
 - **Systemd & cron** — scheduled automated tasks (backups, health reports)
 
 ### Networking
 - **Tailscale mesh VPN** — zero-config secure networking, automatic HTTPS certificates
 - **Reverse proxy** (Traefik) — path-based routing, rate limiting, header manipulation, authentication forwarding
 - **DNS** (Pi-hole) — network-level ad blocking, custom DNS entries
-- **VPN server** (WireGuard) — secure remote access with peer management
 
 ### Monitoring & Observability
 - **Full LGTM stack** — Prometheus (metrics), Loki (logs), Grafana (dashboards), Tempo (traces)
@@ -282,7 +283,7 @@ docker compose -f windows/stacks/secrets/docker-compose.yml up -d
 - If Tailscale has an outage, nothing is accessible remotely
 - Backups report success but aren't automatically tested
 - Passwords in `.env` files need to be rotated manually over time
-- The Pi has 4GB RAM shared across 19 containers — room to grow, but limited
+- The Pi has 4GB RAM shared across 18 containers — room to grow, but limited
 - Services on Windows are one network hop away through Tailscale
 
 ---
@@ -295,6 +296,7 @@ v1.0     2025-01    Single Pi 4B with 27 Docker containers
 v1.1     2026-05    Moved heavy services (Grafana, monitoring, auth) to Windows
 v1.2     2026-06    Upgraded CrowdSec, added Telegram alert pipeline
 v1.3     2026-06    Optimized memory, set up automated backups, cleaned up
+v1.4     2026-06    Hardened all containers: pinned tags, healthchecks, CPU limits, :ro mounts, stale cleanup
 ```
 
 ---

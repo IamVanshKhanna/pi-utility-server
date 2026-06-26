@@ -1,6 +1,10 @@
 .env
 *.env
 !.env.example
+.env.backup
+.env.local
+.env.prod
+.env.real
 **/venv/
 **/.venv/
 __pycache__/
@@ -16,4 +20,14 @@ pi/config/crowdsec/webhook-relay/__init__.py
 pi/config/authelia/users_database.yml
 windows/config/authelia/users_database.yml
 pi/config/traefik/dynamic.yml
+pi/config/alertmanager/alertmanager.yml
 windows/config/alertmanager/alertmanager.yml
+
+# Tinybot runtime data (state contains chat IDs, logs are ephemeral)
+**/tinybot/state/
+**/tinybot/logs/
+**/tinybot/queue/
+
+# TLS certificates and keys
+*.key
+*.pem

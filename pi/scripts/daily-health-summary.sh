@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # daily-health-summary.sh - Generate and send daily health summary via Telegram
-# Intended to run via systemd timer daily at 08:00
+# Intended to run via systemd timer daily at 08:00 (homelab-daily-summary.timer)
 
 set -euo pipefail
 
