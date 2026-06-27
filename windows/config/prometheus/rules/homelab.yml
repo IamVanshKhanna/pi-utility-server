@@ -30,22 +30,22 @@ groups:
           description: "{{ $labels.container }} CPU usage is above 80% for 10 minutes."
 
       - alert: DiskSpaceCritical
-        expr: (node_filesystem_avail_bytes{mountpoint="/mnt/data"} / node_filesystem_size_bytes{mountpoint="/mnt/data"}) < 0.1
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
         for: 5m
         labels:
           severity: critical
         annotations:
-          summary: "Disk space critical on /mnt/data"
-          description: "Less than 10% free space on /mnt/data."
+          summary: "Disk space critical on /"
+          description: "Less than 10% free space on /."
 
       - alert: DiskSpaceWarning
-        expr: (node_filesystem_avail_bytes{mountpoint="/mnt/data"} / node_filesystem_size_bytes{mountpoint="/mnt/data"}) < 0.2
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.2
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "Disk space warning on /mnt/data"
-          description: "Less than 20% free space on /mnt/data."
+          summary: "Disk space warning on /"
+          description: "Less than 20% free space on /."
 
   - name: homelab-containers
     interval: 30s

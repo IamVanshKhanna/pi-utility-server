@@ -1,13 +1,13 @@
 # Pi-hole Custom DNS Entries
 # Format: IP_ADDRESS  hostname
 # These resolve local service names without a public domain
-# Set your router DNS to 192.168.1.50 for this to work network-wide
+# Set your router DNS to the Pi's IP for this to work network-wide
 
-192.168.1.50  homelab.local
-192.168.1.50  cloud.local
-192.168.1.50  vault.local
-192.168.1.50  grafana.local
-192.168.1.50  portainer.local
-192.168.1.50  traefik.local
-192.168.1.50  ha.local
-192.168.1.50  pihole.local
+192.168.68.59  homelab.local
+192.168.68.59  cloud.local
+192.168.68.59  vault.local
+192.168.68.59  grafana.local
+192.168.68.59  portainer.local
+192.168.68.59  traefik.local
+192.168.68.59  ha.local
+192.168.68.59  pihole.local

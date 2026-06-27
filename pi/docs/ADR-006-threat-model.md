@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-The homelab-ops-mesh v1.4 introduces authentication (Authelia), DNS-01 TLS, intrusion detection (CrowdSec), and supply chain security (Syft+Cosign). We need a documented threat model.
+The homelab-ops-mesh v1.4 introduces authentication (Authelia), Tailscale HTTPS, intrusion detection (CrowdSec), and container hardening (pinned tags, CPU/mem limits, `:ro` mounts). We need a documented threat model.
 
 ## Decision
 Use **STRIDE** methodology to model threats to the homelab-ops-mesh system.
@@ -14,19 +14,19 @@ Use **STRIDE** methodology to model threats to the homelab-ops-mesh system.
 | Threat | Description | Mitigation |
 |--------|-------------|------------|
 | **Spoofing** | Attacker impersonates user/service | Authelia 2FA for all external access; Traefik ForwardAuth on all routes; Tailscale for admin access |
-| **Tampering** | Unauthorized modification of data/config | Git-signed commits (Cosign); SBOM verification; Infisical secrets; Config in Git |
+| **Tampering** | Unauthorized modification of data/config | Git-tracked config; Infisical secrets; Config mounts `:ro`; Pinned image tags |
 | **Repudiation** | Actions cannot be traced | Centralized logging (Loki); Audit logs (Authelia, CrowdSec); Git commit signatures |
-| **Information Disclosure** | Sensitive data exposure | TLS everywhere (Traefik + Let's Encrypt DNS-01); Infisical secrets; Network segmentation |
+| **Information Disclosure** | Sensitive data exposure | TLS everywhere (Tailscale Serve + MagicDNS); Infisical secrets; Tailscale network isolation |
 | **Denial of Service** | Service unavailable | Rate limiting (Traefik); CrowdSec IPS; Resource limits (Docker); ZRAM swap |
-| **Elevation of Privilege** | Unauthorized access escalation | Least privilege containers; Authelia RBAC; Tailscale ACLs; Read-only root FS |
+| **Elevation of Privilege** | Unauthorized access escalation | Least privilege containers; Authelia RBAC; Tailscale ACLs; No root in containers; `NoNewPrivileges` systemd |
 
 ## Attack Surface
 
 | Component | Exposure | Protection |
 |-----------|----------|------------|
-| Traefik (80/443) | Internet | TLS, Authelia ForwardAuth, Rate limiting |
-| Tailscale (UDP 51820) | Internet | WireGuard crypto, ACLs, Exit node |
-| SSH (Tailscale) | Tailscale only | Key-only auth, Fail2ban |
+| Traefik (80/8443) | Tailscale network | Tailscale Serve TLS, Authelia ForwardAuth, Rate limiting |
+| Tailscale mesh | Internet | WireGuard crypto, ACLs, MagicDNS |
+| SSH (22) | Tailscale only | Key-only auth, password disabled |
 | Authelia (9091) | Internal only | Traefik only, 2FA |
 | Prometheus (9090) | Internal only | Localhost bind, Traefik proxy |
 | CrowdSec | Local/Internal | Log parsing only, no external exposure |
@@ -34,30 +34,30 @@ Use **STRIDE** methodology to model threats to the homelab-ops-mesh system.
 ## Trust Boundaries
 
 ```
-Internet → [Tailscale/WG] → [Traefik:443] → [Authelia ForwardAuth] → Services
-                ↓
-           [CrowdSec] ← Logs from Traefik, Auth, System
-                ↓
-           [Infisical] ← Secrets for all services
+Internet → [Tailscale mesh] → [Traefik:8443] → [Authelia ForwardAuth] → Services
+                 ↓
+            [CrowdSec] ← Logs from Traefik, Auth, System
+                 ↓
+            [Infisical] ← Secret audit + rotation (Windows)
 ```
 
 ## Data Classification
 
 | Data | Classification | Protection |
 |------|----------------|------------|
-| User credentials (Authelia) | Secret | Argon2id, Infisical |
-| TLS private keys | Secret | Traefik ACME, file perms 600 |
-| Restic repo password | Secret | Infisical, env var |
-| Database passwords | Secret | Infisical, env var |
-| Application configs | Confidential | Git (encrypted via Infisical) |
+| User credentials (Authelia) | Secret | Argon2id (memory: 65536), `.env` file |
+| TLS private keys | Secret | Tailscale manages, auto-rotation |
+| Restic repo password | Secret | `.env` file, gitignored |
+| Database passwords | Secret | `.env` file, gitignored |
+| Application configs | Confidential | Git (templates only; real configs gitignored) |
 | Logs (Loki) | Confidential | Internal network only |
 | Metrics (Prometheus) | Internal | Localhost + Traefik proxy |
 
 ## Incident Response
 
 ### Detection
-- CrowdSec alerts → Telegram
-- Prometheus alerts → Telegram (Authelia, Prometheus, Loki)
+- CrowdSec alerts → Telegram relay
+- Prometheus alerts → Alertmanager → Telegram
 - Health checks → Logs + Telegram
 
 ### Containment

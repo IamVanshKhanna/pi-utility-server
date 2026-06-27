@@ -1,7 +1,7 @@
 # STACK: SMARTHOME
 # Services: Home Assistant
 # Uses host network for mDNS, Zigbee USB dongle, device discovery.
-# Access directly at http://192.168.1.50:8123
+# Access directly at http://192.168.68.59:8123
 # NOT routed through Traefik due to host network mode.
 
 volumes:

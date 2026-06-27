@@ -27,7 +27,7 @@ Use **Tailscale** for v1.
 | Self-hosted control | No | Yes | Yes | N/A |
 | Cost (personal) | Free (100 devices) | Free | VPS cost | Free tier |
 
-**Key for Pi:** Tailscale container runs on host network, zero config, works over CGNAT, mobile app stays connected.
+**Key for Pi:** Tailscale runs on host (not in Docker — removed Docker WireGuard to avoid port conflict), zero config, works over CGNAT, mobile app stays connected. MagicDNS provides `autobot.taila24d04.ts.net` for zero-cost HTTPS via Tailscale Serve.
 
 ## Consequences
 - Dependency on Tailscale coordination servers (not fully air-gapped)

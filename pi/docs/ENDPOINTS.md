@@ -1,150 +1,90 @@
 # Service Endpoints Reference
 
-> Last updated: 2026-06-13 | Host: AutoBot (192.168.68.59)
-
-This document lists every service, its access URL, default credentials, and how to verify it is working. Non-technical users (age 16+) should be able to read this and understand what each service does and how to check if it is online.
+> Last updated: 2026-06-28 | Pi: autobot (100.127.191.2) | Windows: mr-stranger (100.74.111.26)
+> All web services use path-based routing: `https://autobot.taila24d04.ts.net/<path>/`
 
 ---
 
 ## Quick Health Check
 
-Open a terminal (Command Prompt or PowerShell on Windows, Terminal on Mac/Linux) and type:
-
 ```bash
-ssh vansh@192.168.68.59
+ssh vansh@autobot
+cd ~/homelab-ops-mesh/pi && bash scripts/health-check.sh
 ```
 
-Once logged in, run:
-```bash
-cd ~/homelab-ops-mesh && bash scripts/health-check.sh
-```
-
-This checks if all services are running. Green = OK, Red = problem.
+Green = OK, Red = problem.
 
 ---
 
 ## Service List
 
-### 1. Traefik (Reverse Proxy)
-- **What it does:** Acts as the "front door" for all web services. Handles security certificates (HTTPS) and routes traffic to the right service.
-- **Access URL:** `https://traefik.yourdomain.com`
-- **Local test:** `curl -k https://192.168.68.59:443`
-- **Credentials:** Set in `.env` as `TRAEFIK_DASHBOARD_USER` / `TRAEFIK_DASHBOARD_PASS`
-- **How to check:** Visit the dashboard URL in a browser. You should see a Traefik dashboard with routers and services listed.
+### Pi Services (18 containers)
 
-### 2. Portainer (Container Manager)
-- **What it does:** A web interface to manage Docker containers. Useful if you prefer clicking over typing commands.
-- **Access URL:** `https://portainer.yourdomain.com`
-- **Local test:** `curl -k https://portainer.yourdomain.com` or `http://192.168.68.59:9000`
-- **Credentials:** Set during first visit. Username: `admin`, Password: you choose
-- **How to check:** Login to Portainer. All containers should show as "running" (green).
+| # | Service | Path / URL | Credentials | How to check |
+|---|---------|------------|-------------|--------------|
+| 1 | Traefik | `/dashboard/` | Basic auth (`.env`) | Dashboard shows routers + services |
+| 2 | Portainer | `127.0.0.1:9000` | Set on first visit | All containers show "running" |
+| 3 | Pi-hole | `127.0.0.1:8053/admin` | `PIHOLE_WEBPASSWORD` in `.env` | Dashboard shows query stats |
+| 4 | Nextcloud | `/nextcloud/` | `NEXTCLOUD_ADMIN_USER` in `.env` | Login page appears |
+| 5 | Vaultwarden | `/vault/` | Create account on first visit | Login page appears |
+| 6 | Home Assistant | `/hass/` (host net :8123) | Set during first setup | Setup/login page appears |
+| 7 | Uptime Kuma | `127.0.0.1:8082` | Set on first visit | All monitors show green "UP" |
+| 8 | Syncthing | `127.0.0.1:8384` | API key in UI | Devices connected |
+| 9 | Promtail | No UI | None | Logs flow to Loki on Windows |
+| 10 | Node Exporter | `100.127.191.2:9100/metrics` | None | Metrics endpoint returns data |
+| 11 | cAdvisor | `100.127.191.2:8083/containers` | None | Container metrics visible |
+| 12 | Pi-hole Exporter | `100.127.191.2:9617/metrics` | None | Metrics endpoint returns data |
+| 13 | CrowdSec | No UI | CLI: `cscli decisions list` | Shows active decisions |
+| 14 | CrowdSec Relay | No UI | Bearer token auth | 200 on valid POST, 401 on bad |
 
-### 3. Nextcloud (Personal Cloud Storage)
-- **What it does:** Your own private Dropbox/Google Drive. Store files, photos, calendars, contacts.
-- **Access URL:** `https://cloud.yourdomain.com`
-- **Local test:** `curl -k https://cloud.yourdomain.com`
-- **Credentials:** Set in `.env` as `NEXTCLOUD_ADMIN_USER` / `NEXTCLOUD_ADMIN_PASSWORD`
-- **How to check:** Open the URL. Login page should appear.
+### Windows Services (10 containers)
 
-### 4. Vaultwarden (Password Manager)
-- **What it does:** Stores all your passwords securely. Syncs with Bitwarden apps on phone/laptop.
-- **Access URL:** `https://vault.yourdomain.com`
-- **Local test:** `curl -k https://vault.yourdomain.com`
-- **Credentials:** Create account on first visit. Admin panel: `ADMIN_TOKEN` from `.env`
-- **How to check:** Open the URL. You should see a login page.
-
-### 5. Home Assistant (Smart Home Hub)
-- **What it does:** Controls smart home devices — lights, sensors, cameras, thermostats, etc.
-- **Access URL:** `http://192.168.68.59:8123`
-- **Local test:** `curl http://192.168.68.59:8123`
-- **Credentials:** Set during first setup. Username and password you choose.
-- **How to check:** Open `http://192.168.68.59:8123` in a browser. Setup/login page should appear.
-
-### 6. Pi-hole (Ad Blocker + DNS)
-- **What it does:** Blocks ads across your entire network. Also provides local DNS (custom domain names for your services).
-- **Access URL (Web UI):** `http://192.168.68.59:8053/admin`
-- **DNS Server:** `192.168.68.59` (port 53)
-- **Credentials:** Set in `.env` as `PIHOLE_WEBPASSWORD`
-- **How to check:** Open the admin page. The dashboard shows queries blocked, total queries, etc.
-
-### 7. WireGuard (VPN)
-- **What it does:** Creates a secure tunnel to your home network from anywhere. Like being at home even when you are away.
-- **Access:** Via WireGuard app on your phone/laptop
-- **Port:** UDP 51820
-- **How to check:** Connect with the WireGuard app. You should be able to access `192.168.68.59` services.
-
-### 8. Grafana (Monitoring Dashboards)
-- **What it does:** Shows graphs and charts about your server's health — CPU, memory, disk, network.
-- **Access URL:** `https://grafana.yourdomain.com`
-- **Local test:** `curl -k https://grafana.yourdomain.com`
-- **Credentials:** Set in `.env` as `GF_SECURITY_ADMIN_USER` / `GF_SECURITY_ADMIN_PASSWORD`
-- **How to check:** Login to Grafana. Go to Dashboards → Homelab. You should see CPU/memory graphs updating.
-
-### 9. Prometheus (Metrics Database)
-- **What it does:** Collects numbers about every service (feeds data to Grafana for charts).
-- **Access:** `http://192.168.68.59:9090`
-- **Credentials:** None (local access only)
-- **How to check:** Open the URL, click Status → Targets. All should show "UP" in green.
-
-### 10. Uptime Kuma (Uptime Monitor)
-- **What it does:** Constantly checks if your services are online. Sends alerts if something goes down.
-- **Access URL:** `https://uptime.yourdomain.com`
-- **Local test:** `curl -k https://uptime.yourdomain.com`
-- **Credentials:** Set during first visit.
-- **How to check:** Login. All monitors should show green "UP" status.
-
-### 11. Authelia (Authentication / SSO)
-- **What it does:** Adds a login gate before any service. Provides two-factor authentication (2FA).
-- **Access URL:** `https://auth.yourdomain.com`
-- **Credentials:** Defined in `config/authelia/users_database.yml`
-- **How to check:** Visit any protected service. You should be redirected to Authelia login.
-
-### 12. CrowdSec (Intrusion Detection)
-- **What it does:** Monitors logs for hacking attempts and automatically blocks bad IPs.
-- **Access:** No web UI. Works silently in the background.
-- **How to check:** `docker logs crowdsec` — should show log parsing activity.
-
-### 13. Ollama (Local AI / LLM)
-- **What it does:** Runs AI language models locally on your Pi. No internet needed, your data stays private.
-- **Access:** `http://127.0.0.1:11434` (local only)
-- **Credentials:** None
-- **How to check:** `curl http://127.0.0.1:11434/api/tags` — should return a list of downloaded models.
-
-### 14. Loki + Promtail (Log Aggregation)
-- **What it does:** Loki collects all logs from every container. Promtail ships logs to Loki. Viewable in Grafana.
-- **How to check:** In Grafana, go to Explore → select Loki datasource → run `{job="varlogs"}` — should see log entries.
-
-### 15. Alertmanager (Alert Notifications)
-- **What it does:** Sends notifications when Prometheus detects problems (high CPU, low disk, service down).
-- **Access:** `http://192.168.68.59:9093`
-- **How to check:** Open the URL. Should show the Alertmanager status page.
-
-### 16. Tempo (Distributed Tracing)
-- **What it does:** Tracks requests as they travel between services, helping debug slow performance.
-- **Access:** Via Grafana Explore → Tempo datasource.
-- **How to check:** In Grafana, Explore → Tempo. Search for recent traces.
+| # | Service | Path / URL | Credentials | How to check |
+|---|---------|------------|-------------|--------------|
+| 1 | Grafana | `/grafana/` | `GF_SECURITY_ADMIN_USER` in `.env` | Dashboards show live metrics |
+| 2 | Prometheus | `127.0.0.1:9090/targets` | None | All 8 targets show "UP" |
+| 3 | Alertmanager | `127.0.0.1:9093` | None | Status page shows silences/receivers |
+| 4 | Loki | `127.0.0.1:3100/ready` | None | Returns "ready" |
+| 5 | Tempo | `127.0.0.1:3200/ready` | None | Returns "ready" |
+| 6 | Authelia | `/auth/` | See `users_database.yml` | Login page appears |
+| 7 | Infisical | `/secrets/` | Set on first visit | Project secrets visible |
 
 ---
 
 ## Port Summary
 
-| Port | Service | External? | Purpose |
-|------|---------|-----------|---------|
-| 22 | SSH | Yes | Remote terminal access |
-| 53 | Pi-hole DNS | Yes (UDP) | DNS server |
-| 80 | Traefik HTTP | Yes | Redirects to HTTPS |
-| 443 | Traefik HTTPS | Yes | Secure web access |
-| 3000 | Grafana | Internal | Monitoring UI |
-| 8082 | Traefik Metrics | Internal | Prometheus metrics |
-| 8053 | Pi-hole Web | Yes | Ad-block admin page |
-| 8123 | Home Assistant | Yes | Smart home control |
-| 9090 | Prometheus | Internal | Metrics database |
-| 9093 | Alertmanager | Internal | Alert management |
-| 9100 | Node Exporter | Internal | System metrics |
-| 9617 | Pi-hole Exporter | Internal | Pi-hole metrics for Prometheus |
-| 11434 | Ollama | Internal | AI model API |
-| 3100 | Loki | Internal | Log storage |
-| 51820 | WireGuard | Yes (UDP) | VPN |
+### Pi Host Ports
+
+| Port | Service | Binding | Purpose |
+|------|---------|---------|---------|
+| 22 | SSH | 0.0.0.0 | Remote terminal |
+| 53 | Pi-hole DNS | 0.0.0.0 (UDP) | DNS server |
+| 80 | Traefik HTTP | 0.0.0.0 | Redirects to 8443 |
+| 8443 | Traefik Tailscale | 0.0.0.0 | Plain-HTTP behind Tailscale Serve |
+| 8080 | Nextcloud | 0.0.0.0 | File cloud |
+| 8081 | Vaultwarden | 0.0.0.0 | Password manager |
+| 8082 | Uptime Kuma | 127.0.0.1 | Uptime monitoring |
+| 8083 | cAdvisor | 0.0.0.0 | Container metrics |
+| 8084 | Traefik API | 0.0.0.0 | Prometheus metrics |
+| 9000 | Portainer | 127.0.0.1 | Docker UI |
+| 9100 | Node Exporter | 0.0.0.0 | Host metrics |
+| 9617 | Pi-hole Exporter | 0.0.0.0 | DNS metrics |
+| 8123 | Home Assistant | host mode | Home automation |
+| 8384 | Syncthing | 0.0.0.0 | File sync UI |
+| 139/445 | Samba | 0.0.0.0 | File sharing |
+
+### Windows Host Ports
+
+| Port | Service | Binding | Purpose |
+|------|---------|---------|---------|
+| 3000 | Grafana | 127.0.0.1 | Dashboards |
+| 3200 | Tempo | 127.0.0.1 | Traces |
+| 3100 | Loki | 127.0.0.1 | Log storage |
+| 4317 | Tempo OTLP | 127.0.0.1 | gRPC trace ingest |
+| 8083 | Infisical | 127.0.0.1 | Secrets UI |
+| 9090 | Prometheus | 127.0.0.1 | Metrics |
+| 9091 | Authelia | 127.0.0.1 | SSO |
+| 9093 | Alertmanager | 127.0.0.1 | Alerts |
 
 ---
 
@@ -152,10 +92,10 @@ This checks if all services are running. Green = OK, Red = problem.
 
 | Problem | What to try |
 |---------|------------|
-| Website shows "404 Not Found" | Check Traefik dashboard — is the router listed? |
-| Website shows "502 Bad Gateway" | The backend container may be down. Run `docker ps` and check status. |
-| Can't reach any service | Check if Pi is powered on. Try `ping 192.168.68.59`. |
-| Pi-hole not blocking ads | Try `nslookup doubleclick.net 192.168.68.59`. Should return `0.0.0.0`. |
-| Low disk space warning | Run `df -h /mnt/data`. Clear old backups: `rm /mnt/backup/*.tar.gz` |
-| Service keeps restarting | Run `docker logs containername --tail 50` to see last 50 log lines. |
-| RAM is full (>90%) | Stop Ollama: `docker stop ollama`. Restart when needed. |
+| Website 404 | Check Traefik dashboard — is the router listed? |
+| Website 502 | Backend container may be down. Run `docker ps` |
+| Can't reach any service | Pi powered on? Try `ping autobot` via Tailscale |
+| Pi-hole not blocking ads | `nslookup doubleclick.net 192.168.68.59` should return `0.0.0.0` |
+| Low disk space | `df -h /` — clear old backups in `/mnt/nas/backup/` |
+| Service keeps restarting | `docker logs containername --tail 50` |
+| RAM > 90% | `docker stats --no-stream` — find heavy container, check limits |

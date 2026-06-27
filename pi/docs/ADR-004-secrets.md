@@ -33,22 +33,17 @@ Use **Infisical** (self-hosted) for v1.2+.
 - **Free tier** — unlimited secrets for personal use
 - **Lightweight** — Go binary, ~50MB RAM + PostgreSQL + Redis
 
-## Implementation Plan (v1.2)
-1. Deploy Infisical stack (PostgreSQL + Redis + Infisical) in new `secrets` phase
-2. Generate `AUTH_SECRET`, `ENCRYPTION_KEY`, `REDIS_PASSWORD` in `.env`
-3. On first login, create project "homelab-ops-mesh", add all `.env` secrets
-4. Update deploy: `infisical run --projectId=... --env=production -- docker compose up -d`
-5. Remove plaintext secrets from `.env` (keep only Infisical config)
-6. Document rotation procedure
+## Implementation (v1.2 — completed; v1.4 — migrated to Windows)
+1. Infisical stack deployed (PostgreSQL + Redis + Infisical) — now on Windows Desktop
+2. **Not using runtime injection** — staying with `.env` files for simplicity (no `infisical run` wrapper)
+3. Infisical serves as secret audit log and rotation reference, not runtime injection
+4. `.env` remains the source of truth for Docker Compose deployment
+5. `.template` files committed to git with placeholder values; real files gitignored
 
 ## Consequences
-- **Added complexity**: 3 new containers (Infisical, PostgreSQL, Redis) ~400MB RAM
-- **Boot dependency**: Infisical must be healthy before other stacks deploy
-- **Migration effort**: One-time `.env` → Infisical migration
-- **Operational**: Must monitor Infisical health (added to health checks)
-
-## Alternative for v2.0
-If Infisical proves too heavy, evaluate **sops + age** for GitOps-native approach with Flux/ArgoCD.
+- **Added complexity**: 3 new containers (Infisical, PostgreSQL, Redis) — ~1GB RAM on Windows
+- **Windows dependency**: Infisical runs on Windows Desktop; must be up for secrets access
+- **Boot order**: Infisical healthy before other stacks can reference secrets (not enforced — `.env` is current source of truth)
 
 ## References
 - [Infisical docs](https://infisical.com/docs)

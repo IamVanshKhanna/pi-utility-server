@@ -82,12 +82,12 @@ graph TB
 
 TinyBot runs as a systemd user service with `loginctl enable-linger vansh`.
 It polls Telegram for commands (`/health`, `/fan`, `/docker`, `/search`, `/chatid`).
-Scheduled health reports sent every 6 hours via cron -> `send_health.py`.
+Daily health summary sent at 08:00 via systemd timer (`homelab-daily-summary.timer`).
 
 ## Backup strategy
 
-- **OS level:** Weekly dd image to `/mnt/nas/backup/os` via systemd timer (Sun 3am, 4 week retention)
-- **Config/data:** Restic to Backblaze B2 via `pi/scripts/backup.sh` (daily, 7/4/6 retention)
+- **Config/data:** Restic local backup to `/mnt/nas/backup/restic-repo` via `pi/scripts/backup.sh` (daily 03:00, 7/4/6 retention)
+- **Legacy volumes:** One-time Docker volume backup at `/mnt/nas/backup/docker-volumes-2026-06-23`
 - **.env files:** Not backed up (restore manually from secure store)
 
 ## Node responsibilities
