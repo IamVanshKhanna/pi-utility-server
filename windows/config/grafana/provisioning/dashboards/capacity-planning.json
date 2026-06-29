@@ -18,7 +18,7 @@
   "panels": [
     {
       "id": 1,
-      "title": "Disk Usage - /mnt/data",
+      "title": "Disk Usage - /",
       "type": "graph",
       "gridPos": {
         "x": 0,
@@ -28,7 +28,7 @@
       },
       "targets": [
         {
-          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"} / node_filesystem_size_bytes{mountpoint=\"/mnt/data\"})) * 100",
+          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100",
           "legendFormat": "Disk Usage %",
           "refId": "A"
         },
@@ -77,12 +77,12 @@
       },
       "targets": [
         {
-          "expr": "node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"} / 1024 / 1024 / 1024",
+          "expr": "node_filesystem_avail_bytes{mountpoint=\"/\"} / 1024 / 1024 / 1024",
           "legendFormat": "Available (GB)",
           "refId": "A"
         },
         {
-          "expr": "node_filesystem_size_bytes{mountpoint=\"/mnt/data\"} / 1024 / 1024 / 1024",
+          "expr": "node_filesystem_size_bytes{mountpoint=\"/\"} / 1024 / 1024 / 1024",
           "legendFormat": "Total (GB)",
           "refId": "B"
         }
@@ -109,7 +109,7 @@
       },
       "targets": [
         {
-          "expr": "rate(node_filesystem_size_bytes{mountpoint=\"/mnt/data\"} - node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d]) * 86400 * 1024 * 1024 * 1024",
+          "expr": "rate(node_filesystem_size_bytes{mountpoint=\"/\"} - node_filesystem_avail_bytes{mountpoint=\"/\"}[30d]) * 86400 * 1024 * 1024 * 1024",
           "legendFormat": "Growth Rate (GB/day)",
           "refId": "A"
         }
@@ -266,19 +266,19 @@
       },
       "targets": [
         {
-          "expr": "predict_linear(node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d], 30*24*3600) / 1024 / 1024 / 1024",
+          "expr": "predict_linear(node_filesystem_avail_bytes{mountpoint=\"/\"}[30d], 30*24*3600) / 1024 / 1024 / 1024",
           "legendFormat": "30 Days",
           "refId": "A",
           "format": "table"
         },
         {
-          "expr": "predict_linear(node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d], 60*24*3600) / 1024 / 1024 / 1024",
+          "expr": "predict_linear(node_filesystem_avail_bytes{mountpoint=\"/\"}[30d], 60*24*3600) / 1024 / 1024 / 1024",
           "legendFormat": "60 Days",
           "refId": "B",
           "format": "table"
         },
         {
-          "expr": "predict_linear(node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d], 90*24*3600) / 1024 / 1024 / 1024",
+          "expr": "predict_linear(node_filesystem_avail_bytes{mountpoint=\"/\"}[30d], 90*24*3600) / 1024 / 1024 / 1024",
           "legendFormat": "90 Days",
           "refId": "C",
           "format": "table"
@@ -302,44 +302,12 @@
       ]
     },
     {
-      "id": 8,
-      "title": "Pod Count Trend",
-      "type": "graph",
-      "gridPos": {
-        "x": 12,
-        "y": 24,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "expr": "count(kube_pod_info)",
-          "legendFormat": "Total Pods",
-          "refId": "A"
-        },
-        {
-          "expr": "predict_linear(count(kube_pod_info)[30d], 30*24*3600)",
-          "legendFormat": "Predicted (30d)",
-          "refId": "B"
-        }
-      ],
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "Pods"
-        },
-        {
-          "format": "short"
-        }
-      ]
-    },
-    {
       "id": 9,
       "title": "Network I/O Rate",
       "type": "graph",
       "gridPos": {
-        "x": 0,
-        "y": 32,
+        "x": 12,
+        "y": 24,
         "w": 12,
         "h": 8
       },
@@ -366,67 +334,12 @@
       ]
     },
     {
-      "id": 10,
-      "title": "PVC Usage by Volume",
-      "type": "table",
-      "gridPos": {
-        "x": 12,
-        "y": 32,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "expr": "kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100",
-          "legendFormat": "{{persistentvolumeclaim}} - {{namespace}}",
-          "refId": "A",
-          "format": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "type": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true
-            },
-            "renameByName": {
-              "Value #A": "Usage %"
-            }
-          }
-        },
-        {
-          "type": "filter",
-          "options": {
-            "conditions": [
-              {
-                "evaluator": {
-                  "params": [
-                    "90"
-                  ],
-                  "type": "gt"
-                },
-                "id": "A",
-                "type": "query",
-                "query": {
-                  "params": [
-                    "A"
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
       "id": 11,
       "title": "Capacity Alerts Status",
       "type": "stat",
       "gridPos": {
         "x": 0,
-        "y": 40,
+        "y": 32,
         "w": 6,
         "h": 4
       },
@@ -468,13 +381,13 @@
       "type": "stat",
       "gridPos": {
         "x": 6,
-        "y": 40,
+        "y": 32,
         "w": 6,
         "h": 4
       },
       "targets": [
         {
-          "expr": "node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"} / (rate(node_filesystem_size_bytes{mountpoint=\"/mnt/data\"} - node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"}[30d]) * 86400)",
+          "expr": "node_filesystem_avail_bytes{mountpoint=\"/\"} / (rate(node_filesystem_size_bytes{mountpoint=\"/\"} - node_filesystem_avail_bytes{mountpoint=\"/\"}[30d]) * 86400)",
           "legendFormat": "Days Remaining",
           "refId": "A"
         }
@@ -511,7 +424,7 @@
       "type": "stat",
       "gridPos": {
         "x": 12,
-        "y": 40,
+        "y": 32,
         "w": 6,
         "h": 4
       },
@@ -545,48 +458,6 @@
           },
           "unit": "percent",
           "decimals": 1
-        }
-      }
-    },
-    {
-      "id": 14,
-      "title": "Pod Growth Prediction (30d)",
-      "type": "stat",
-      "gridPos": {
-        "x": 18,
-        "y": 40,
-        "w": 6,
-        "h": 4
-      },
-      "targets": [
-        {
-          "expr": "predict_linear(count(kube_pod_info)[30d], 30*24*3600)",
-          "legendFormat": "Predicted Pod Count (30d)",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 100
-              },
-              {
-                "color": "red",
-                "value": 200
-              }
-            ]
-          },
-          "unit": "short"
         }
       }
     }

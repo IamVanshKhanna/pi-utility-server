@@ -44,7 +44,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7.2-alpine
+    image: redis:7.4-alpine
     container_name: redis
     restart: unless-stopped
     logging:
@@ -56,11 +56,11 @@ services:
       - apps_internal
     volumes:
       - redis_data:/data
-    command: redis-server --save 60 1 --loglevel warning
+    command: redis-server --requirepass ${REDIS_APPS_PASSWORD} --save 60 1 --loglevel warning
     mem_limit: 64m
     cpus: 0.25
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_APPS_PASSWORD redis-cli ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -75,7 +75,7 @@ services:
         max-size: "10m"
         max-file: "3"
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
     networks:
       - proxy
       - apps_internal
@@ -123,7 +123,7 @@ services:
         max-size: "10m"
         max-file: "3"
     ports:
-      - "8081:80"
+      - "127.0.0.1:8081:80"
     networks:
       - proxy
     volumes:

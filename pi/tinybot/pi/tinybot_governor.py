@@ -4,13 +4,13 @@ import shutil
 import yaml
 from datetime import datetime, timezone
 
-HERMES_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROJECTS_DIR = os.path.join(HERMES_ROOT, 'projects')
-QUEUE_DIR = os.path.join(HERMES_ROOT, 'queue')
-STATE_DIR = os.path.join(HERMES_ROOT, 'state')
-LOGS_DIR = os.path.join(HERMES_ROOT, 'logs')
-CONFIG_DIR = os.path.join(HERMES_ROOT, 'config')
-PROFILES_DIR = os.path.join(HERMES_ROOT, 'pi', 'profiles')
+TINYBOT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECTS_DIR = os.path.join(TINYBOT_ROOT, 'projects')
+QUEUE_DIR = os.path.join(TINYBOT_ROOT, 'queue')
+STATE_DIR = os.path.join(TINYBOT_ROOT, 'state')
+LOGS_DIR = os.path.join(TINYBOT_ROOT, 'logs')
+CONFIG_DIR = os.path.join(TINYBOT_ROOT, 'config')
+PROFILES_DIR = os.path.join(TINYBOT_ROOT, 'pi', 'profiles')
 
 
 def load_global_state():

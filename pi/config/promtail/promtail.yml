@@ -60,4 +60,4 @@ scrape_configs:
       - labels:
           unit:
       - output:
-          source: message"
+          source: message

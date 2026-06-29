@@ -39,14 +39,14 @@ services:
         echo -e '[backup]\npath = /mnt/backup\nbrowseable = yes\nread only = no' >> /etc/samba/smb.conf &&
         addgroup -g ${PGID:-1000} vansh 2>/dev/null || true &&
         adduser -u ${PUID:-1000} -G vansh -D -H -s /bin/false vansh 2>/dev/null || true &&
-        echo -e '${SAMBA_PASSWORD:-changeme}\n${SAMBA_PASSWORD:-changeme}' | smbpasswd -a -s vansh &&
+        echo -e '${SAMBA_PASSWORD}\n${SAMBA_PASSWORD}' | smbpasswd -a -s vansh &&
         smbd -F
       "
     environment:
       - TZ=${TZ:-Australia/Melbourne}
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
-      - SAMBA_PASSWORD=${SAMBA_PASSWORD:-changeme}
+      - SAMBA_PASSWORD=${SAMBA_PASSWORD:?SAMBA_PASSWORD must be set}
     mem_limit: 128m
     cpus: 0.25
     healthcheck:
@@ -70,7 +70,7 @@ services:
     networks:
       - proxy
     ports:
-      - "8384:8384"
+      - "127.0.0.1:8384:8384"
       - "22000:22000"
       - "21027:21027/udp"
     volumes:

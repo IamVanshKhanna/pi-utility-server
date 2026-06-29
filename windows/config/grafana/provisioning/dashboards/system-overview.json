@@ -162,7 +162,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/mnt/data\"} / node_filesystem_size_bytes{mountpoint=\"/mnt/data\"})) * 100",
+          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100",
           "legendFormat": "Data Disk %",
           "refId": "A"
         }
@@ -330,8 +330,8 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/mnt/backup\"} / node_filesystem_size_bytes{mountpoint=\"/mnt/backup\"})) * 100",
-          "legendFormat": "Backup Disk %",
+          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/mnt/nas\"} / node_filesystem_size_bytes{mountpoint=\"/mnt/nas\"})) * 100",
+          "legendFormat": "NAS Disk %",
           "refId": "A"
         }
       ],

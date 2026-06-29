@@ -210,6 +210,7 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg.strip())
 
 
+@admin_only
 async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = " ".join(context.args)
     if not query:
@@ -230,6 +231,7 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f'Web search results for "{query}":\n\n{search_results}')
 
 
+@admin_only
 async def chatid_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cid = update.message.chat_id
     await update.message.reply_text(f"Your chat ID: {cid}")
@@ -250,6 +252,9 @@ async def docker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if action == "close" and len(args) > 1:
         name = args[1]
+        if not re.match(r'^[a-zA-Z0-9_-]+$', name):
+            await update.message.reply_text("Invalid container name.")
+            return
         ps_result = subprocess.run(["docker", "ps", "--format", "{{.Names}}"], capture_output=True, text=True, timeout=30)
         running = ps_result.stdout.strip().splitlines()
         if name not in running:
@@ -263,6 +268,9 @@ async def docker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if action == "restart" and len(args) > 1:
         name = args[1]
+        if not re.match(r'^[a-zA-Z0-9_-]+$', name):
+            await update.message.reply_text("Invalid container name.")
+            return
         ps_result = subprocess.run(["docker", "ps", "--format", "{{.Names}}"], capture_output=True, text=True, timeout=30)
         running = ps_result.stdout.strip().splitlines()
         if name not in running:

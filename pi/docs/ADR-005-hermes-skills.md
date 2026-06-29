@@ -1,7 +1,7 @@
 # ADR-005: TinyBot Agent Skills Architecture
 
 ## Status
-Accepted (replaces Hermes Agent — removed in v1.7)
+Accepted (replaces Hermes Agent — removed in v1.3)
 
 ## Context
 TinyBot runs on the Pi homelab as a headless Telegram bot. It needs safe, structured capabilities for homelab operations with:

@@ -5,7 +5,7 @@
 networks:
   proxy:
     name: homelab_win
-    driver: bridge
+    external: true
 
 volumes:
   authelia_data:
@@ -61,7 +61,7 @@ services:
     mem_limit: 64m
     cpus: 0.1
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${AUTHELIA_REDIS_PASSWORD}", "ping"]
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$AUTHELIA_REDIS_PASSWORD redis-cli ping"]
       interval: 15s
       timeout: 5s
       retries: 5

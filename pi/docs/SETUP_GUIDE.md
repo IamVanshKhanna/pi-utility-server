@@ -195,7 +195,7 @@ crontab -e
 Add:
 ```bash
 # Daily backup at 3am (with alerting on failure)
-0 3 * * * /home/vansh/homelab-ops-mesh/pi/scripts/backup-wrapper.sh >> /var/log/homelab-backup.log 2>&1
+0 3 * * * /home/vansh/homelab-ops-mesh/pi/scripts/backup.sh >> /var/log/homelab-backup.log 2>&1
 
 # Health check every 15 minutes
 */15 * * * * /home/vansh/homelab-ops-mesh/pi/scripts/health-check.sh >> /var/log/homelab-health.log 2>&1
