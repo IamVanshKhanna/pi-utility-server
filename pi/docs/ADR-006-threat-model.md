@@ -15,7 +15,7 @@ Use **STRIDE** methodology to model threats to the homelab-ops-mesh system.
 |--------|-------------|------------|
 | **Spoofing** | Attacker impersonates user/service | Authelia 2FA for all external access; Traefik ForwardAuth on all routes; Tailscale for admin access |
 | **Tampering** | Unauthorized modification of data/config | Git-tracked config; Infisical secrets; Config mounts `:ro`; Pinned image tags |
-| **Repudiation** | Actions cannot be traced | Centralized logging (Loki); Audit logs (Authelia, CrowdSec); Git commit history |
+| **Repudiation** | Actions cannot be traced | Centralized logging (Loki); Audit logs (Authelia, CrowdSec); Git commit history (unsigned — commit signing not yet implemented) |
 | **Information Disclosure** | Sensitive data exposure | TLS everywhere (Tailscale Serve + MagicDNS); Infisical secrets; Tailscale network isolation |
 | **Denial of Service** | Service unavailable | Rate limiting (Traefik); CrowdSec IPS; Resource limits (Docker); ZRAM swap |
 | **Elevation of Privilege** | Unauthorized access escalation | Least privilege containers; Authelia RBAC; Tailscale ACLs; No root in containers; `NoNewPrivileges` systemd |
