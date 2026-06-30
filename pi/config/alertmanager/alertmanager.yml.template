@@ -1,0 +1,41 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'job', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'telegram'
+  routes:
+    - match:
+        severity: 'critical'
+      receiver: 'telegram'
+      continue: true
+    - match:
+        severity: 'warning'
+      receiver: 'telegram'
+      continue: true
+
+receivers:
+  - name: 'telegram'
+    telegram_configs:
+      - api_url: "https://api.telegram.org"
+        bot_token: "${TELEGRAM_BOT_TOKEN}"
+        chat_id: "${TELEGRAM_CHAT_ID}"
+        message_thread_id: 0
+        parse_mode: "HTML"
+        disable_notifications: false
+    webhook_configs:
+      - url: "http://crowdsec:8080/alerts"
+        http_config:
+          basic_auth:
+            username: "alertmanager"
+            password: "${CROWDSEC_API_KEY}"
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']

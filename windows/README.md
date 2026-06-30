@@ -43,3 +43,14 @@ docker compose -f windows/stacks/<stack>/docker-compose.yml --env-file windows/.
 ```powershell
 docker compose -f windows/stacks/<stack>/docker-compose.yml --env-file windows/.env down
 ```
+
+## Backup
+
+Export all Windows Docker named volumes to tar archives:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File windows/scripts/backup-volumes.ps1
+```
+
+Volumes backed up: Grafana, Prometheus, Loki, Alertmanager, Tempo, Authelia, Infisical DB.
+Archives stored in `windows/backups/` with 7-day retention.

@@ -1,0 +1,8 @@
+users:
+  vansh:
+    displayname: "Vansh"
+    password: "$argon2id$v=19$m=65536,t=3,p=4$tZd8RWSD+nP5mNo7pjUy8g$SvdvFjmfk79WxHOs0uKXXnV+0fDQ9ZP9GJ/VSJOk+vw"
+    email: vanshkhanna416@gmail.com
+    groups:
+      - admins
+      - users
