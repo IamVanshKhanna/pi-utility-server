@@ -124,6 +124,9 @@ BACKUP_EXIT=0
 if [[ $BACKUP_EXIT -eq 0 ]]; then
   echo "Backup completed successfully"
   send_telegram "✅ <b>Backup completed successfully</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"
+elif [[ $BACKUP_EXIT -eq 3 ]]; then
+  echo "Backup completed with some unreadable files (exit 3)"
+  send_telegram "⚠️ <b>Backup completed with warnings</b> on $(hostname) — some files unreadable"
 else
   echo "Backup failed with exit code $BACKUP_EXIT" >&2
   send_telegram "❌ <b>Backup FAILED</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S') - Exit code: $BACKUP_EXIT"
