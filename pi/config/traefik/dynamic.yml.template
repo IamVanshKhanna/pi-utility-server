@@ -13,6 +13,7 @@ http:
         - Remote-Name
         - Remote-Email
         trustForwardHeader: false
+        maxResponseBodySize: 1048576
     authelia-forwardauth-2fa:
       forwardAuth:
         address: http://${WINDOWS_IP:-100.74.111.26}:9091/auth/api/verify?x=2
@@ -22,12 +23,13 @@ http:
         - Remote-Name
         - Remote-Email
         trustForwardHeader: false
+        maxResponseBodySize: 1048576
     basic-auth:
       basicAuth:
         users:
         - REPLACE_WITH_htpasswd_hash
     local-only:
-      ipWhiteList:
+      ipAllowList:
         sourceRange:
         - 127.0.0.1/32
         - 192.168.0.0/16
@@ -58,14 +60,14 @@ http:
     authelia:
       entrypoints:
       - tailscale
-      rule: PathPrefix(`/auth`)
+      rule: "PathPrefix(`/auth`)"
       middlewares:
       - secure-headers
       service: authelia
     infisical:
       entrypoints:
       - tailscale
-      rule: PathPrefix(`/secrets`)
+      rule: "PathPrefix(`/secrets`)"
       middlewares:
       - authelia-forwardauth
       - secure-headers
@@ -73,7 +75,7 @@ http:
     grafana-win:
       entrypoints:
       - tailscale
-      rule: PathPrefix(`/grafana`)
+      rule: "PathPrefix(`/grafana`)"
       middlewares:
       - authelia-forwardauth
       - secure-headers
@@ -81,7 +83,7 @@ http:
     tempo:
       entrypoints:
       - tailscale
-      rule: PathPrefix(`/tempo`)
+      rule: "PathPrefix(`/tempo`)"
       middlewares:
       - strip-tempo
       - authelia-forwardauth
@@ -93,7 +95,7 @@ http:
       middlewares:
       - basic-auth
       - local-only
-      rule: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+      rule: "PathPrefix(`/dashboard`) || PathPrefix(`/api`)"
       service: api@internal
   services:
     authelia:

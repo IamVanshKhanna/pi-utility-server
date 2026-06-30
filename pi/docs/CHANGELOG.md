@@ -7,9 +7,17 @@
 ## [v1.5.1] — 2026-07-01
 
 ### Fixed
-- **Restic lock contention** — `backup.sh` auto-unlocks stale locks before init check and `forget --prune` (daily cron overlap, interrupted runs)
+- **[CRITICAL] Traefik PathPrefix rules broken** — `dynamic.yml` on Pi had unquoted `PathPrefix(/path)` syntax; backticks stripped during template rendering. All rules now double-quoted in YAML: `"PathPrefix(\`/path\`)"` — restores routing to Grafana, Authelia, Infisical, Tempo, and Dashboard
+- **Windows services unreachable from Pi Traefik** — Grafana, Authelia, Infisical, Tempo ports bound to `127.0.0.1` on Windows; changed to Tailscale IP `100.74.111.26` — only Tailscale peers can connect
+- **Restic lock contention** — `backup.sh` auto-unlocks stale locks before init check and `forget --prune`
 - **Syncthing UI on `0.0.0.0:8384`** — Container not recreated after compose port bind change; NAS stack redeployed to enforce `127.0.0.1:8384`
-- **`daily-health-summary.sh` enhanced** — Windows Prometheus API queries (targets up, firing alerts), Pi unhealthy container count, load average, version tag `v1.5`
+- **`daily-health-summary.sh`** — Windows Prometheus API queries for target/alert counts, Pi unhealthy container count, load average, version tag
+- **`ipWhiteList` deprecated** — changed to `ipAllowList` in `dynamic.yml.template` (Traefik v3)
+- **`maxResponseBodySize` missing** on ForwardAuth middlewares — added 1MB limit to prevent DoS via large Authelia responses
+
+### Changed
+- **Windows port bindings**: Grafana `127.0.0.1:3000` → `100.74.111.26:3000`, Authelia `127.0.0.1:9091` → `100.74.111.26:9091`, Infisical `127.0.0.1:8083` → `100.74.111.26:8083`, Tempo `127.0.0.1:3200` → `100.74.111.26:3200`
+- **Prometheus, Alertmanager, Loki, Tempo OTLP** ports remain `127.0.0.1` (no external access needed)
 
 ### Removed
 - **13 stale Docker images** on Pi (MariaDB 11.4, CrowdSec v1.6.0, OTel collector, WireGuard, old Authelia/Loki/Tempo/Alertmanager/Postgres/curl/alpine/busybox — ~1.5GB)
@@ -17,8 +25,8 @@
 - **10 dangling Docker volumes** on Pi (Ollama data 2.1GB, old Authelia/Redis/Traefik/CrowdSec/Infisical/Uptime-Kuma/Vaultwarden — ~2.4GB)
 - **2 dangling Docker volumes** on Windows (old Infisical DB, anonymous hash)
 
-### Changed
-- **`backup.sh`** — removes `_win_mem` Windows RAM line (Prometheus can't scrape Windows RAM without node-exporter)
+### Note
+- **Ollama systemd service** still running on Pi (`/etc/systemd/system/ollama.service`) — requires `sudo systemctl stop ollama && sudo systemctl disable ollama` to remove
 
 ---
 
