@@ -4,6 +4,24 @@
 
 ---
 
+## [v1.5.1] — 2026-07-01
+
+### Fixed
+- **Restic lock contention** — `backup.sh` auto-unlocks stale locks before init check and `forget --prune` (daily cron overlap, interrupted runs)
+- **Syncthing UI on `0.0.0.0:8384`** — Container not recreated after compose port bind change; NAS stack redeployed to enforce `127.0.0.1:8384`
+- **`daily-health-summary.sh` enhanced** — Windows Prometheus API queries (targets up, firing alerts), Pi unhealthy container count, load average, version tag `v1.5`
+
+### Removed
+- **13 stale Docker images** on Pi (MariaDB 11.4, CrowdSec v1.6.0, OTel collector, WireGuard, old Authelia/Loki/Tempo/Alertmanager/Postgres/curl/alpine/busybox — ~1.5GB)
+- **6 stale Docker images** on Windows (Authelia 4.38.19, Infisical latest, Postgres 16-alpine, Alertmanager latest+v0.27.0, Alpine latest)
+- **10 dangling Docker volumes** on Pi (Ollama data 2.1GB, old Authelia/Redis/Traefik/CrowdSec/Infisical/Uptime-Kuma/Vaultwarden — ~2.4GB)
+- **2 dangling Docker volumes** on Windows (old Infisical DB, anonymous hash)
+
+### Changed
+- **`backup.sh`** — removes `_win_mem` Windows RAM line (Prometheus can't scrape Windows RAM without node-exporter)
+
+---
+
 ## [v1.5.0] — 2026-06-30
 
 ### Added
