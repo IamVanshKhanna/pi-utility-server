@@ -4,6 +4,57 @@
 
 ---
 
+## [v1.5.0] — 2026-06-30
+
+### Added
+- **Senior security audit** — Full STRIDE review with 3 CRITICAL, 7 HIGH, 13 MEDIUM, 8 LOW findings
+- **Redis auth on apps stack** — `--requirepass` + `REDISCLI_AUTH` env var for password-protected Nextcloud Redis
+- **Nextcloud `REDIS_HOST_PASSWORD`** — Connects to password-protected Redis
+- **Portfolio healthcheck** — `wget` against `127.0.0.1:8080` (Alpine nginx)
+- **`secrets-rotation.sh`** — Checks `.env` file age, sends Telegram notification if older than threshold
+- **`windows/README.md`** — Stacks table, network docs, deployment order, commands
+
+### Changed
+- **All 4 Windows stacks declare `homelab_win` as `external: true`** — Must `docker network create homelab_win` before deploy
+- **CrowdSec relay image** `python:3.14-alpine` → `python:3.12-alpine` (3.14 not stable)
+- **Infisical `TRUSTED_PROXIES`** `"*"` → `"172.16.0.0/12"` (Docker bridge subnet only)
+- **Pi repo path** `~/pi4homelab/` → `~/homelab-ops-mesh/` — systemd, cron, symlinks all updated
+- **Portfolio healthcheck** `localhost` → `127.0.0.1` — Alpine resolves localhost to IPv6 `::1`
+
+### Fixed
+- **[C1] `secrets-rotation.service`** referenced non-existent script — created `secrets-rotation.sh`
+- **[C2] Promtail trailing `"`** on `source: message"` line in `promtail.yml`
+- **[C3] `capacity-planning.json`** broken JSON — missing `}` on last panel; restored Network I/O Rate panel (was overwritten with Capacity Alerts content)
+- **[H1] TinyBot `/search` and `/chatid`** missing `@admin_only` decorator
+- **[H2] TinyBot container commands** no name validation — added `re.match(r'^[a-zA-Z0-9_-]+$', name)`
+- **[H5] TinyBot `requirements.txt`** missing `requests>=2.31`
+- **[H6] Grafana dashboards** — removed Ollama/K8s panels from 4 dashboards (services removed in v1.3)
+- **[H7] Portfolio** — updated container counts (27→28, 14→13 stacks)
+- **[M1] Nextcloud/Vaultwarden/Syncthing ports** bound to `127.0.0.1` instead of `0.0.0.0`
+- **[M2] Samba compose** — `SAMBA_PASSWORD` now required (no `changeme` default)
+- **[M4] Pi apps Redis** — `--requirepass` + `REDISCLI_AUTH` healthcheck
+- **[M6] ADR-005** — "removed in v1.7" → "removed in v1.3"
+- **[M7] ADR-006** — removed Git signing claim; fixed recovery commands
+- **[M9] SETUP_GUIDE** — `backup-wrapper.sh` → `backup.sh`
+- **[M10] `backup.sh` and `backup-os.sh`** — `set -uo pipefail` → `set -euo pipefail`
+- **[M11] Pi apps Redis** — `7.2-alpine` → `7.4-alpine`
+- **[M12] Windows `homelab_win` network** — all stacks now use `external: true`
+- **[M13] Portfolio** — removed WireGuard reference, updated tech list
+- **[L2] Redis healthchecks** — `redis-cli -a $PASSWORD` → `REDISCLI_AUTH` env var (password not in process list)
+- **[L4] CrowdSec** — removed `SYS_RESOURCE` capability (only `NET_ADMIN` needed)
+- **[L6] Portfolio Dockerfile** — `nginx:alpine` → `nginx:1.27-alpine`
+- **[L7] TinyBot governor** — `HERMES_ROOT` → `TINYBOT_ROOT`
+- **[L8] ADR-006** — acknowledged unsigned commits as documented risk gap
+- **Nextcloud healthcheck** — timeout 10s→35s; `curl -m 30`; interval 60s→120s (status.php slow on Pi)
+- **Redis healthcheck in all 3 stacks** — `$$VAR` in CMD-SHELL doesn't work (env var not set in container); moved to `REDISCLI_AUTH` in `environment:` section
+
+### Removed
+- **11 stale Pi config files** — `pi/config/grafana/` (8 dashboards + prometheus datasource), `pi/config/tempo/`, `pi/config/otel-collector-config.yaml`
+- ** CrowdSec `SYS_RESOURCE` capability** — unjustified, overrides container limits
+- **`TAILSCALE_WIN_IP`** from `windows/.env.example` — unused (dead var)
+
+---
+
 ## [v1.4.0] — 2026-06-28
 
 ### Added

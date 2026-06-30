@@ -11,7 +11,7 @@
 
 ---
 
-## Current: v1.4 — Multi-Node Mesh ✅ Released
+## Current: v1.5 — Security Audit & Hardening ✅ Released
 
 | Version | Focus | Status |
 |---------|-------|--------|
@@ -19,7 +19,8 @@
 | **v1.1** | Observability: Loki+Promtail, Alertmanager+Telegram, Uptime Kuma, ZRAM | ✅ Released |
 | **v1.2** | Secrets + backup: Infisical, Restic, backup automation | ✅ Released |
 | **v1.3** | Security: Authelia SSO, CrowdSec IDS, ForwardAuth | ✅ Released |
-| **v1.4** | Multi-node mesh (current): Pi + Windows, 28 containers, Docker Compose only | ✅ Released |
+| **v1.4** | Multi-node mesh: Pi + Windows, 28 containers, Docker Compose only | ✅ Released |
+| **v1.5** | Security audit: STRIDE review, Redis auth, TinyBot hardening, dashboard cleanup, network hardening | ✅ Released |
 
 ---
 
@@ -27,8 +28,8 @@
 
 | Version | Focus | Status |
 |---------|-------|--------|
-| **v1.5** | Headscale self-hosted Tailscale control plane | 📋 Planned |
-| **v1.6** | Gitops: Gitea + CI/CD on Pi | 📋 Planned |
+| **v1.6** | Headscale self-hosted Tailscale control plane | 📋 Planned |
+| **v1.7** | Gitops: Gitea + CI/CD on Pi | 📋 Planned |
 | **v2.0** | Edge/IoT: Matter/Thread/Zigbee bridge, HA integration | 📋 Planned |
 
 ---

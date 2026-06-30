@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-The homelab-ops-mesh v1.4 introduces authentication (Authelia), Tailscale HTTPS, intrusion detection (CrowdSec), and container hardening (pinned tags, CPU/mem limits, `:ro` mounts). We need a documented threat model.
+The homelab-ops-mesh v1.5 introduces a full STRIDE security audit, Redis authentication on all stacks, TinyBot command hardening, network port binding to localhost, and removal of unjustified capabilities.
 
 ## Decision
 Use **STRIDE** methodology to model threats to the homelab-ops-mesh system.

@@ -297,6 +297,7 @@ v1.1     2026-05    Moved heavy services (Grafana, monitoring, auth) to Windows
 v1.2     2026-06    Upgraded CrowdSec, added Telegram alert pipeline
 v1.3     2026-06    Optimized memory, set up automated backups, cleaned up
 v1.4     2026-06    Hardened all containers: pinned tags, healthchecks, CPU limits, :ro mounts, stale cleanup
+v1.5     2026-06    Security audit: STRIDE review, Redis auth, TinyBot hardening, network hardening, dashboard cleanup
 ```
 
 ---
