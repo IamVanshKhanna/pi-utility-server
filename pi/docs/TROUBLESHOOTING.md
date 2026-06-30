@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-Common issues and solutions for the Pi4B Homelab stack.
+Common issues and solutions for the homelab-ops-mesh multi-node stack.
 
 ---
 
@@ -111,9 +111,9 @@ sudo systemctl start docker
 ## Prometheus / Grafana Issues
 
 ### No data in Grafana
-- Verify Prometheus is scraping: visit `http://prometheus-ip:9090/targets`
-- Check datasource URL in Grafana: should be `http://prometheus:9090`
-- Ensure both containers are on the `monitoring` network
+- Verify Prometheus is scraping: visit `http://<windows-ip>:9090/targets`
+- Check datasource URL in Grafana: should be `http://prometheus-win:9090` (Windows Docker network)
+- Prometheus and Grafana both run on Windows in the `homelab_win` network
 
 ### Grafana shows "No data" for panels
 - Adjust time range in Grafana (top right)
@@ -159,7 +159,7 @@ free -h
 docker stats --no-stream
 ```
 - Stop unused stacks: `docker compose -f stacks/smarthome/docker-compose.yml stop`
-- Reduce Prometheus retention: add `--storage.tsdb.retention.time=7d`
+- Check if swap is being used: `free -h` — zram compressed swap is expected
 
 ### USB SSD not detected after reboot
 ```bash

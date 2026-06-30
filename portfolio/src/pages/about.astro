@@ -29,7 +29,6 @@ import Base from '../layouts/Base.astro';
           <li>Debian Trixie (aarch64)</li>
           <li>Docker Compose (no Kubernetes)</li>
           <li>Tailscale mesh VPN</li>
-          <li>Host-level WireGuard (fallback)</li>
         </ul>
       </div>
       <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
@@ -58,7 +57,6 @@ import Base from '../layouts/Base.astro';
           <li>CrowdSec (IPS)</li>
           <li>Infisical (secrets management)</li>
           <li>Vaultwarden (passwords)</li>
-          <li>Host-level WireGuard (fallback VPN)</li>
         </ul>
       </div>
     </div>
@@ -75,24 +73,38 @@ import Base from '../layouts/Base.astro';
         </div>
       </div>
       <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v2.0</div>
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.1</div>
         <div class="border-l-2 border-brand pl-4">
           <p class="font-medium">K3s experiment</p>
           <p class="text-sm text-text-muted">Kubernetes with ArgoCD, Helmfile - too heavy for 4GB Pi</p>
         </div>
       </div>
       <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v3.0</div>
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.2</div>
         <div class="border-l-2 border-brand pl-4">
           <p class="font-medium">K3s removed, optimized</p>
           <p class="text-sm text-text-muted">Docker Compose only, swap off, TinyBot, Tailscale mesh</p>
         </div>
       </div>
       <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v4.0</div>
-        <div class="border-l-2 border-brand-light pl-4">
-          <p class="font-medium text-brand-light">Multi-node mesh (current)</p>
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.3</div>
+        <div class="border-l-2 border-brand pl-4">
+          <p class="font-medium">Multi-node mesh</p>
           <p class="text-sm text-text-muted">Pi always-on core + Windows heavy compute, restructured repo</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.4</div>
+        <div class="border-l-2 border-brand pl-4">
+          <p class="font-medium">Container hardening</p>
+          <p class="text-sm text-text-muted">Pinned tags, healthchecks, CPU limits, :ro mounts, stale cleanup</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.5</div>
+        <div class="border-l-2 border-brand-light pl-4">
+          <p class="font-medium text-brand-light">Security audit (current)</p>
+          <p class="text-sm text-text-muted">STRIDE review, Redis auth, TinyBot hardening, network hardening</p>
         </div>
       </div>
     </div>

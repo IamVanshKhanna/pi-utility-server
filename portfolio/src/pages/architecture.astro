@@ -13,17 +13,17 @@ const topologyDiagram = ` Internet
     +--- /vault/
     +--- /hass/ (homeassistant)
     +--- /sync/
-    +--- /grafana/     (Phase 2: Windows)
-    +--- /auth/        (Phase 2: Windows)
-    +--- /secrets/     (Phase 2: Windows)
+    +--- /grafana/     (Windows)
+    +--- /auth/        (Windows)
+    +--- /secrets/     (Windows)
     |
     +--- 28 containers total
     |
-[ Pi 4B : 100.127.191.2 ]  <--- Tailscale mesh --->  [ Windows : 100.74.111.26 ]
+ [ Pi 4B : 100.127.191.2 ]  <--- Tailscale mesh --->  [ Windows : 100.74.111.26 ]
     |                                                      |
     +-- Pi-hole (DNS:53)                                  +-- Docker Desktop
-    +-- TinyBot (Telegram)                                +-- Heavy compute
-    +-- /mnt/nas/ storage                                 +-- Phase 2 targets
+    +-- TinyBot (Telegram)                                +-- Monitoring + Auth + Secrets
+    +-- /mnt/nas/ storage                                 +-- Heavy compute
 `;
 ---
 
@@ -87,9 +87,13 @@ const topologyDiagram = ` Internet
         <h3 class="font-semibold text-green-400">Phase 2 - Windows Migration (Done)</h3>
         <p class="text-sm text-text-muted">Monitoring (Grafana, Prometheus, Loki, Tempo, Alertmanager), auth (Authelia), and secrets (Infisical) on Windows Docker Desktop. 10 containers.</p>
       </div>
+      <div class="border-l-4 border-green-500 pl-4">
+        <h3 class="font-semibold text-green-400">Phase 3 - Security Hardening (Done)</h3>
+        <p class="text-sm text-text-muted">STRIDE threat model, Authelia SSO + 2FA, CrowdSec IDS, Redis auth, TinyBot hardening, network hardening.</p>
+      </div>
       <div class="border-l-4 border-text-muted pl-4">
-        <h3 class="font-semibold text-text-muted-foreground">Phase 3 - Polish (Todo)</h3>
-        <p class="text-sm text-text-muted">Portfolio site deployment, Windows docs, CI/CD pipeline, automated testing.</p>
+        <h3 class="font-semibold text-text-muted-foreground">Phase 4 - Self-Hosted Control Plane (Planned)</h3>
+        <p class="text-sm text-text-muted">Headscale self-hosted Tailscale, Gitea CI/CD, Matter/Thread IoT bridge.</p>
       </div>
     </div>
   </section>

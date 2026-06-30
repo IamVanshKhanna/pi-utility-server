@@ -80,11 +80,11 @@ Internet
 | pihole-exporter | 9617 | 0.0.0.0 | Prometheus metrics |
 | Node Exporter | 9100 | 0.0.0.0 | Host metrics |
 | cAdvisor | 8083 | 0.0.0.0 | Container metrics |
-| Nextcloud | 8080 | 0.0.0.0 | File cloud |
-| Vaultwarden | 8081 | 0.0.0.0 | Password manager |
+| Nextcloud | 8080 | 127.0.0.1 | File cloud |
+| Vaultwarden | 8081 | 127.0.0.1 | Password manager |
 | Home Assistant | 8123 | host mode | Home automation |
 | Uptime Kuma | 8082 | 127.0.0.1 | Uptime monitoring |
-| Syncthing | 8384, 22000, 21027/udp | 0.0.0.0 | File sync |
+| Syncthing | 8384, 22000, 21027/udp | 127.0.0.1 | File sync |
 | Samba | 139, 445 | 0.0.0.0 | File sharing |
 
 ### Windows Host Ports

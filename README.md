@@ -292,7 +292,7 @@ docker compose -f windows/stacks/secrets/docker-compose.yml up -d
 
 ```
 v0.x     2024       Started with Kubernetes (K3s + ArgoCD) — too complex, removed
-v1.0     2025-01    Single Pi 4B with 27 Docker containers
+v1.0     2026-06    Single Pi 4B with Docker Compose baseline
 v1.1     2026-05    Moved heavy services (Grafana, monitoring, auth) to Windows
 v1.2     2026-06    Upgraded CrowdSec, added Telegram alert pipeline
 v1.3     2026-06    Optimized memory, set up automated backups, cleaned up

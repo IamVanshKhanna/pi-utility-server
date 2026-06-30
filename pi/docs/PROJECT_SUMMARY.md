@@ -12,7 +12,7 @@ A production-grade, multi-node homelab on **Raspberry Pi 4B (4GB RAM, 1.9TB SSD)
 
 ---
 
-## Architecture (v1.4 — Multi-Node Docker Compose)
+## Architecture (v1.5 — Security Audit & Hardening)
 
 ### Hardware
 | Node | Spec | Role |
@@ -111,9 +111,11 @@ docker compose -f stacks/<stack>/docker-compose.yml --env-file ../.env up -d
 | Version | Focus |
 |---------|-------|
 | v1.0 | Single Pi baseline, Docker Compose |
-| v2.0 | K3s experiment (abandoned — too heavy for 4GB) |
-| v3.0 | K3s removed, Docker Compose only, TinyBot, Tailscale |
-| **v4.0** | **Multi-node mesh (current): Pi + Windows, restructured repo** |
+| v1.1 | K3s experiment (abandoned — too heavy for 4GB) |
+| v1.2 | K3s removed, Docker Compose only, TinyBot, Tailscale |
+| v1.3 | Multi-node mesh: Pi + Windows, restructured repo |
+| v1.4 | Container hardening: pinned tags, healthchecks, CPU limits, :ro mounts |
+| **v1.5** | **Security audit: STRIDE review, Redis auth, TinyBot hardening, network hardening** |
 
 ---
 

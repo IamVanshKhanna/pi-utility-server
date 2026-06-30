@@ -49,14 +49,19 @@ sudo reboot
 
 ---
 
-## Phase 4 — Clone Repo and Run Setup
+## Phase 4 — Clone Repo and Install Docker
 
 ```bash
 sudo apt-get install -y git
 git clone https://github.com/IamVanshKhanna/homelab-ops-mesh.git
 cd homelab-ops-mesh/pi
 chmod +x scripts/*.sh
-bash scripts/setup.sh
+```
+
+Install Docker and add user to group:
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
 ```
 
 Log out and back in after completion (Docker group permissions):
@@ -94,12 +99,10 @@ openssl rand -base64 32           # Restic encryption password
 - `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` — Nextcloud/MariaDB
 - `NEXTCLOUD_ADMIN_USER`, `NEXTCLOUD_ADMIN_PASSWORD`, `NEXTCLOUD_TRUSTED_DOMAINS`
 - `CROWDSEC_API_KEY` — CrowdSec API key
-- `PI_IP` — Pi's Tailscale IP for Prometheus scrape targets
+- `WINDOWS_IP` — Windows Tailscale IP for cross-node routing + Prometheus scrape targets
 
 > Also copy `.template` files to real files and fill in real values:
 > - `pi/config/traefik/dynamic.yml.template` → `dynamic.yml`
-> - `pi/config/authelia/users_database.yml.template` → `users_database.yml`
-> - `pi/config/alertmanager/alertmanager.yml.template` → `alertmanager.yml`
 > - `windows/config/alertmanager/alertmanager.yml.template` → `alertmanager.yml`
 > - `windows/config/authelia/users_database.yml.template` → `users_database.yml`
 
@@ -108,7 +111,8 @@ openssl rand -base64 32           # Restic encryption password
 ## Phase 6 — Tailscale Setup + HTTPS
 
 ```bash
-# On Pi (after setup.sh, which installs Tailscale)
+# On Pi (after Docker install)
+curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up --ssh --advertise-exit-node --hostname=autobot
 # Visit the auth URL, login to Tailscale
 
@@ -197,9 +201,6 @@ Add:
 # Daily backup at 3am (with alerting on failure)
 0 3 * * * /home/vansh/homelab-ops-mesh/pi/scripts/backup.sh >> /var/log/homelab-backup.log 2>&1
 
-# Health check every 15 minutes
-*/15 * * * * /home/vansh/homelab-ops-mesh/pi/scripts/health-check.sh >> /var/log/homelab-health.log 2>&1
-
 # Weekly update Sunday 4am
 0 4 * * 0 /home/vansh/homelab-ops-mesh/pi/scripts/update.sh >> /var/log/homelab-update.log 2>&1
 ```
@@ -209,10 +210,7 @@ Add:
 ## Phase 10 — Verify
 
 ```bash
-# Full health check
-bash scripts/health-check.sh
-
-# Check key metrics
+# Quick health check
 docker ps
 vcgencmd measure_temp   # Should be 45-55°C at idle
 df -h                   # Check disk usage

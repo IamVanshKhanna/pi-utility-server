@@ -61,8 +61,8 @@ Green = OK, Red = problem.
 | 53 | Pi-hole DNS | 0.0.0.0 (UDP) | DNS server |
 | 80 | Traefik HTTP | 0.0.0.0 | Redirects to 8443 |
 | 8443 | Traefik Tailscale | 0.0.0.0 | Plain-HTTP behind Tailscale Serve |
-| 8080 | Nextcloud | 0.0.0.0 | File cloud |
-| 8081 | Vaultwarden | 0.0.0.0 | Password manager |
+| 8080 | Nextcloud | 127.0.0.1 | File cloud |
+| 8081 | Vaultwarden | 127.0.0.1 | Password manager |
 | 8082 | Uptime Kuma | 127.0.0.1 | Uptime monitoring |
 | 8083 | cAdvisor | 0.0.0.0 | Container metrics |
 | 8084 | Traefik API | 0.0.0.0 | Prometheus metrics |
@@ -70,7 +70,7 @@ Green = OK, Red = problem.
 | 9100 | Node Exporter | 0.0.0.0 | Host metrics |
 | 9617 | Pi-hole Exporter | 0.0.0.0 | DNS metrics |
 | 8123 | Home Assistant | host mode | Home automation |
-| 8384 | Syncthing | 0.0.0.0 | File sync UI |
+| 8384 | Syncthing | 127.0.0.1 | File sync UI |
 | 139/445 | Samba | 0.0.0.0 | File sharing |
 
 ### Windows Host Ports
