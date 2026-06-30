@@ -17,10 +17,8 @@ pi/config/crowdsec/notifications/
 pi/config/crowdsec/webhook-relay/__init__.py
 
 # Secrets — contain real credentials (use .template versions instead)
-pi/config/authelia/users_database.yml
 windows/config/authelia/users_database.yml
 pi/config/traefik/dynamic.yml
-pi/config/alertmanager/alertmanager.yml
 windows/config/alertmanager/alertmanager.yml
 
 # Tinybot runtime data (state contains chat IDs, logs are ephemeral)
@@ -31,3 +29,7 @@ windows/config/alertmanager/alertmanager.yml
 # TLS certificates and keys
 *.key
 *.pem
+
+# Backup archives
+windows/backups/
+pi/backups/
