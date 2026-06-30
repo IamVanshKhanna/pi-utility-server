@@ -82,8 +82,14 @@ else
 fi
 
 if ! "$RESTIC_BIN" snapshots >/dev/null 2>&1; then
-  echo "Repository not initialized -- running restic init"
-  "$RESTIC_BIN" init
+  if "$RESTIC_BIN" list locks 2>/dev/null | grep -q .; then
+    echo "Removing stale repository lock..."
+    "$RESTIC_BIN" unlock
+  fi
+  if ! "$RESTIC_BIN" snapshots >/dev/null 2>&1; then
+    echo "Repository not initialized -- running restic init"
+    "$RESTIC_BIN" init
+  fi
 fi
 
 NEXTCLOUD_CONTAINER="nextcloud"
@@ -160,6 +166,7 @@ else
 fi
 
 echo "Applying retention policy: daily=$RESTIC_KEEP_DAILY weekly=$RESTIC_KEEP_WEEKLY monthly=$RESTIC_KEEP_MONTHLY"
+"$RESTIC_BIN" unlock 2>/dev/null || true
 "$RESTIC_BIN" forget \
   --keep-daily "$RESTIC_KEEP_DAILY" \
   --keep-weekly "$RESTIC_KEEP_WEEKLY" \
