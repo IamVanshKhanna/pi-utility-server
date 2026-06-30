@@ -86,8 +86,29 @@ if ! "$RESTIC_BIN" snapshots >/dev/null 2>&1; then
   "$RESTIC_BIN" init
 fi
 
-BACKUP_PATHS=(
-  "${DATA_DIR}/nextcloud/userdata"
+NEXTCLOUD_CONTAINER="nextcloud"
+NEXTCLOUD_SNAPSHOT_DIR="${BACKUP_DIR}/nextcloud-snapshots"
+mkdir -p "$NEXTCLOUD_SNAPSHOT_DIR"
+
+if docker ps --format '{{.Names}}' | grep -q "^${NEXTCLOUD_CONTAINER}$"; then
+  echo "Snapshotting Nextcloud data via docker exec..."
+  NEXTCLOUD_TAR="${NEXTCLOUD_SNAPSHOT_DIR}/nextcloud-userdata-$(date +%Y%m%d-%H%M%S).tar.gz"
+  docker exec "$NEXTCLOUD_CONTAINER" tar czf - -C /var/www/html data/ > "$NEXTCLOUD_TAR" 2>/dev/null || {
+    echo "WARNING: Nextcloud docker exec snapshot failed, falling back to direct path"
+    NEXTCLOUD_TAR=""
+  }
+else
+  echo "Nextcloud container not running, skipping docker snapshot"
+  NEXTCLOUD_TAR=""
+fi
+
+BACKUP_PATHS=()
+if [[ -n "$NEXTCLOUD_TAR" && -f "$NEXTCLOUD_TAR" ]]; then
+  BACKUP_PATHS+=("$NEXTCLOUD_TAR")
+else
+  BACKUP_PATHS+=("${DATA_DIR}/nextcloud/userdata")
+fi
+BACKUP_PATHS+=(
   "${DATA_DIR}/vaultwarden"
   "${DATA_DIR}/homeassistant"
   "${ROOT_DIR}/pi/config"
@@ -114,8 +135,13 @@ fi
 
 echo "Backing up ${#EXISTING_PATHS[@]} paths..."
 
+BACKUP_EXCLUDE=(
+  --exclude="**/crowdsec/notifications"
+)
+
 BACKUP_EXIT=0
 "$RESTIC_BIN" backup "${EXISTING_PATHS[@]}" \
+  "${BACKUP_EXCLUDE[@]}" \
   --tag "auto-$(date +%Y-%m-%d)" \
   --tag "hostname-$(hostname)" \
   --compression max \
@@ -142,6 +168,9 @@ echo "Applying retention policy: daily=$RESTIC_KEEP_DAILY weekly=$RESTIC_KEEP_WE
 
 echo "Verifying repository (5% sample)..."
 "$RESTIC_BIN" check --read-data-subset=5% 2>&1 || echo "Check skipped (slow on large repos)"
+
+echo "Cleaning old Nextcloud snapshots (keep 7)..."
+ls -t "${NEXTCLOUD_SNAPSHOT_DIR}"/nextcloud-userdata-*.tar.gz 2>/dev/null | tail -n +8 | xargs -r rm -f
 
 echo "=== Backup finished: $(date -Is) ==="
 send_telegram "📦 <b>Backup finished</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"
