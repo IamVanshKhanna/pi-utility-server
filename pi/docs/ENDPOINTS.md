@@ -45,7 +45,7 @@ Green = OK, Red = problem.
 | 2 | Prometheus | `127.0.0.1:9090/targets` | None | All 8 targets show "UP" |
 | 3 | Alertmanager | `127.0.0.1:9093` | None | Status page shows silences/receivers |
 | 4 | Loki | `127.0.0.1:3100/ready` | None | Returns "ready" |
-| 5 | Tempo | `127.0.0.1:3200/ready` | None | Returns "ready" |
+| 5 | Tempo | `100.74.111.26:3200/ready` | None | Returns "ready" |
 | 6 | Authelia | `/auth/` | See `users_database.yml` | Login page appears |
 | 7 | Infisical | `/secrets/` | Set on first visit | Project secrets visible |
 
@@ -77,13 +77,13 @@ Green = OK, Red = problem.
 
 | Port | Service | Binding | Purpose |
 |------|---------|---------|---------|
-| 3000 | Grafana | 127.0.0.1 | Dashboards |
-| 3200 | Tempo | 127.0.0.1 | Traces |
+| 3000 | Grafana | 100.74.111.26 | Dashboards (Tailscale-only) |
+| 3200 | Tempo | 100.74.111.26 | Traces (Tailscale-only) |
 | 3100 | Loki | 127.0.0.1 | Log storage |
 | 4317 | Tempo OTLP | 127.0.0.1 | gRPC trace ingest |
-| 8083 | Infisical | 127.0.0.1 | Secrets UI |
+| 8083 | Infisical | 100.74.111.26 | Secrets UI (Tailscale-only) |
 | 9090 | Prometheus | 127.0.0.1 | Metrics |
-| 9091 | Authelia | 127.0.0.1 | SSO |
+| 9091 | Authelia | 100.74.111.26 | SSO (Tailscale-only) |
 | 9093 | Alertmanager | 127.0.0.1 | Alerts |
 
 ---

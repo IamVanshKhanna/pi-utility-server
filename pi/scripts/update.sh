@@ -61,8 +61,8 @@ for STACK in "${STACKS[@]}"; do
   FULL_PATH="$REPO_DIR/$STACK"
   if [[ -f "$FULL_PATH" ]]; then
     log "Updating: $STACK"
-    docker compose -f "$FULL_PATH" pull
-    docker compose -f "$FULL_PATH" up -d --remove-orphans
+    docker compose -f "$FULL_PATH" --env-file "$ENV_FILE" pull
+    docker compose -f "$FULL_PATH" --env-file "$ENV_FILE" up -d --remove-orphans
     log "  OK: $STACK"
   else
     log "  SKIP (not found): $FULL_PATH"

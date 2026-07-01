@@ -27,7 +27,7 @@ http:
     basic-auth:
       basicAuth:
         users:
-        - REPLACE_WITH_htpasswd_hash
+        - "REPLACE_WITH_htpasswd_hash"
     local-only:
       ipAllowList:
         sourceRange:

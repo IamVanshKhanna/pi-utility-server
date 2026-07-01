@@ -4,6 +4,19 @@
 
 ---
 
+## [v1.5.2] — 2026-07-01
+
+### Changed
+- **`render-dynamic-yml.sh` rewritten** — Uses Python for safe env substitution; avoids shell `$` expansion corrupting htpasswd hashes in `TRAEFIK_BASICAUTH`
+- **`dynamic.yml.template`** — htpasswd placeholder changed from `${TRAEFIK_BASICAUTH}` to `REPLACE_WITH_htpasswd_hash` (double-quoted in YAML; Python replaces it safely)
+- **`pi/.env.example`** — Added `TRAEFIK_BASICAUTH` with generation instructions
+
+### Fixed
+- **Traefik dashboard basic auth broken** — Template had `"${TRAEFIK_BASICAUTH}"` but shell sed + `load_env()` mangled `$apr1$` hash characters; now rendered correctly via Python
+- **Render script env var passing** — `export RENDER_TEMPLATE/OUTPUT/ENV` instead of inline `export` outside heredoc scope
+
+---
+
 ## [v1.5.1] — 2026-07-01
 
 ### Fixed
