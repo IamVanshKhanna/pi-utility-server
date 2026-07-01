@@ -26,6 +26,7 @@ EXPECTED_CONTAINERS=(
   homeassistant
   uptime-kuma
   crowdsec crowdsec-relay
+  headscale
   samba syncthing
   portfolio
 )

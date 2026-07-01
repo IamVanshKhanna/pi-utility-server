@@ -74,13 +74,13 @@ generate_summary() {
 • Containers: $pi_total$( [[ $pi_unhealthy -gt 0 ]] && echo " ⚠️${pi_unhealthy} unhealthy" || echo "")
 
 <b>📘 mr-stranger (Windows)</b>
-• Prometheus targets: $win_targets_up/8 up
+• Prometheus targets: $win_targets_up/9 up
 • Firing alerts: $alerts_firing
 
 <b>💾 Backup</b>
 • Last snapshot: $last_backup
 
-🤖 <i>homelab-ops-mesh v1.5</i>
+🤖 <i>homelab-ops-mesh v1.6</i>
 EOF
 }
 

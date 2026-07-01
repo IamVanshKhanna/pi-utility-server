@@ -4,6 +4,19 @@
 
 ---
 
+## [v1.6.1] — 2026-07-01
+
+### Fixed
+- **update.sh** — Added missing `headscale` stack to update rotation
+- **health-check.sh** — Added `headscale` to expected container list (was unmonitored)
+- **daily-health-summary.sh** — Updated Prometheus target count 8→9 (headscale); version tag v1.5→v1.6
+
+### Pending (requires sudo)
+- **systemd ordering** — Docker should start After=tailscaled to allow Headscale port binding to `100.64.0.1`
+- **Headscale port hardening** — Change `0.0.0.0:8086` → `100.64.0.1:8086` once systemd ordering is applied
+
+---
+
 ## [v1.6.0] — 2026-07-01
 
 ### Added

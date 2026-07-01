@@ -39,6 +39,7 @@ send_telegram() {
 STACKS=(
   "pi/stacks/core/docker-compose.yml"
   "pi/stacks/network/docker-compose.yml"
+  "pi/stacks/headscale/docker-compose.yml"
   "pi/stacks/apps/docker-compose.yml"
   "pi/stacks/smarthome/docker-compose.yml"
   "pi/stacks/uptime-kuma/docker-compose.yml"
