@@ -11,6 +11,9 @@
 - **`dynamic.yml.template`** — htpasswd placeholder changed from `${TRAEFIK_BASICAUTH}` to `REPLACE_WITH_htpasswd_hash` (double-quoted in YAML; Python replaces it safely)
 - **`pi/.env.example`** — Added `TRAEFIK_BASICAUTH` with generation instructions
 
+### Removed
+- **Ollama systemd service disabled** — `systemctl stop ollama && disable ollama`; frees ~24MB RAM on Pi; binary remains at `/usr/local/bin/ollama` for future use
+
 ### Fixed
 - **Traefik dashboard basic auth broken** — Template had `"${TRAEFIK_BASICAUTH}"` but shell sed + `load_env()` mangled `$apr1$` hash characters; now rendered correctly via Python
 - **Render script env var passing** — `export RENDER_TEMPLATE/OUTPUT/ENV` instead of inline `export` outside heredoc scope
@@ -37,9 +40,6 @@
 - **6 stale Docker images** on Windows (Authelia 4.38.19, Infisical latest, Postgres 16-alpine, Alertmanager latest+v0.27.0, Alpine latest)
 - **10 dangling Docker volumes** on Pi (Ollama data 2.1GB, old Authelia/Redis/Traefik/CrowdSec/Infisical/Uptime-Kuma/Vaultwarden — ~2.4GB)
 - **2 dangling Docker volumes** on Windows (old Infisical DB, anonymous hash)
-
-### Note
-- **Ollama systemd service** still running on Pi (`/etc/systemd/system/ollama.service`) — requires `sudo systemctl stop ollama && sudo systemctl disable ollama` to remove
 
 ---
 
