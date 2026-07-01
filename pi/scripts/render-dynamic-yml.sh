@@ -48,7 +48,7 @@ with open(env_path) as f:
             env[key.strip()] = val
 
 defaults = {
-    "WINDOWS_IP": "100.74.111.26",
+    "WINDOWS_IP": "100.64.0.2",
     "TRAEFIK_BASICAUTH": "REPLACE_WITH_htpasswd_hash",
 }
 
@@ -68,7 +68,7 @@ with open(output_path, "w") as f:
     f.write(content)
 
 print("Rendered " + output_path)
-windows_ip = env.get("WINDOWS_IP", "100.74.111.26")
+windows_ip = env.get("WINDOWS_IP", "100.64.0.2")
 basicauth_set = "TRAEFIK_BASICAUTH" in env
 print("WINDOWS_IP: " + windows_ip)
 print("TRAEFIK_BASICAUTH: " + ("SET" if basicauth_set else "NOT SET (using placeholder)"))

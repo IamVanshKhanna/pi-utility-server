@@ -3,10 +3,7 @@ import Base from '../layouts/Base.astro';
 
 const topologyDiagram = ` Internet
     |
-    | HTTPS
-    v
-[ Tailscale Serve :443 ]   (TLS termination)
-    |
+    | HTTP over Tailscale mesh (WireGuard encrypted)
     v
 [ Traefik (reverse proxy) ]  <--- path-based routing (PathPrefix)
     |
@@ -19,11 +16,12 @@ const topologyDiagram = ` Internet
     |
     +--- 28 containers total
     |
- [ Pi 4B : 100.127.191.2 ]  <--- Tailscale mesh --->  [ Windows : 100.74.111.26 ]
-    |                                                      |
-    +-- Pi-hole (DNS:53)                                  +-- Docker Desktop
-    +-- TinyBot (Telegram)                                +-- Monitoring + Auth + Secrets
-    +-- /mnt/nas/ storage                                 +-- Heavy compute
+ [ Pi 4B : 100.64.0.1 ]  <--- Headscale/Tailscale mesh --->  [ Windows : 100.64.0.2 ]
+    |                                                            |
+    +-- Pi-hole (DNS:53)                                      +-- Docker Desktop
+    +-- Headscale (control server)                              +-- Monitoring + Auth + Secrets
+    +-- TinyBot (Telegram)                                      +-- Heavy compute
+    +-- /mnt/nas/ storage
 `;
 ---
 
@@ -43,10 +41,10 @@ const topologyDiagram = ` Internet
   <section class="mb-16">
     <h2 class="text-2xl font-semibold mb-6 text-brand">Traffic Flow</h2>
     <ol class="list-decimal list-inside space-y-2 text-text-muted">
-      <li>User hits <code class="text-brand-light bg-surface-light px-1.5 py-0.5 rounded text-sm">https://autobot.taila24d04.ts.net/service/</code></li>
-      <li>Tailscale Serve terminates TLS, proxies to Traefik on localhost:8443</li>
+      <li>User hits <code class="text-brand-light bg-surface-light px-1.5 py-0.5 rounded text-sm">http://100.64.0.1/service/</code> over Tailscale mesh</li>
       <li>Traefik matches PathPrefix rule, routes to the correct Docker container on the proxy network</li>
       <li>StripPrefix middleware removes the path prefix before forwarding to the backend</li>
+      <li>Cross-node traffic uses Headscale-assigned 100.64.0.x IPs (WireGuard encrypted)</li>
     </ol>
   </section>
 
@@ -71,6 +69,7 @@ const topologyDiagram = ` Internet
           <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">crowdsec</td><td class="px-4 py-2 text-text-muted">crowdsec, relay</td><td class="px-4 py-2 text-text-muted">Intrusion detection + alert relay</td></tr>
           <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">uptime-kuma</td><td class="px-4 py-2 text-text-muted">uptime-kuma</td><td class="px-4 py-2 text-text-muted">Uptime monitoring</td></tr>
           <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">portfolio</td><td class="px-4 py-2 text-text-muted">astro site</td><td class="px-4 py-2 text-text-muted">Project showcase</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">headscale</td><td class="px-4 py-2 text-text-muted">headscale</td><td class="px-4 py-2 text-text-muted">Self-hosted Tailscale control plane</td></tr>
         </tbody>
       </table>
     </div>
@@ -91,9 +90,13 @@ const topologyDiagram = ` Internet
         <h3 class="font-semibold text-green-400">Phase 3 - Security Hardening (Done)</h3>
         <p class="text-sm text-text-muted">STRIDE threat model, Authelia SSO + 2FA, CrowdSec IDS, Redis auth, TinyBot hardening, network hardening.</p>
       </div>
+      <div class="border-l-4 border-green-500 pl-4">
+        <h3 class="font-semibold text-green-400">Phase 4 - Self-Hosted Control Plane (Done)</h3>
+        <p class="text-sm text-text-muted">Headscale self-hosted Tailscale control server, replacing Tailscale SaaS. HTTP-over-mesh architecture.</p>
+      </div>
       <div class="border-l-4 border-text-muted pl-4">
-        <h3 class="font-semibold text-text-muted-foreground">Phase 4 - Self-Hosted Control Plane (Planned)</h3>
-        <p class="text-sm text-text-muted">Headscale self-hosted Tailscale, Gitea CI/CD, Matter/Thread IoT bridge.</p>
+        <h3 class="font-semibold text-text-muted-foreground">Phase 5 - GitOps (Planned)</h3>
+        <p class="text-sm text-text-muted">Gitea + CI/CD on Pi. Matter/Thread IoT bridge.</p>
       </div>
     </div>
   </section>
@@ -103,7 +106,7 @@ const topologyDiagram = ` Internet
     <ul class="space-y-3 text-text-muted">
       <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No K3s</span><span>K3s removed - saves ~575MB RAM and 50% idle CPU on 4GB Pi</span></li>
       <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No disk swap</span><span>zram only - compressed RAM swap avoids SSD wear</span></li>
-      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No domain</span><span>Tailscale MagicDNS provides HTTPS at zero cost</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No TLS needed</span><span>WireGuard (Tailscale mesh) encrypts all traffic — TLS redundant inside mesh</span></li>
       <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No AI/LLM</span><span>Free Groq API as fallback - Pi cannot run models with 27 containers</span></li>
       <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No repartitioning</span><span>Uses /mnt/nas/ folders - safer, simpler</span></li>
     </ul>

@@ -26,7 +26,7 @@ services:
       - ../../config/promtail/promtail.yml:/etc/promtail/config.yml:ro
     command:
       - '-config.file=/etc/promtail/config.yml'
-      - '-client.url=http://${WINDOWS_IP:-100.74.111.26}:3100/loki/api/v1/push'
+      - '-client.url=http://${WINDOWS_IP:-100.64.0.2}:3100/loki/api/v1/push'
     mem_limit: 96m
     cpus: 0.1
     healthcheck:

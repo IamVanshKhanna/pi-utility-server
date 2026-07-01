@@ -22,7 +22,7 @@ docker compose -f windows/stacks/auth/docker-compose.yml --env-file windows/.env
 ## Prerequisites
 
 - Docker Desktop for Windows (with WSL2 backend)
-- Tailscale connected (IP `100.74.111.26`)
+- Tailscale connected via Headscale (IP `100.64.0.2`)
 - `windows/.env` configured (copy from `windows/.env.example`)
 
 ## Deployment Order

@@ -1,5 +1,5 @@
 # STACK: CORE
-# Services: Traefik (reverse proxy + TLS) + Portainer (Docker UI)
+# Services: Traefik (reverse proxy) + Portainer (Docker UI)
 # Deploy FIRST before any other stack.
 
 networks:
@@ -24,7 +24,6 @@ services:
       - proxy
     ports:
       - "80:80"
-      - "8443:8443"
       - "8084:8082"
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -45,7 +44,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=PathPrefix(`/dashboard`) || PathPrefix(`/api`)"
-      - "traefik.http.routers.traefik.entrypoints=tailscale"
+      - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.middlewares=basic-auth@file,strip-traefik-dashboard"
       - "traefik.http.middlewares.strip-traefik-dashboard.stripprefix.prefixes=/dashboard,/api"
@@ -73,7 +72,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.portainer.rule=PathPrefix(`/portainer`)"
-      - "traefik.http.routers.portainer.entrypoints=tailscale"
+      - "traefik.http.routers.portainer.entrypoints=web"
       - "traefik.http.routers.portainer.middlewares=strip-portainer"
       - "traefik.http.middlewares.strip-portainer.stripprefix.prefixes=/portainer"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"

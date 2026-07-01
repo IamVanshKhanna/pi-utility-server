@@ -8,17 +8,14 @@ This document describes the technical architecture of the homelab-ops-mesh multi
 |-----------|------|
 | Pi 4B | 4GB RAM, 1.9TB USB 3.0 SSD, Debian Trixie (aarch64) |
 | Windows Desktop | 16GB RAM, Docker Desktop |
-| Network | Tailscale mesh VPN (100.x.x.x), Gigabit Ethernet |
+| Network | Headscale/Tailscale mesh VPN (100.64.0.0/10), Gigabit Ethernet |
 
 ## Network Architecture
 
 ```
 Internet
     |
-    | HTTPS (Tailscale MagicDNS)
-    v
-[ Tailscale Serve :443 ]  (TLS termination)
-    |
+    | HTTP over Tailscale mesh (WireGuard encrypted)
     v
 [ Traefik v3 Reverse Proxy ]  <--- path-based routing (PathPrefix)
     |
@@ -26,7 +23,8 @@ Internet
     +--- /grafana/, /auth/, /secrets/, /tempo/  (Windows services via Tailscale IP)
     |
     v
-[ Pi 4B : 100.127.191.2 ]  <--- Tailscale mesh --->  [ Windows : 100.74.111.26 ]
+[ Pi 4B : 100.64.0.1 ]  <--- Tailscale mesh --->  [ Windows : 100.64.0.2 ]
+                    [ Headscale control :100.64.0.1:8086 ]
 ```
 
 ## Docker Network Topology
@@ -57,6 +55,7 @@ Internet
 | crowdsec | crowdsec, relay | Intrusion detection + alert relay |
 | nas | samba, syncthing | File sharing, sync |
 | portfolio | astro site | Project showcase |
+| headscale | headscale | Self-hosted Tailscale control server |
 
 ### Windows Stacks (heavy compute)
 
@@ -73,7 +72,9 @@ Internet
 
 | Service | Port | Binding | Notes |
 |---------|------|---------|-------|
-| Traefik | 80, 8443, 8084 | 0.0.0.0 | HTTP, Tailscale entrypoint, API |
+| Traefik | 80, 8084 | 0.0.0.0 | HTTP, API |
+| Headscale | 8086 | 0.0.0.0 | Control server (HTTP) |
+| Headscale metrics | 9092 | 127.0.0.1 | Prometheus metrics |
 | Portainer | 9000 | 127.0.0.1 | Docker UI |
 | Pi-hole | 53 | 0.0.0.0 | DNS |
 | Pi-hole admin | 8053 | 127.0.0.1 | Web UI |
@@ -91,13 +92,13 @@ Internet
 
 | Service | Port | Binding | Notes |
 |---------|------|---------|-------|
-| Grafana | 3000 | 127.0.0.1 | Dashboards |
+| Grafana | 3000 | 100.64.0.2 | Dashboards (Tailscale-only) |
 | Prometheus | 9090 | 127.0.0.1 | Metrics |
 | Alertmanager | 9093 | 127.0.0.1 | Alert routing |
 | Loki | 3100 | 127.0.0.1 | Log storage |
-| Tempo | 3200, 4317 | 127.0.0.1 | Traces + OTLP gRPC |
-| Authelia | 9091 | 127.0.0.1 | SSO |
-| Infisical | 8083 | 127.0.0.1 | Secrets UI |
+| Tempo | 3200, 4317 | 100.64.0.2 / 127.0.0.1 | Traces + OTLP gRPC |
+| Authelia | 9091 | 100.64.0.2 | SSO (Tailscale-only) |
+| Infisical | 8083 | 100.64.0.2 | Secrets UI (Tailscale-only) |
 
 ## Data Persistence
 
@@ -116,7 +117,7 @@ All Pi persistent data is stored under `/mnt/nas/`:
 
 ## Security Model
 
-- **TLS everywhere**: Tailscale Serve terminates TLS on 443
+- **WireGuard encryption**: Tailscale/Headscale mesh encrypts all traffic (no TLS needed inside mesh)
 - **Path-based routing**: Traefik PathPrefix rules, no subdomain certs needed
 - **Authelia SSO**: 2FA on sensitive endpoints
 - **CrowdSec IPS**: Community blocklists + alert relay to Telegram
@@ -124,6 +125,7 @@ All Pi persistent data is stored under `/mnt/nas/`:
 - **`.env` secrets**: Never committed, templates tracked instead
 - **`:ro` mounts**: Config bind mounts read-only where possible
 - **Memory limits**: All 20+ services have CPU + memory limits
+- **Self-hosted control**: Headscale replaces Tailscale SaaS — no third-party dependency for mesh coordination
 
 ## Resource Usage
 

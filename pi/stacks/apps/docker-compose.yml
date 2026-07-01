@@ -111,7 +111,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nextcloud.rule=PathPrefix(`/cloud`)"
-      - "traefik.http.routers.nextcloud.entrypoints=tailscale"
+      - "traefik.http.routers.nextcloud.entrypoints=web"
       - "traefik.http.routers.nextcloud.middlewares=strip-cloud"
       - "traefik.http.middlewares.strip-cloud.stripprefix.prefixes=/cloud"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
@@ -147,7 +147,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vaultwarden-apps.rule=PathPrefix(`/vault`)"
-      - "traefik.http.routers.vaultwarden-apps.entrypoints=tailscale"
+      - "traefik.http.routers.vaultwarden-apps.entrypoints=web"
       - "traefik.http.routers.vaultwarden-apps.middlewares=strip-vault-apps"
       - "traefik.http.middlewares.strip-vault-apps.stripprefix.prefixes=/vault"
       - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"

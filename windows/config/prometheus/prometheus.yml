@@ -28,19 +28,23 @@ scrape_configs:
   # Pi scrape targets — update these if Pi's Tailscale IP changes
   - job_name: 'node-exporter'
     static_configs:
-      - targets: ['100.127.191.2:9100']
+      - targets: ['100.64.0.1:9100']
 
   - job_name: 'cadvisor'
     static_configs:
-      - targets: ['100.127.191.2:8083']
+      - targets: ['100.64.0.1:8083']
 
   - job_name: 'traefik'
     static_configs:
-      - targets: ['100.127.191.2:8084']
+      - targets: ['100.64.0.1:8084']
 
   - job_name: 'pihole-exporter'
     static_configs:
-      - targets: ['100.127.191.2:9617']
+      - targets: ['100.64.0.1:9617']
+
+  - job_name: 'headscale'
+    static_configs:
+      - targets: ['100.64.0.1:9092']
 
   - job_name: 'tempo'
     static_configs:

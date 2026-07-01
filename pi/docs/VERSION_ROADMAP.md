@@ -11,7 +11,7 @@
 
 ---
 
-## Current: v1.5 — Security Audit & Hardening ✅ Released
+## Current: v1.6 — Self-Hosted Control Plane ✅ Released
 
 | Version | Focus | Status |
 |---------|-------|--------|
@@ -21,6 +21,7 @@
 | **v1.3** | Security: Authelia SSO, CrowdSec IDS, ForwardAuth | ✅ Released |
 | **v1.4** | Multi-node mesh: Pi + Windows, 28 containers, Docker Compose only | ✅ Released |
 | **v1.5** | Security audit: STRIDE review, Redis auth, TinyBot hardening, dashboard cleanup, network hardening | ✅ Released |
+| **v1.6** | Headscale self-hosted Tailscale control plane, HTTP-over-mesh architecture | ✅ Released |
 
 ---
 
@@ -28,7 +29,7 @@
 
 | Version | Focus | Status |
 |---------|-------|--------|
-| **v1.6** | Headscale self-hosted Tailscale control plane | 📋 Planned |
+| **v1.6** | Headscale self-hosted Tailscale control plane | ✅ Released |
 | **v1.7** | Gitops: Gitea + CI/CD on Pi | 📋 Planned |
 | **v2.0** | Edge/IoT: Matter/Thread/Zigbee bridge, HA integration | 📋 Planned |
 
@@ -44,3 +45,4 @@
 | v1.2 | Infisical for secrets management | ADR-004 |
 | v1.3 | TinyBot agent (replaces Hermes) | ADR-005 |
 | v1.3 | STRIDE threat model | ADR-006 |
+| v1.6 | Headscale over Tailscale SaaS; HTTP-over-mesh | ADR-007 |

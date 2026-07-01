@@ -1,0 +1,13 @@
+{
+  // Homelab ACL policy — allow all within tailnet, deny external
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["*"],
+      "dst": ["*:*"]
+    }
+  ],
+  "ssh": [],
+  "tagOwners": {},
+  "autoApprovers": {}
+}

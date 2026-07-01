@@ -9,10 +9,10 @@ graph TB
         TBOT[Telegram Bot API]
     end
 
-    subgraph TS["Tailscale Mesh (100.x.x.x)"]
+    subgraph TS["Headscale/Tailscale Mesh (100.64.0.0/10)"]
         direction LR
-        PI[autobot<br/>Pi 4B - 4GB]
-        WIN[mr-stranger<br/>Windows - 16GB]
+        PI[autobot<br/>Pi 4B - 4GB<br/>100.64.0.1]
+        WIN[mr-stranger<br/>Windows - 16GB<br/>100.64.0.2]
     end
 
     subgraph PiStacks["Pi 4B (always-on)"]
@@ -24,6 +24,7 @@ graph TB
         SM[Samba - File Sharing]
         NE[node-exporter - Hardware Metrics]
         TB[TinyBot - Telegram Bot]
+        HS[Headscale - Control Server]
     end
 
     subgraph NAS["/mnt/nas/ storage"]
@@ -43,8 +44,7 @@ graph TB
         INF[Infisical - Secrets]
     end
 
-    TL -->|HTTPS:443| TRAEFIK
-    TRAEFIK -->|port 80/443| TS
+    TL -->|HTTP:80| TRAEFIK
     TRAEFIK -->|pi stacks| VW
     TRAEFIK -->|pi stacks| HA
     TRAEFIK -->|path /grafana| GRAFANA
@@ -64,19 +64,19 @@ graph TB
 
 ## Traffic flow
 
-1. User hits `https://autobot.taila24d04.ts.net/<path>`
-2. Tailscale Serve handles TLS termination on 443, proxies to Traefik on `localhost:8443`
-3. Traefik routes by PathPrefix:
-   - `/grafana` -> Grafana on Windows (`100.74.111.26:3000`)
-   - `/auth` -> Authelia on Windows (`100.74.111.26:9091`)
-   - `/secrets` -> Infisical on Windows (`100.74.111.26:8083`)
-   - `/tempo` -> Tempo on Windows (`100.74.111.26:3200`)
+1. User hits `http://100.64.0.1/<path>` over Tailscale mesh (WireGuard encrypts all traffic)
+2. Traefik routes by PathPrefix:
+   - `/grafana` -> Grafana on Windows (`100.64.0.2:3000`)
+   - `/auth` -> Authelia on Windows (`100.64.0.2:9091`)
+   - `/secrets` -> Infisical on Windows (`100.64.0.2:8083`)
+   - `/tempo` -> Tempo on Windows (`100.64.0.2:3200`)
    - `/dashboard`, `/api` -> Traefik dashboard (basic auth)
    - Other paths -> Pi services (Vaultwarden, Home Assistant, etc.)
-4. Cross-node traffic uses Tailscale IPs (`100.x.x.x`) — no public exposure
-5. Pi Promtail sends logs to Windows Loki at `100.74.111.26:3100`
-6. Pi apps send traces to Windows Tempo at `100.74.111.26:4317` (OTLP gRPC)
-7. Windows Prometheus scrapes Pi targets at `100.127.191.2:{9100,8083,9617}`
+3. Cross-node traffic uses Headscale-assigned IPs (`100.64.0.x`) — no public exposure
+4. Pi Promtail sends logs to Windows Loki at `100.64.0.2:3100`
+5. Pi apps send traces to Windows Tempo at `100.64.0.2:4317` (OTLP gRPC)
+6. Windows Prometheus scrapes Pi targets at `100.64.0.1:{9100,8083,9617}`
+7. Headscale control server on Pi (`100.64.0.1:8086`) replaces Tailscale SaaS
 
 ## Remote management
 
@@ -93,7 +93,8 @@ Daily health summary sent at 08:00 via systemd timer (`homelab-daily-summary.tim
 ## Node responsibilities
 
 ### Pi 4B (always-on, 4GB RAM)
-- Traefik (reverse proxy, TLS termination, Tailscale entrypoint)
+- Traefik (reverse proxy, HTTP entrypoint)
+- Headscale (self-hosted Tailscale control server)
 - Pi-hole (DNS filtering)
 - Vaultwarden (password manager)
 - Home Assistant (home automation)

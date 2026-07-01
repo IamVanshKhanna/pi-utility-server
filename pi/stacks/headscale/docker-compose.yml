@@ -1,0 +1,39 @@
+# STACK: HEADSCALE
+# Self-hosted Tailscale control server (replaces Tailscale SaaS)
+# HTTP only — TLS is unnecessary inside the Tailscale mesh (WireGuard encrypts all traffic)
+# Windows nodes register via http://100.64.0.1:8086
+# Image: https://github.com/juanfont/headscale/pkgs/container/headscale
+
+volumes:
+  headscale_lib:
+
+services:
+  headscale:
+    image: headscale/headscale:v0.29.1
+    container_name: headscale
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: serve
+    read_only: true
+    tmpfs:
+      - /var/run/headscale
+    volumes:
+      - ../../config/headscale/config.yaml:/etc/headscale/config.yaml:ro
+      - ../../config/headscale/policy.hujson:/etc/headscale/policy.hujson:ro
+      - headscale_lib:/var/lib/headscale
+    ports:
+      - "0.0.0.0:8086:8080"
+      - "0.0.0.0:9092:9090"
+    environment:
+      - TZ=${TZ}
+    mem_limit: 128m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "headscale", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -4,6 +4,43 @@
 
 ---
 
+## [v1.6.0] — 2026-07-01
+
+### Added
+- **Headscale v0.29.1** — Self-hosted Tailscale control server; replaces Tailscale SaaS
+- **Headscale stack** — `pi/stacks/headscale/docker-compose.yml`; read_only, tmpfs, mem_limit 128m, cpus 0.5
+- **Headscale config** — SQLite WAL, MagicDNS `homelab.local`, DERP default, `logtail: false`
+- **Headscale policy** — `policy.hujson` allows all within tailnet
+- **Headscale API key** — Added `HEADSCALE_API_KEY` to `.env.example`
+- **Headscale Prometheus target** — Metrics on `100.64.0.1:9092` (9 Prometheus targets total)
+
+### Changed
+- **HTTP-over-mesh architecture** — Removed Tailscale Serve HTTPS; WireGuard encrypts all mesh traffic (TLS redundant inside mesh)
+- **Traefik entrypoint** — Removed `tailscale:8443`; all routers use `web:80` entrypoint
+- **Removed port 8443** from Traefik compose (no longer needed for Tailscale Serve)
+- **Node IPs** — Pi `100.127.191.2` → `100.64.0.1`, Windows `100.74.111.26` → `100.64.0.2`
+- **Windows port bindings** — `100.74.111.26` → `100.64.0.2` for Grafana, Authelia, Infisical, Tempo
+- **Prometheus scrape targets** — Updated Pi endpoints from `100.127.191.2` → `100.64.0.1`
+- **`dynamic.yml.template`** — All `tailscale` entrypoints → `web`; fallback IP `100.74.111.26` → `100.64.0.2`
+- **`render-dynamic-yml.sh`** — Fallback default `WINDOWS_IP: 100.64.0.2`
+- **`GF_SERVER_ROOT_URL`** — `https://autobot.taila24d04.ts.net/grafana/` → `http://100.64.0.1/grafana/`
+- **Docs** — `ENDPOINTS.md`, `ARCHITECTURE.md`, `architecture.md`, `architecture.astro`, `windows/README.md` all updated for Headscale + new IPs
+- **Headscale `server_url`** — `http://192.168.68.59:8086` (LAN accessible during bootstrap)
+- **Headscale port binding** — `0.0.0.0:8086` (reachable from both Tailscale and LAN during node registration)
+
+### Fixed
+- **Headscale container `listen_addr`** — Changed from `127.0.0.1:8080` to `0.0.0.0:8080` inside container (Docker port mapping couldn't reach loopback-only bind)
+- **Chicken-and-egg DNS** — `autobot.taila24d04.ts.net` MagicDNS unresolvable when Tailscale offline; added `/etc/hosts` entry (to be removed with `sudo`)
+- **Headscale not reachable from Windows** — Tailscale SaaS and Headscale on different tailnets; temporarily bound to LAN IP `192.168.68.59:8086` for Windows registration
+
+### Security
+- **Self-hosted control plane** — No third-party dependency (Tailscale SaaS) for mesh coordination
+- **Headscale bound to `0.0.0.0` temporarily** — Should be tightened to Tailscale IP only once stable
+
+### Known Issues
+- **`/etc/hosts` workaround** — `autobot.taila24d04.ts.net` → `127.0.0.1` added on Pi; needs `sudo sed -i '/autobot.taila24d04.ts.net/d' /etc/hosts` to remove
+- **Headscale port `0.0.0.0:8086`** — Exposed on LAN; should bind to `100.64.0.1:8086` only (requires Pi Tailscale to be running during container start)
+
 ## [v1.5.2] — 2026-07-01
 
 ### Changed

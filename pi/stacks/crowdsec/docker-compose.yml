@@ -58,7 +58,7 @@ services:
       - ../../config/crowdsec/webhook-relay:/relay:ro
     command: python /relay/relay.py
     environment:
-      - ALERTMANAGER_URL=http://${WINDOWS_IP:-100.74.111.26}:9093/api/v1/alerts
+      - ALERTMANAGER_URL=http://${WINDOWS_IP:-100.64.0.2}:9093/api/v1/alerts
       - RELAY_TOKEN=${RELAY_TOKEN}
       - PYTHONUNBUFFERED=1
     mem_limit: 64m
