@@ -34,3 +34,4 @@ windows/config/alertmanager/alertmanager.yml
 windows/backups/
 pi/backups/
 # CI trigger
+# trigger CI v2
