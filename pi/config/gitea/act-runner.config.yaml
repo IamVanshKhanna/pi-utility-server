@@ -1,0 +1,21 @@
+# act_runner configuration for pi-runner
+# Docs: https://gitea.com/gitea/act_runner/src/branch/main/internal/app/run/daemon.go
+# Generate default: act_runner generate-config > config.yaml
+
+log:
+  level: info
+
+runner:
+  file: /home/vansh/.config/act-runner/.runner
+  capacity: 1
+  timeout: 3h
+  fetch_timeout: 5s
+  fetch_interval: 60s
+  labels:
+    - "pi:host"
+
+cache:
+  enabled: false
+
+container:
+  network: ""

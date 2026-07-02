@@ -27,6 +27,7 @@ EXPECTED_CONTAINERS=(
   uptime-kuma
   crowdsec crowdsec-relay
   headscale
+  gitea
   samba syncthing
   portfolio
 )
@@ -100,7 +101,19 @@ if $CHECK_UPTIME_KUMA; then
   fi
 fi
 
+# Check act_runner systemd service
+log ""
+RUNNER_STATUS=$(systemctl --user is-active act-runner.service 2>/dev/null || echo "inactive")
+if [[ "$RUNNER_STATUS" == "active" ]]; then
+  printf "${GREEN}%-22s %-12s${NC}\n" "act-runner (systemd)" "active"
+else
+  printf "${RED}%-22s %-12s${NC}\n" "act-runner (systemd)" "$RUNNER_STATUS"
+  FAILED=$((FAILED + 1))
+fi
+
 echo ""
+TOTAL=$((TOTAL + 1))
+RUNNING=$((TOTAL - FAILED))
 log "Result: $RUNNING/$TOTAL containers running."
 if [[ $WARNINGS -gt 0 ]]; then
   log "Warnings: $WARNINGS"

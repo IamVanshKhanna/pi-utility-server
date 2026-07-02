@@ -1,0 +1,51 @@
+APP_NAME = Homelab Git
+RUN_MODE = prod
+RUN_USER = git
+
+[database]
+DB_TYPE  = sqlite3
+PATH     = /data/gitea/gitea.db
+
+[repository]
+ROOT                        = /data/git/repositories
+DEFAULT_BRANCH              = main
+DISABLE_HTTP_GIT            = false
+
+[server]
+DOMAIN                      = 100.64.0.1
+ROOT_URL                    = http://100.64.0.1/git/
+SSH_DOMAIN                  = 100.64.0.1
+SSH_PORT                    = 8088
+SSH_LISTEN_PORT             = 2222
+HTTP_PORT                   = 3000
+LFS_START_SERVER            = true
+OFFLINE_MODE                = true
+DISABLE_SSH                 = false
+START_SSH_SERVER            = true
+
+[security]
+INSTALL_LOCK                = true
+SECRET_KEY                  = REPLACE_WITH_secret_key
+INTERNAL_TOKEN              = REPLACE_WITH_internal_token
+
+[service]
+REGISTER_EMAIL_CONFIRM      = false
+ENABLE_NOTIFY_MAIL          = false
+DISABLE_REGISTRATION        = true
+ENABLE_CAPTCHA              = false
+REQUIRE_SIGNIN_VIEW         = false
+DEFAULT_KEEP_EMAIL_PRIVATE  = true
+
+[session]
+PROVIDER                    = file
+
+[log]
+MODE                        = console
+LEVEL                       = info
+
+[middleware]
+ENABLE_GZIP                 = true
+
+[other]
+SHOW_FOOTER_VERSION        = false
+SHOW_FOOTER_TEMPLATE_LOAD_TIME = false

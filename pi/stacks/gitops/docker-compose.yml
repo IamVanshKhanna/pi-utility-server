@@ -1,0 +1,76 @@
+# STACK: GITOPS
+# Self-hosted Git (Gitea) for push-to-deploy pipeline
+# Gitea: SQLite mode, rootless image, routed via Traefik at /git/
+# Config via GITEA__section__KEY env vars only
+# Runner: act_runner binary as systemd user service on Pi host (not in Docker)
+#   - Direct access to docker CLI, bash, and ~/homelab-ops-mesh/
+#   - Labels: pi:host (runs CI steps on the host)
+#   - See pi/config/gitea/act-runner.service and act-runner.config.yaml
+# Images: https://hub.docker.com/r/gitea/gitea/tags
+
+networks:
+  proxy:
+    external: true
+
+volumes:
+  gitea_data:
+
+services:
+  gitea:
+    image: gitea/gitea:1.26.4-rootless
+    container_name: gitea
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    tmpfs:
+      - /tmp
+    volumes:
+      - gitea_data:/data
+    ports:
+      - "127.0.0.1:8087:3000"
+      - "127.0.0.1:8088:2222"
+    networks:
+      - proxy
+    environment:
+      - GITEA__server__ROOT_URL=http://100.64.0.1/git/
+      - GITEA__server__DOMAIN=100.64.0.1
+      - GITEA__server__SSH_DOMAIN=100.64.0.1
+      - GITEA__server__SSH_PORT=8088
+      - GITEA__server__SSH_LISTEN_PORT=2222
+      - GITEA__server__LFS_START_SERVER=true
+      - GITEA__server__OFFLINE_MODE=true
+      - GITEA__server__DISABLE_SSH=false
+      - GITEA__server__START_SSH_SERVER=true
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__repository__DEFAULT_BRANCH=main
+      - GITEA__repository__ENABLE_PUSH_CREATE_USER=true
+      - GITEA__repository__ENABLE_PUSH_CREATE_ORG=true
+      - GITEA__service__DISABLE_REGISTRATION=true
+      - GITEA__service__REQUIRE_SIGNIN_VIEW=false
+      - GITEA__service__DEFAULT_KEEP_EMAIL_PRIVATE=true
+      - GITEA__session__PROVIDER=file
+      - GITEA__log__MODE=console
+      - GITEA__log__LEVEL=info
+      - GITEA__middleware__ENABLE_GZIP=true
+      - GITEA__other__SHOW_FOOTER_VERSION=false
+      - GITEA__other__SHOW_FOOTER_TEMPLATE_LOAD_TIME=false
+      - GITEA__security__INSTALL_LOCK=true
+      - TZ=${TZ}
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gitea.rule=PathPrefix(`/git`)"
+      - "traefik.http.routers.gitea.entrypoints=web"
+      - "traefik.http.routers.gitea.middlewares=strip-git,secure-headers@file"
+      - "traefik.http.routers.gitea.priority=10"
+      - "traefik.http.services.gitea.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.strip-git.stripPrefix.prefixes=/git"

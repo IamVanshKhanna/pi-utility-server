@@ -40,6 +40,7 @@ STACKS=(
   "pi/stacks/core/docker-compose.yml"
   "pi/stacks/network/docker-compose.yml"
   "pi/stacks/headscale/docker-compose.yml"
+  "pi/stacks/gitops/docker-compose.yml"
   "pi/stacks/apps/docker-compose.yml"
   "pi/stacks/smarthome/docker-compose.yml"
   "pi/stacks/uptime-kuma/docker-compose.yml"
@@ -72,6 +73,9 @@ done
 
 log "Pruning unused images..."
 docker image prune -f
+
+log "Ensuring act-runner systemd service is running..."
+systemctl --user is-active act-runner.service >/dev/null 2>&1 || systemctl --user start act-runner.service
 
 log "Running post-update health check..."
 sleep 30
