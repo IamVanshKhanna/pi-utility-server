@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: pi
+    runs-on: self-hosted
     steps:
       - name: Pull latest changes
         run: |
