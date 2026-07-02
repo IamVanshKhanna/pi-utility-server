@@ -33,7 +33,3 @@ windows/config/alertmanager/alertmanager.yml
 # Backup archives
 windows/backups/
 pi/backups/
-# CI trigger
-# trigger CI v2
-# CI trigger self-hosted
-# CI trigger pi label
