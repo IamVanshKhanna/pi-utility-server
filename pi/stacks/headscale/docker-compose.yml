@@ -26,8 +26,8 @@ services:
       - ../../config/headscale/policy.hujson:/etc/headscale/policy.hujson:ro
       - headscale_lib:/var/lib/headscale
     ports:
-      - "0.0.0.0:8086:8080"
-      - "0.0.0.0:9092:9090"
+      - "100.64.0.1:8086:8080"
+      - "100.64.0.1:9092:9090"
     environment:
       - TZ=${TZ}
     mem_limit: 128m
