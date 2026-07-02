@@ -20,6 +20,8 @@ pi/config/crowdsec/webhook-relay/__init__.py
 windows/config/authelia/users_database.yml
 pi/config/traefik/dynamic.yml
 windows/config/alertmanager/alertmanager.yml
+pi/config/gitea/app.ini
+pi/config/gitea/.runner
 
 # Tinybot runtime data (state contains chat IDs, logs are ephemeral)
 **/tinybot/state/

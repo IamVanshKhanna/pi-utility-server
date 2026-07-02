@@ -11,8 +11,10 @@ jobs:
       - name: Pull latest changes
         run: |
           cd /home/vansh/homelab-ops-mesh
-          git fetch origin
-          git reset --hard origin/main
+          git remote add gitea http://127.0.0.1:8087/vansh/homelab-ops-mesh.git 2>/dev/null || true
+          git fetch gitea
+          git checkout main
+          git reset --hard gitea/main
 
       - name: Validate compose files
         run: |

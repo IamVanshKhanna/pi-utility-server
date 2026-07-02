@@ -29,7 +29,7 @@ Internet
 
 ## Docker Network Topology
 
-### Pi (18 containers)
+### Pi (20 containers + 1 systemd service)
 | Network | Services |
 |---------|----------|
 | proxy (external) | Traefik-accessible services |
@@ -56,6 +56,7 @@ Internet
 | nas | samba, syncthing | File sharing, sync |
 | portfolio | astro site | Project showcase |
 | headscale | headscale | Self-hosted Tailscale control server |
+| gitops | gitea | Self-hosted Git (CI runner is systemd service on host) |
 
 ### Windows Stacks (heavy compute)
 
@@ -75,6 +76,8 @@ Internet
 | Traefik | 80, 8084 | 0.0.0.0 | HTTP, API |
 | Headscale | 8086 | 0.0.0.0 | Control server (HTTP) |
 | Headscale metrics | 9092 | 127.0.0.1 | Prometheus metrics |
+| Gitea web | 8087 | 127.0.0.1 | Self-hosted Git UI |
+| Gitea SSH | 8088 | 127.0.0.1 | Git SSH access |
 | Portainer | 9000 | 127.0.0.1 | Docker UI |
 | Pi-hole | 53 | 0.0.0.0 | DNS |
 | Pi-hole admin | 8053 | 127.0.0.1 | Web UI |
@@ -131,7 +134,7 @@ All Pi persistent data is stored under `/mnt/nas/`:
 
 | Node | Containers | RAM (typical) | CPU (idle) |
 |------|------------|---------------|------------|
-| Pi 4B | 18 | ~1.8GB | ~10-15% |
+| Pi 4B | 20 (Docker) + 1 (systemd) | ~1.8GB | ~10-15% |
 | Windows | 10 | ~2GB | ~5-10% |
 
 > 4GB Pi runs comfortably with zram (compressed RAM swap, no disk swap).

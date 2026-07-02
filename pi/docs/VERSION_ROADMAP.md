@@ -11,7 +11,7 @@
 
 ---
 
-## Current: v1.6 — Self-Hosted Control Plane ✅ Released
+## Current: v1.7 — GitOps 🔄 In Progress
 
 | Version | Focus | Status |
 |---------|-------|--------|
@@ -30,7 +30,7 @@
 | Version | Focus | Status |
 |---------|-------|--------|
 | **v1.6** | Headscale self-hosted Tailscale control plane | ✅ Released |
-| **v1.7** | Gitops: Gitea + CI/CD on Pi | 📋 Planned |
+| **v1.7** | Gitops: Gitea + CI/CD on Pi | 🔄 In Progress |
 | **v2.0** | Edge/IoT: Matter/Thread/Zigbee bridge, HA integration | 📋 Planned |
 
 ---
@@ -46,3 +46,4 @@
 | v1.3 | TinyBot agent (replaces Hermes) | ADR-005 |
 | v1.3 | STRIDE threat model | ADR-006 |
 | v1.6 | Headscale over Tailscale SaaS; HTTP-over-mesh | ADR-007 |
+| v1.7 | Gitea + act_runner (systemd) for self-hosted GitOps | ADR-008 |

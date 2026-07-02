@@ -4,6 +4,23 @@
 
 ---
 
+## [v1.7.0] — 2026-07-01
+
+### Added
+- **Gitea v1.26.4-rootless** — Self-hosted Git server; SQLite, rootless, mem_limit 256m, cpus 0.5
+- **act_runner (systemd host service)** — CI/CD runner as systemd user service on Pi host; direct docker/bash/git access; label `pi:host`
+- **GitOps stack** — `pi/stacks/gitops/docker-compose.yml` (Gitea only); Traefik route `/git/` with `strip-git` middleware (priority 10)
+- **Gitea CI workflow** — `.gitea/workflows/deploy.yml` (pull → validate → render → deploy → health-check → notify)
+- **Gitea config template** — `pi/config/gitea/app.ini.template` (real `app.ini` gitignored, auto-generated on first start)
+- **act_runner config** — `pi/config/gitea/act-runner.config.yaml`; `pi/config/gitea/act-runner.service` (systemd user unit)
+- **`.gitignore`** — Added `pi/config/gitea/app.ini`, `pi/config/gitea/.runner`
+- **`.env.example`** — Added `GITEA_RUNNER_TOKEN` (used at registration only)
+- **health-check.sh** — Added `gitea` container + `act-runner` systemd service check
+- **update.sh** — Added `gitops` stack to update rotation; ensures act-runner service is running
+- **Pi containers** — 19 → 20 (gitea only); runner is systemd, not Docker; total 29 → 30
+
+---
+
 ## [v1.6.1] — 2026-07-01
 
 ### Fixed

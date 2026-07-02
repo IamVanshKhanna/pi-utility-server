@@ -14,12 +14,13 @@ const topologyDiagram = ` Internet
     +--- /auth/        (Windows)
     +--- /secrets/     (Windows)
     |
-    +--- 28 containers total
+    +--- 30 containers total
     |
  [ Pi 4B : 100.64.0.1 ]  <--- Headscale/Tailscale mesh --->  [ Windows : 100.64.0.2 ]
     |                                                            |
     +-- Pi-hole (DNS:53)                                      +-- Docker Desktop
-    +-- Headscale (control server)                              +-- Monitoring + Auth + Secrets
+         +-- Headscale (control server)
+     +-- Gitea (self-hosted git)                              +-- Monitoring + Auth + Secrets
     +-- TinyBot (Telegram)                                      +-- Heavy compute
     +-- /mnt/nas/ storage
 `;
@@ -28,7 +29,7 @@ const topologyDiagram = ` Internet
 <Base title="Architecture">
   <h1 class="text-4xl font-bold mb-4 text-brand-light">Architecture</h1>
   <p class="text-lg text-text-muted mb-12 max-w-2xl">
-    Two nodes connected via Tailscale mesh VPN. The Pi 4B runs 18 containers as the always-on core, Windows runs 10 for heavy compute.
+    Two nodes connected via Tailscale mesh VPN. The Pi 4B runs 20 containers + 1 systemd service as the always-on core, Windows runs 10 for heavy compute.
   </p>
 
   <section class="mb-16">
@@ -70,6 +71,7 @@ const topologyDiagram = ` Internet
           <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">uptime-kuma</td><td class="px-4 py-2 text-text-muted">uptime-kuma</td><td class="px-4 py-2 text-text-muted">Uptime monitoring</td></tr>
           <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">portfolio</td><td class="px-4 py-2 text-text-muted">astro site</td><td class="px-4 py-2 text-text-muted">Project showcase</td></tr>
           <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">headscale</td><td class="px-4 py-2 text-text-muted">headscale</td><td class="px-4 py-2 text-text-muted">Self-hosted Tailscale control plane</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">gitops</td><td class="px-4 py-2 text-text-muted">gitea, act-runner (systemd)</td><td class="px-4 py-2 text-text-muted">Self-hosted Git + CI/CD</td></tr>
         </tbody>
       </table>
     </div>
@@ -94,9 +96,9 @@ const topologyDiagram = ` Internet
         <h3 class="font-semibold text-green-400">Phase 4 - Self-Hosted Control Plane (Done)</h3>
         <p class="text-sm text-text-muted">Headscale self-hosted Tailscale control server, replacing Tailscale SaaS. HTTP-over-mesh architecture.</p>
       </div>
-      <div class="border-l-4 border-text-muted pl-4">
-        <h3 class="font-semibold text-text-muted-foreground">Phase 5 - GitOps (Planned)</h3>
-        <p class="text-sm text-text-muted">Gitea + CI/CD on Pi. Matter/Thread IoT bridge.</p>
+      <div class="border-l-4 border-yellow-500 pl-4">
+        <h3 class="font-semibold text-yellow-400">Phase 5 - GitOps (In Progress)</h3>
+        <p class="text-sm text-text-muted">Gitea + act_runner (systemd) on Pi for push-to-deploy CI/CD. Self-hosted Git replaces manual bundle+SCP workflow.</p>
       </div>
     </div>
   </section>

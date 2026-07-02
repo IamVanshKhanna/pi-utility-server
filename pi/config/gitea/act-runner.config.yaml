@@ -1,6 +1,11 @@
 # act_runner configuration for pi-runner
 # Docs: https://gitea.com/gitea/act_runner/src/branch/main/internal/app/run/daemon.go
 # Generate default: act_runner generate-config > config.yaml
+#
+# IMPORTANT: v2.0.0 daemon on arm64 has a bug where worker executors never spawn
+# after "NewParallelExecutor" — tasks are picked up but never executed.
+# Workaround: use `act_runner exec -W .gitea/workflows/deploy.yml --detect-event -i -self-hosted`
+# The daemon is kept running as a systemd service for future v2.x fixes.
 
 log:
   level: info
@@ -18,4 +23,5 @@ cache:
   enabled: false
 
 container:
-  network: ""
+  docker_host: ""
+  network: host

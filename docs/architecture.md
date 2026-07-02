@@ -25,6 +25,8 @@ graph TB
         NE[node-exporter - Hardware Metrics]
         TB[TinyBot - Telegram Bot]
         HS[Headscale - Control Server]
+        GT[Gitea - Self-Hosted Git]
+        RN[act_runner - CI/CD (systemd)]
     end
 
     subgraph NAS["/mnt/nas/ storage"]
@@ -77,6 +79,7 @@ graph TB
 5. Pi apps send traces to Windows Tempo at `100.64.0.2:4317` (OTLP gRPC)
 6. Windows Prometheus scrapes Pi targets at `100.64.0.1:{9100,8083,9617}`
 7. Headscale control server on Pi (`100.64.0.1:8086`) replaces Tailscale SaaS
+8. Gitea on Pi at `/git/` (Traefik-routed); act_runner as systemd user service for CI/CD
 
 ## Remote management
 
@@ -104,6 +107,7 @@ Daily health summary sent at 08:00 via systemd timer (`homelab-daily-summary.tim
 - Promtail (log shipping -> Windows Loki)
 - Nextcloud (file sync + apps)
 - Uptime Kuma (uptime monitoring)
+- Gitea (self-hosted Git + CI/CD via act_runner systemd service)
 
 ### Windows Desktop (on-demand, 16GB RAM)
 - Grafana (dashboards, queries Prometheus/Loki/Tempo via Docker DNS)

@@ -19,7 +19,7 @@ Green = OK, Red = problem.
 
 ## Service List
 
-### Pi Services (18 containers)
+### Pi Services (20 containers + 1 systemd service)
 
 | # | Service | Path / URL | Credentials | How to check |
 |---|---------|------------|-------------|--------------|
@@ -38,6 +38,8 @@ Green = OK, Red = problem.
 | 13 | CrowdSec | No UI | CLI: `cscli decisions list` | Shows active decisions |
 | 14 | CrowdSec Relay | No UI | Bearer token auth | 200 on valid POST, 401 on bad |
 | 15 | Headscale | `0.0.0.0:8086` | API key in `.env` | `curl http://100.64.0.1:8086/health` |
+| 16 | Gitea | `/git/` | Set on first visit | Login page appears |
+| 17 | act_runner | No UI | Token in `.config/act-runner/` | `systemctl --user status act-runner` |
 
 ### Windows Services (10 containers)
 
@@ -68,6 +70,8 @@ Green = OK, Red = problem.
 | 8083 | cAdvisor | 0.0.0.0 | Container metrics |
 | 8084 | Traefik API | 0.0.0.0 | Prometheus metrics |
 | 8086 | Headscale | 0.0.0.0 | Control server (HTTP) |
+| 8087 | Gitea web | 127.0.0.1 | Self-hosted Git UI |
+| 8088 | Gitea SSH | 127.0.0.1 | Git SSH access |
 | 9000 | Portainer | 127.0.0.1 | Docker UI |
 | 9092 | Headscale metrics | 127.0.0.1 | Prometheus metrics |
 | 9100 | Node Exporter | 0.0.0.0 | Host metrics |
