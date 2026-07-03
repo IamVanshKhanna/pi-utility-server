@@ -1,0 +1,182 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Hub">
+  <h1 class="text-4xl font-bold mb-2 text-brand-light">Hub</h1>
+  <p class="text-lg text-text-muted mb-12 max-w-2xl">
+    Homelab control panel. Click any service to open its UI. Green dots = UP, red = DOWN. Updates every 30s.
+  </p>
+
+  <!-- Health summary bar -->
+  <section class="mb-12">
+    <div id="health-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
+        <div class="text-3xl font-bold text-brand-light" id="stat-containers">—</div>
+        <div class="text-sm text-text-muted mt-1">Containers Up</div>
+      </div>
+      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
+        <div class="text-3xl font-bold text-brand-light" id="stat-targets">—</div>
+        <div class="text-sm text-text-muted mt-1">Prometheus Targets</div>
+      </div>
+      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
+        <div class="text-3xl font-bold text-brand-light" id="stat-alerts">—</div>
+        <div class="text-sm text-text-muted mt-1">Active Alerts</div>
+      </div>
+      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
+        <div class="text-3xl font-bold text-brand-light" id="stat-nodes">—</div>
+        <div class="text-sm text-text-muted mt-1">Mesh Nodes Online</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pi services -->
+  <section class="mb-10">
+    <h2 class="text-xl font-semibold mb-4 text-brand">Pi Core Services — autobot (100.64.0.1)</h2>
+    <div id="pi-services" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    </div>
+  </section>
+
+  <!-- Windows services -->
+  <section>
+    <h2 class="text-xl font-semibold mb-4 text-brand">Windows Compute — mr-stranger (100.64.0.2)</h2>
+    <div id="win-services" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Service definitions
+  const piServices = [
+    { name: 'Gitea', path: '/git/', desc: 'Self-hosted Git & CI/CD', color: '#34d399' },
+    { name: 'Nextcloud', path: '/cloud/', desc: 'File sync & collaboration', color: '#38bdf8' },
+    { name: 'Vaultwarden', path: '/vault/', desc: 'Password manager', color: '#a78bfa' },
+    { name: 'Home Assistant', path: '/hass/', desc: 'Home automation', color: '#fbbf24' },
+    { name: 'Uptime Kuma', path: '/uptime/', desc: 'Uptime monitoring', color: '#fb923c' },
+    { name: 'Portainer', path: 'http://127.0.0.1:9000', desc: 'Docker container UI (local)', color: '#38bdf8' },
+    { name: 'Syncthing', path: 'http://127.0.0.1:8384', desc: 'File sync (local)', color: '#34d399' },
+    { name: 'Pi-hole', path: 'http://127.0.0.1:8053/admin', desc: 'DNS ad-blocking (local)', color: '#f87171' },
+    { name: 'cAdvisor', path: 'http://100.64.0.1:8083/containers', desc: 'Container metrics', color: '#e879f9' },
+    { name: 'Headscale', path: 'http://100.64.0.1:8086', desc: 'Mesh control API', color: '#818cf8' },
+  ];
+
+  const winServices = [
+    { name: 'Grafana', path: '/grafana/', desc: 'Metrics, logs, traces dashboards', color: '#f97316' },
+    { name: 'Prometheus', path: '/prometheus/', desc: 'Metrics & alerting', color: '#ef4444' },
+    { name: 'Authelia', path: '/auth/', desc: 'SSO authentication portal', color: '#6366f1' },
+    { name: 'Infisical', path: '/secrets/', desc: 'Secrets management', color: '#10b981' },
+    { name: 'Tempo', path: '/tempo/', desc: 'Distributed tracing', color: '#facc15' },
+  ];
+
+  function renderCard(svc, container, id) {
+    const card = document.createElement('div');
+    card.className = 'border border-surface-light rounded-lg p-4 bg-surface-light/20 hover:bg-surface-light/40 transition-colors';
+    card.innerHTML = `
+      <a href="${svc.path}" target="${svc.path.startsWith('http') ? '_blank' : '_self'}" rel="noopener" class="block">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:#6b7280" id="dot-${id}"></span>
+          <h3 class="font-semibold text-text">${svc.name}</h3>
+        </div>
+        <p class="text-sm text-text-muted">${svc.desc}</p>
+        <p class="text-xs text-text-muted mt-1 font-mono break-all">${svc.path}</p>
+      </a>`;
+    container.appendChild(card);
+    return card.querySelector(`#dot-${id}`);
+  }
+
+  // Render all service cards
+  const piContainer = document.getElementById('pi-services');
+  const winContainer = document.getElementById('win-services');
+  const allDots = [];
+  piServices.forEach((s, i) => allDots.push(renderCard(s, piContainer, `pi-${i}`)));
+  winServices.forEach((s, i) => allDots.push(renderCard(s, winContainer, `win-${i}`)));
+
+  // --- Live data fetching ---
+
+  async function fetchPrometheusTargets() {
+    try {
+      const resp = await fetch('http://100.64.0.2:9090/api/v1/targets');
+      const json = await resp.json();
+      const targets = json.data.activeTargets || [];
+      const up = targets.filter(t => t.health === 'up').length;
+      document.getElementById('stat-targets').textContent = `${up}/${targets.length}`;
+      return targets;
+    } catch {
+      document.getElementById('stat-targets').textContent = 'offline';
+      return [];
+    }
+  }
+
+  async function fetchAlerts() {
+    try {
+      const resp = await fetch('http://100.64.0.2:9090/api/v1/alerts');
+      const json = await resp.json();
+      const active = (json.data.alerts || []).filter(a => a.state === 'firing').length;
+      document.getElementById('stat-alerts').textContent = active;
+      document.getElementById('stat-alerts').style.color = active > 0 ? '#f87171' : '';
+    } catch {
+      document.getElementById('stat-alerts').textContent = 'offline';
+    }
+  }
+
+  async function fetchNodes() {
+    try {
+      const resp = await fetch('http://100.64.0.1:8086/api/v1/node', {
+        headers: { 'Authorization': 'Bearer hskey-api--TitjkRAMAQZ-8Fe0pCFmSV3HlCNuIuTd92bVz3S83eOarDUApaxewp0k5eUxxcoXAAlukZaQW9eQ' }
+      });
+      const json = await resp.json();
+      const nodes = json.nodes || [];
+      const online = nodes.filter(n => n.online).length;
+      document.getElementById('stat-nodes').textContent = `${online}/${nodes.length}`;
+    } catch {
+      document.getElementById('stat-nodes').textContent = 'offline';
+    }
+  }
+
+  async function fetchContainers() {
+    try {
+      const resp = await fetch('http://100.64.0.1:8083/api/v2.0/subcontainers?num_stats=1');
+      if (!resp.ok) throw new Error();
+      const json = await resp.json();
+      const count = json.length || '?';
+      document.getElementById('stat-containers').textContent = count;
+    } catch {
+      document.getElementById('stat-containers').textContent = '—';
+    }
+  }
+
+  // Status dots from Prometheus targets — map service names to exporter targets
+  const serviceTargetMap = {
+    'Gitea': 'gitea',
+    'Nextcloud': 'nextcloud',
+    'Vaultwarden': 'vaultwarden',
+    'Home Assistant': 'homeassistant',
+    'Uptime Kuma': 'uptime-kuma',
+    'cAdvisor': 'cadvisor',
+    'Headscale': 'headscale',
+  };
+
+  function updateDotsFromTargets(targets) {
+    allDots.forEach((dot, i) => {
+      const allSvcs = [...piServices, ...winServices];
+      const name = allSvcs[i].name;
+      const targetLabel = serviceTargetMap[name];
+      if (targetLabel) {
+        const target = targets.find(t =>
+          (t.labels && t.labels.container) === targetLabel ||
+          (t.labels && t.labels.job) === targetLabel
+        );
+        dot.style.background = target && target.health === 'up' ? '#22c55e' : '#ef4444';
+      }
+    });
+  }
+
+  async function refreshAll() {
+    const targets = await fetchPrometheusTargets();
+    updateDotsFromTargets(targets);
+    await Promise.all([fetchAlerts(), fetchNodes(), fetchContainers()]);
+  }
+
+  refreshAll();
+  setInterval(refreshAll, 30000);
+</script>

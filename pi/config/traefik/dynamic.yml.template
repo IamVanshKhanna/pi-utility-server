@@ -89,6 +89,13 @@ http:
       - authelia-forwardauth
       - secure-headers
       service: tempo
+    prometheus:
+      entrypoints:
+      - web
+      rule: "PathPrefix(`/prometheus`)"
+      middlewares:
+      - secure-headers
+      service: prometheus
     traefik-dashboard:
       entrypoints:
       - web
@@ -110,6 +117,10 @@ http:
       loadBalancer:
         servers:
         - url: http://${WINDOWS_IP:-100.64.0.2}:3000
+    prometheus:
+      loadBalancer:
+        servers:
+        - url: http://${WINDOWS_IP:-100.64.0.2}:9090
     tempo:
       loadBalancer:
         servers:

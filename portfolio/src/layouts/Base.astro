@@ -27,6 +27,7 @@ const currentPath = Astro.url.pathname;
         </a>
         <div class="flex gap-6 text-sm">
           <a href="/" class:list={["hover:text-brand-light transition-colors", currentPath === "/" && "text-brand-light font-semibold"]}>Home</a>
+          <a href="/hub" class:list={["hover:text-brand-light transition-colors", currentPath === "/hub" && "text-brand-light font-semibold"]}>Hub</a>
           <a href="/projects" class:list={["hover:text-brand-light transition-colors", currentPath === "/projects" && "text-brand-light font-semibold"]}>Projects</a>
           <a href="/architecture" class:list={["hover:text-brand-light transition-colors", currentPath === "/architecture" && "text-brand-light font-semibold"]}>Architecture</a>
           <a href="/about" class:list={["hover:text-brand-light transition-colors", currentPath === "/about" && "text-brand-light font-semibold"]}>About</a>
