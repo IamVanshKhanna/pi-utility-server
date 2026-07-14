@@ -26,17 +26,13 @@ services:
       - "139:139"
       - "445:445"
     volumes:
-      - /mnt/nas/shared:/mnt/shared:rw
-      - /mnt/nas/media:/mnt/media:rw
-      - /mnt/nas/backup:/mnt/backup:rw
+      - /mnt/nas:/mnt/nas:rw
       - samba_config:/etc/samba
     command: >
       sh -c "
         apk add --no-cache samba &&
         echo -e '[global]\nworkgroup = HOMELAB\nsecurity = user\nmap to guest = bad user\n' > /etc/samba/smb.conf &&
-        echo -e '[shared]\npath = /mnt/shared\nbrowseable = yes\nread only = no' >> /etc/samba/smb.conf &&
-        echo -e '[media]\npath = /mnt/media\nbrowseable = yes\nread only = yes\nguest ok = yes\nforce user = nobody' >> /etc/samba/smb.conf &&
-        echo -e '[backup]\npath = /mnt/backup\nbrowseable = yes\nread only = no' >> /etc/samba/smb.conf &&
+        echo -e '[samba]\npath = /mnt/nas\nbrowseable = yes\nread only = no' >> /etc/samba/smb.conf &&
         addgroup -g ${PGID:-1000} vansh 2>/dev/null || true &&
         adduser -u ${PUID:-1000} -G vansh -D -H -s /bin/false vansh 2>/dev/null || true &&
         echo -e '${SAMBA_PASSWORD}\n${SAMBA_PASSWORD}' | smbpasswd -a -s vansh &&
@@ -72,7 +68,7 @@ services:
       - "100.64.0.1:22000:22000/tcp"
     volumes:
       - syncthing_data:/var/syncthing
-      - /mnt/nas/sync:/data/sync:rw
+      - "/mnt/nas/01. sync:/data/sync:rw"
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}

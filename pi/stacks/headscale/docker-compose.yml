@@ -13,10 +13,10 @@ services:
     container_name: headscale
     restart: unless-stopped
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: 10m
+        max-file: 3
     command: serve
     read_only: true
     tmpfs:
@@ -26,14 +26,15 @@ services:
       - ../../config/headscale/policy.hujson:/etc/headscale/policy.hujson:ro
       - headscale_lib:/var/lib/headscale
     ports:
-      - "100.64.0.1:8086:8080"
-      - "100.64.0.1:9092:9090"
+      -  100.64.0.1:8086:8080
+      - 192.168.68.59:8086:8080
+      - 100.64.0.1:9092:9090
     environment:
-      - TZ=${TZ}
+      - TZ=
     mem_limit: 128m
     cpus: 0.5
     healthcheck:
-      test: ["CMD", "headscale", "health"]
+      test: [CMD, headscale, health]
       interval: 30s
       timeout: 10s
       retries: 3

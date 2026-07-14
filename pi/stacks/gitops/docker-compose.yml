@@ -30,12 +30,12 @@ services:
     volumes:
       - gitea_data:/data
     ports:
-      - "127.0.0.1:8087:3000"
-      - "127.0.0.1:8088:2222"
+      - "100.64.0.1:8087:3000"
+      - "100.64.0.1:8088:2222"
     networks:
       - proxy
     environment:
-      - GITEA__server__ROOT_URL=http://100.64.0.1/git/
+      - GITEA__server__ROOT_URL=http://100.64.0.1:8087/
       - GITEA__server__DOMAIN=100.64.0.1
       - GITEA__server__SSH_DOMAIN=100.64.0.1
       - GITEA__server__SSH_PORT=8088
