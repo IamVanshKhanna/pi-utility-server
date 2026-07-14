@@ -35,3 +35,4 @@ pi/config/gitea/.runner
 # Backup archives
 windows/backups/
 pi/backups/
+*.swp
