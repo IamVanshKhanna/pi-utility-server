@@ -27,7 +27,8 @@ const currentPath = Astro.url.pathname;
       })();
     </script>
   </head>
-  <body class="min-h-screen flex flex-col">
+  <body class="min-h-screen flex flex-col relative">
+    <div class="grid-texture fixed inset-0 -z-20 pointer-events-none"></div>
     <nav class="border-b border-surface-light bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
       <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         <a href="/" class="font-display text-xl font-bold text-brand-dark hover:text-brand transition-colors">

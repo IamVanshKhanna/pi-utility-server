@@ -3,55 +3,117 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base title="Home">
-  <section class="relative mb-20 pt-8 pb-4">
-    <div class="gradient-blob absolute -top-10 -left-10 w-72 h-72 rounded-full pointer-events-none -z-10"></div>
-    <p class="text-sm font-semibold text-accent mb-3 tracking-wide uppercase">Melbourne, Australia &middot; Open to Grad Roles</p>
-    <h1 class="font-display text-5xl md:text-6xl font-bold mb-6 text-text leading-tight">
-      Hi, I'm Vansh. <br />
-      <span class="text-brand">I build things</span> and write down <span class="text-accent">why</span>.
+  <section class="relative mb-24 pt-6 pb-4">
+    <div class="gradient-blob absolute -top-16 -left-16 w-80 h-80 rounded-full pointer-events-none -z-10"></div>
+
+    <p class="mono-chip inline-block mb-5">~/melbourne $ open to grad roles</p>
+
+    <h1 class="font-display text-5xl md:text-7xl font-bold mb-6 text-text leading-[1.05]">
+      Hi, I'm Vansh.<br />
+      I build <span class="grad-text">systems</span>,<br />
+      then I <span class="grad-text">simplify</span> them.
     </h1>
-    <p class="text-lg text-text-muted max-w-xl mb-8">
-      Graduate Software Engineer with an Application Security minor. I ship real projects —
-      an AI code-review agent, a self-hosted homelab I rebuilt and then deliberately cut back down,
-      an ops-analytics dashboard — and I document the decisions, not just the outcomes.
+
+    <p class="font-mono-accent text-base md:text-lg text-text-muted mb-2">
+      <span class="text-accent">&gt;</span> <span id="type-line" class="type-cursor"></span>
     </p>
+
+    <p class="text-lg text-text-muted max-w-xl mb-8 mt-6">
+      Graduate Software Engineer, Application Security minor. I ship real things &mdash; an AI
+      code-review agent, a self-hosted homelab I built big then deliberately cut in half, an
+      ops-analytics pipeline &mdash; and I write down the <em>why</em>, including the reversals.
+    </p>
+
     <div class="flex flex-wrap gap-4">
-      <a href="https://github.com/iamvanshkhanna" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-cta text-white font-semibold hover:bg-cta-hover transition-colors">
+      <a href="https://github.com/iamvanshkhanna" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-cta text-white font-semibold hover:bg-cta-hover transition-colors">
         See my projects &rarr;
       </a>
-      <a href="https://linkedin.com/in/iamvanshkhanna" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-surface-light font-semibold hover:bg-surface-light/40 transition-colors">
-        About me
+      <a href="https://linkedin.com/in/iamvanshkhanna" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-surface-light font-semibold hover:bg-surface-light/40 transition-colors">
+        Connect on LinkedIn
       </a>
     </div>
   </section>
 
-  <section class="mb-20 reveal">
-    <h2 class="font-display text-2xl font-semibold mb-6 text-brand">Featured work</h2>
+  <!-- whoami terminal card -->
+  <section class="mb-24 reveal">
+    <div class="terminal max-w-2xl text-sm">
+      <div class="terminal-bar">
+        <span class="terminal-dot" style="background:#ff5f56"></span>
+        <span class="terminal-dot" style="background:#ffbd2e"></span>
+        <span class="terminal-dot" style="background:#27c93f"></span>
+        <span class="ml-2 text-xs text-text-muted">vansh@portfolio: ~</span>
+      </div>
+      <div class="p-5 leading-relaxed">
+        <p><span class="text-accent">$</span> whoami</p>
+        <p class="text-text-muted mb-3">graduate-software-engineer &middot; melbourne, au &middot; visa-485 (work rights &rarr; oct 2027)</p>
+        <p><span class="text-accent">$</span> cat focus.txt</p>
+        <p class="text-text-muted mb-3">grad SWE / application security roles</p>
+        <p><span class="text-accent">$</span> ls superpowers/</p>
+        <p class="text-text-muted">ship-real-projects &nbsp; document-decisions &nbsp; know-when-to-delete</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-24 reveal">
+    <h2 class="font-display text-3xl font-bold mb-8">Featured <span class="grad-text">work</span></h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <a href="/projects" class="card-lift block border border-surface-light rounded-2xl p-6 bg-surface-light/20">
-        <p class="text-xs font-semibold text-accent uppercase tracking-wide mb-2">AI &middot; Pre-launch MVP</p>
+      <a href="https://github.com/iamvanshkhanna/devpilot" target="_blank" rel="noopener" class="card-lift block border border-surface-light rounded-2xl p-6 bg-surface-light/20">
+        <p class="mono-chip inline-block mb-3">AI &middot; MVP</p>
         <h3 class="font-display font-semibold text-lg mb-2">devpilot</h3>
-        <p class="text-sm text-text-muted">AI code-review agent that installs as a GitHub App — Next.js, FastAPI, PostgreSQL, Redis.</p>
+        <p class="text-sm text-text-muted">AI code-review agent that installs as a GitHub App &mdash; Next.js, FastAPI, PostgreSQL, Redis.</p>
       </a>
       <a href="/homelab" class="card-lift block border border-surface-light rounded-2xl p-6 bg-surface-light/20">
-        <p class="text-xs font-semibold text-accent uppercase tracking-wide mb-2">Infra &middot; Case Study</p>
+        <p class="mono-chip inline-block mb-3">Infra &middot; Case Study</p>
         <h3 class="font-display font-semibold text-lg mb-2">The Homelab Rebuild</h3>
-        <p class="text-sm text-text-muted">Built it big, then retired half of it on purpose. 9 ADRs, real decisions, real reversals.</p>
+        <p class="text-sm text-text-muted">Built it big, then retired half on purpose. The full story &mdash; ambition, an outage, and disciplined subtraction.</p>
       </a>
-      <a href="/projects" class="card-lift block border border-surface-light rounded-2xl p-6 bg-surface-light/20">
-        <p class="text-xs font-semibold text-accent uppercase tracking-wide mb-2">Data &middot; Python/pandas</p>
+      <a href="https://github.com/iamvanshkhanna/digital-operations-analytics" target="_blank" rel="noopener" class="card-lift block border border-surface-light rounded-2xl p-6 bg-surface-light/20">
+        <p class="mono-chip inline-block mb-3">Data &middot; Python</p>
         <h3 class="font-display font-semibold text-lg mb-2">Digital Operations Analytics</h3>
-        <p class="text-sm text-text-muted">Multi-source ops dashboard — support, infra, and hiring data, cleaned and correlated.</p>
+        <p class="text-sm text-text-muted">Multi-source ops dashboard &mdash; support, infra, and hiring data, cleaned and correlated.</p>
       </a>
     </div>
   </section>
 
   <section class="reveal">
-    <h2 class="font-display text-2xl font-semibold mb-4 text-brand">What I actually know</h2>
+    <h2 class="font-display text-3xl font-bold mb-6">The <span class="grad-text">stack</span></h2>
     <div class="flex flex-wrap gap-2">
       {['Python', 'TypeScript', 'C++', 'Docker', 'Linux', 'Tailscale/Headscale', 'Astro', 'CI/CD', 'Penetration Testing', 'AI/LLM tooling'].map((skill) => (
-        <span class="text-sm px-3 py-1.5 rounded-full bg-brand/10 text-brand-dark font-medium">{skill}</span>
+        <span class="font-mono-accent text-sm px-3 py-1.5 rounded-lg bg-brand/10 text-brand-dark font-medium">{skill}</span>
       ))}
     </div>
   </section>
+
+  <script is:inline>
+    (function () {
+      var el = document.getElementById('type-line');
+      if (!el) return;
+      var phrases = [
+        'juniors add tools. seniors remove them.',
+        'built 30 containers. kept the 9 i actually use.',
+        'self-hosted, mesh-networked, documented.',
+        'i reverse decisions in public, not in secret.'
+      ];
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        el.textContent = phrases[0];
+        el.classList.remove('type-cursor');
+        return;
+      }
+      var pi = 0, ci = 0, deleting = false;
+      function tick() {
+        var p = phrases[pi];
+        if (!deleting) {
+          ci++;
+          el.textContent = p.slice(0, ci);
+          if (ci === p.length) { deleting = true; return setTimeout(tick, 1800); }
+        } else {
+          ci--;
+          el.textContent = p.slice(0, ci);
+          if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; }
+        }
+        setTimeout(tick, deleting ? 30 : 55);
+      }
+      tick();
+    })();
+  </script>
 </Base>

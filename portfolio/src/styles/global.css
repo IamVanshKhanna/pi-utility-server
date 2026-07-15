@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 @theme {
   --color-brand: var(--brand);
@@ -15,6 +15,7 @@
   --color-text-muted: var(--text-muted);
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 :root {
@@ -160,4 +161,87 @@ a:hover {
   .card-lift:hover {
     transform: none;
   }
+}
+
+/* ---- Bold / techy layer ---- */
+
+.font-mono-accent {
+  font-family: var(--font-mono);
+}
+
+/* Gradient text for headline moments */
+.grad-text {
+  background: linear-gradient(90deg, var(--brand) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Subtle dotted grid texture behind sections */
+.grid-texture {
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--surface-light);
+  opacity: 0.5;
+}
+
+[data-theme="dark"] .grid-texture {
+  opacity: 0.35;
+}
+
+/* Terminal-style code card */
+.terminal {
+  font-family: var(--font-mono);
+  border: 1px solid var(--surface-light);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--surface-light);
+  background: var(--surface-light);
+}
+
+.terminal-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 9999px;
+}
+
+/* Blinking cursor for typing effect */
+.type-cursor::after {
+  content: "";
+  display: inline-block;
+  width: 0.6ch;
+  height: 1em;
+  margin-left: 2px;
+  background: var(--accent);
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .type-cursor::after { animation: none; }
+}
+
+/* Mono "chip" label */
+.mono-chip {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid var(--surface-light);
+  color: var(--accent);
 }
