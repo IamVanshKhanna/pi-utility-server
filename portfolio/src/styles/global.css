@@ -7,6 +7,8 @@
   --color-brand-dark: var(--brand-dark);
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
   --color-surface: var(--surface);
   --color-surface-light: var(--surface-light);
   --color-text: var(--text);
@@ -21,6 +23,8 @@
   --brand-dark: #4338ca;
   --accent: #ea580c;
   --accent-light: #fb923c;
+  --cta: #4338ca;
+  --cta-hover: #3730a3;
   --surface: #ffffff;
   --surface-light: #e2e8f0;
   --text: #0f172a;
@@ -33,6 +37,8 @@
   --brand-dark: #6366f1;
   --accent: #fb923c;
   --accent-light: #fdba74;
+  --cta: #4338ca;
+  --cta-hover: #3730a3;
   --surface: #0b1120;
   --surface-light: #1c2536;
   --text: #e7ecf5;
@@ -46,6 +52,8 @@
     --brand-dark: #6366f1;
     --accent: #fb923c;
     --accent-light: #fdba74;
+    --cta: #4338ca;
+    --cta-hover: #3730a3;
     --surface: #0b1120;
     --surface-light: #1c2536;
     --text: #e7ecf5;
