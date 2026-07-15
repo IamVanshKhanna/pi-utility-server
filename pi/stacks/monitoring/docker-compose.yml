@@ -37,7 +37,7 @@ services:
     mem_limit: 256m
     cpus: 0.5
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:19999/api/v1/info"]
+      test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
       interval: 30s
       timeout: 10s
       retries: 3
