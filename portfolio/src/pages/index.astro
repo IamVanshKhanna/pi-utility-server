@@ -4,39 +4,88 @@ import Base from '../layouts/Base.astro';
 
 <Base title="Home">
   <section class="mb-16">
-    <h1 class="text-4xl font-bold mb-4 text-brand-light">homelab-ops-mesh</h1>
+    <h1 class="text-4xl font-bold mb-4 text-brand-light">pi-utility-server</h1>
     <p class="text-lg text-text-muted max-w-2xl">
-      Multi-node homelab built on a Raspberry Pi 4B (always-on core) and Windows (on-demand compute),
-      connected via Tailscale mesh VPN. Every stack defined in Docker Compose, version-controlled in Git.
+      A homelab built, over-built, and then deliberately cut back down &mdash;
+      on a single Raspberry Pi 4B. This isn't a showcase of running as many
+      containers as possible. It's a record of what got tested, what got
+      rejected, and why, with the reasoning kept alongside the code.
     </p>
   </section>
 
   <section class="mb-16">
-    <h2 class="text-2xl font-semibold mb-6 text-brand">Nodes</h2>
+    <h2 class="text-2xl font-semibold mb-6 text-brand">The arc</h2>
+    <div class="space-y-6">
+      <div class="border-l-2 border-surface-light pl-6">
+        <h3 class="font-semibold text-brand-light">v1.0 — Single Pi, Compose only</h3>
+        <p class="text-sm text-text-muted mt-1">
+          Started deliberately minimal: one Pi 4B, 4GB RAM, Docker Compose. No orchestrator.
+        </p>
+      </div>
+      <div class="border-l-2 border-surface-light pl-6">
+        <h3 class="font-semibold text-brand-light">Multi-node ambition, tested and rejected</h3>
+        <p class="text-sm text-text-muted mt-1">
+          K3s, ArgoCD, and Helmfile were evaluated for orchestration, then removed.
+          K3s alone costs ~600&ndash;800MB idle RAM &mdash; too much overhead on a 4GB box
+          before running a single real workload. Compose won on RAM budget, not features.
+        </p>
+      </div>
+      <div class="border-l-2 border-surface-light pl-6">
+        <h3 class="font-semibold text-brand-light">The big offload</h3>
+        <p class="text-sm text-text-muted mt-1">
+          A second node (Windows, 16GB RAM) took on the full observability + secrets stack:
+          Grafana, Prometheus, Loki, Tempo, Alertmanager, Authelia, Infisical &mdash; 11 containers,
+          migrated off the Pi in sequence to keep it under a 3.5GB budget.
+        </p>
+      </div>
+      <div class="border-l-2 border-brand pl-6">
+        <h3 class="font-semibold text-brand-light">The retirement</h3>
+        <p class="text-sm text-text-muted mt-1">
+          That full stack ran, then got switched off. Single-operator homelab, no multi-user
+          access-control need, no rotation workflow ever actually used, no tracing need that
+          materialized. Uptime Kuma covers what actually gets checked day to day.
+          Documented as ADR-009, not silently deleted.
+        </p>
+      </div>
+      <div class="border-l-2 border-surface-light pl-6">
+        <h3 class="font-semibold text-brand-light">Where it landed</h3>
+        <p class="text-sm text-text-muted mt-1">
+          A lean core of 8 services that get used, a single-container Netdata swapped in for
+          the six-container metrics stack it replaced, and a <code class="text-brand-light">_retired/</code>
+          folder pattern &mdash; nothing gets silently deleted, everything decommissioned stays
+          one git command away.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-16">
+    <h2 class="text-2xl font-semibold mb-6 text-brand">What's actually running</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="border border-surface-light rounded-lg p-6 bg-surface-light/30">
-        <h3 class="text-lg font-semibold mb-2">autobot</h3>
-        <p class="text-text-muted text-sm mb-3">Raspberry Pi 4B &mdash; 4GB RAM &mdash; Always-on core</p>
+        <h3 class="text-lg font-semibold mb-2">autobot &mdash; Raspberry Pi 4B</h3>
+        <p class="text-text-muted text-sm mb-3">4GB RAM &mdash; always-on core &mdash; the only node in daily use</p>
         <ul class="text-sm space-y-1 text-text-muted">
-          <li>Traefik reverse proxy + Tailscale HTTPS</li>
-          <li>Pi-hole DNS ad-blocking</li>
-          <li>CrowdSec intrusion detection</li>
-          <li>Vaultwarden password manager</li>
-          <li>Home Assistant automation</li>
-          <li>Syncthing + Samba file sharing</li>
-          <li>Telegram bot for remote management</li>
+          <li>Vaultwarden &mdash; password vault</li>
+          <li>Gitea &mdash; self-hosted git + CI</li>
+          <li>Headscale &mdash; self-hosted mesh control plane</li>
+          <li>Pi-hole &mdash; DNS ad-blocking</li>
+          <li>Samba + Syncthing &mdash; file storage &amp; sync</li>
+          <li>Uptime Kuma &mdash; service monitoring</li>
+          <li>Netdata &mdash; real-time system metrics</li>
         </ul>
       </div>
       <div class="border border-surface-light rounded-lg p-6 bg-surface-light/30">
-        <h3 class="text-lg font-semibold mb-2">mr-stranger</h3>
-        <p class="text-text-muted text-sm mb-3">Windows PC &mdash; 16GB RAM &mdash; On-demand compute</p>
+        <h3 class="text-lg font-semibold mb-2">Built, kept, not running</h3>
+        <p class="text-text-muted text-sm mb-3">Configured and version-controlled &mdash; brought up only if actually needed</p>
         <ul class="text-sm space-y-1 text-text-muted">
-          <li>Grafana dashboards</li>
-          <li>Prometheus + Loki + Tempo (metrics, logs, traces)</li>
-          <li>Alertmanager (Telegram alerts)</li>
-          <li>Authelia SSO portal</li>
-          <li>Infisical secrets management</li>
+          <li>Nextcloud + MariaDB + Redis</li>
+          <li>Home automation stack</li>
         </ul>
+        <p class="text-text-muted text-xs mt-3">
+          Retired entirely (Traefik, Portainer, CrowdSec, Home Assistant,
+          the full Windows observability stack) live in git history, not on disk.
+        </p>
       </div>
     </div>
   </section>
@@ -45,20 +94,20 @@ import Base from '../layouts/Base.astro';
     <h2 class="text-2xl font-semibold mb-6 text-brand">Key Stats</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
-        <div class="text-3xl font-bold text-brand-light">28</div>
-        <div class="text-sm text-text-muted mt-1">Containers</div>
+        <div class="text-3xl font-bold text-brand-light">8</div>
+        <div class="text-sm text-text-muted mt-1">Live services</div>
       </div>
       <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
-        <div class="text-3xl font-bold text-brand-light">13</div>
-        <div class="text-sm text-text-muted mt-1">Stacks</div>
+        <div class="text-3xl font-bold text-brand-light">9</div>
+        <div class="text-sm text-text-muted mt-1">ADRs written</div>
       </div>
       <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
         <div class="text-3xl font-bold text-brand-light">1.9</div>
         <div class="text-sm text-text-muted mt-1">TB Storage</div>
       </div>
       <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
-        <div class="text-3xl font-bold text-brand-light">2</div>
-        <div class="text-sm text-text-muted mt-1">Nodes</div>
+        <div class="text-3xl font-bold text-brand-light">11</div>
+        <div class="text-sm text-text-muted mt-1">Containers retired</div>
       </div>
     </div>
   </section>
@@ -69,7 +118,7 @@ import Base from '../layouts/Base.astro';
       <li><a href="/hub" class="text-brand-light hover:underline">Live Hub &rarr; — all services, health status</a></li>
       <li><a href="/architecture" class="text-brand-light hover:underline">Architecture diagram &rarr;</a></li>
       <li><a href="/projects" class="text-brand-light hover:underline">All projects &rarr;</a></li>
-      <li><a href="https://github.com/IamVanshKhanna/homelab-ops-mesh" class="text-brand-light hover:underline">GitHub repo &rarr;</a></li>
+      <li><a href="http://100.64.0.1:8087/vansh/pi-utility-server" class="text-brand-light hover:underline">Gitea repo &rarr;</a></li>
     </ul>
   </section>
 </Base>

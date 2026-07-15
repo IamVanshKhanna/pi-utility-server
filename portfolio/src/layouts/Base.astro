@@ -16,14 +16,14 @@ const currentPath = Astro.url.pathname;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <title>{title} | homelab-ops-mesh</title>
+    <title>{title} | pi-utility-server</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body class="min-h-screen flex flex-col">
     <nav class="border-b border-surface-light bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
       <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         <a href="/" class="text-xl font-bold text-brand-light hover:text-brand transition-colors">
-          homelab-ops-mesh
+          pi-utility-server
         </a>
         <div class="flex gap-6 text-sm">
           <a href="/" class:list={["hover:text-brand-light transition-colors", currentPath === "/" && "text-brand-light font-semibold"]}>Home</a>
@@ -40,7 +40,7 @@ const currentPath = Astro.url.pathname;
     </main>
 
     <footer class="border-t border-surface-light py-8 text-center text-text-muted text-sm">
-      <p>homelab-ops-mesh &mdash; Raspberry Pi 4B + Windows &mdash; Tailscale Mesh</p>
+      <p>pi-utility-server &mdash; Raspberry Pi 4B + Windows &mdash; Tailscale Mesh</p>
     </footer>
   </body>
 </html>

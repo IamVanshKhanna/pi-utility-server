@@ -9,13 +9,14 @@ import Base from '../layouts/Base.astro';
     <h2 class="text-2xl font-semibold mb-4 text-brand">Why this project?</h2>
     <p class="text-text-muted leading-relaxed max-w-2xl mb-4">
       This homelab started as a single Raspberry Pi 4B running Docker containers for personal services.
-      It evolved into a multi-node mesh architecture with automated deployments, remote management,
-      and full observability - all defined as code and version-controlled.
+      It grew into a two-node mesh with a full observability + secrets + auth stack on a second machine —
+      then that entire stack got retired once it was clear it wasn't earning its RAM. What's left is a lean
+      core that actually gets used daily, with every major decision (and reversal) documented as it happened.
     </p>
     <p class="text-text-muted leading-relaxed max-w-2xl">
       The project demonstrates infrastructure-as-code practices applied to a homelab:
-      Docker Compose orchestration, reverse proxy configuration, VPN mesh networking,
-      DNS filtering, security hardening, observability, and automated backup - all on a $35 board.
+      Docker Compose orchestration, mesh VPN networking, DNS filtering, security hardening,
+      and the discipline to cut back down once the actual usage pattern was clear — all on a $35 board.
     </p>
   </section>
 
@@ -34,30 +35,33 @@ import Base from '../layouts/Base.astro';
       <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
         <h3 class="font-semibold mb-2">Networking</h3>
         <ul class="text-sm text-text-muted space-y-1">
-          <li>Traefik v3 reverse proxy</li>
+          <li>Headscale (self-hosted mesh control plane)</li>
           <li>Pi-hole DNS ad-blocking</li>
-          <li>Tailscale MagicDNS + HTTPS</li>
-          <li>Docker proxy network</li>
+          <li>Samba + Syncthing (file access &amp; sync)</li>
+          <li>Direct mesh-IP:port per service — no reverse proxy layer</li>
         </ul>
       </div>
       <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
         <h3 class="font-semibold mb-2">Observability</h3>
         <ul class="text-sm text-text-muted space-y-1">
-          <li>Prometheus (metrics)</li>
-          <li>Grafana (dashboards)</li>
-          <li>Loki (logs)</li>
-          <li>Tempo (traces)</li>
-          <li>Alertmanager (alerts)</li>
+          <li>Uptime Kuma (up/down + response time)</li>
+          <li>Netdata (real-time system + container metrics)</li>
         </ul>
+        <p class="text-xs text-text-muted mt-2">
+          Prometheus/Grafana/Loki/Tempo/Alertmanager were built, ran, then retired
+          (ADR-009) — full stack was disproportionate for a single-operator setup.
+        </p>
       </div>
       <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
         <h3 class="font-semibold mb-2">Security</h3>
         <ul class="text-sm text-text-muted space-y-1">
-          <li>Authelia (SSO + 2FA)</li>
-          <li>CrowdSec (IPS)</li>
-          <li>Infisical (secrets management)</li>
           <li>Vaultwarden (passwords)</li>
+          <li>Headscale mesh membership as the access boundary</li>
         </ul>
+        <p class="text-xs text-text-muted mt-2">
+          Authelia/Infisical/CrowdSec were built, then retired — no multi-user
+          need, no rotation workflow ever actually used (ADR-009).
+        </p>
       </div>
     </div>
   </section>
@@ -102,9 +106,35 @@ import Base from '../layouts/Base.astro';
       </div>
       <div class="flex gap-4">
         <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.5</div>
-        <div class="border-l-2 border-brand-light pl-4">
-          <p class="font-medium text-brand-light">Security audit (current)</p>
+        <div class="border-l-2 border-brand pl-4">
+          <p class="font-medium">Security audit</p>
           <p class="text-sm text-text-muted">STRIDE review, Redis auth, TinyBot hardening, network hardening</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.6&ndash;v1.8</div>
+        <div class="border-l-2 border-brand pl-4">
+          <p class="font-medium">Headscale, Gitea, Hub dashboard</p>
+          <p class="text-sm text-text-muted">Self-hosted mesh control plane replaces Tailscale SaaS; self-hosted git + CI/CD; unified service launcher</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v2</div>
+        <div class="border-l-2 border-brand pl-4">
+          <p class="font-medium">Identity + repo consolidation</p>
+          <p class="text-sm text-text-muted">Three drifting repo copies merged into one canonical source, migrated into indexed Samba storage</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v2.1</div>
+        <div class="border-l-2 border-brand-light pl-4">
+          <p class="font-medium text-brand-light">The retirement (current)</p>
+          <p class="text-sm text-text-muted">
+            Windows observability/secrets/auth stack (11 containers), Traefik, Portainer, CrowdSec,
+            Home Assistant retired per ADR-009 — moved to <code>_retired/</code>, then removed from the
+            working tree entirely (recoverable via git history, nothing deleted). Netdata replaces the
+            six-container metrics stack it made obsolete. Down to 8 services that actually get used.
+          </p>
         </div>
       </div>
     </div>
@@ -113,8 +143,7 @@ import Base from '../layouts/Base.astro';
   <section>
     <h2 class="text-2xl font-semibold mb-4 text-brand">Links</h2>
     <ul class="space-y-2 text-text-muted">
-      <li><a href="https://github.com/IamVanshKhanna/homelab-ops-mesh" class="text-brand-light hover:underline">GitHub Repository</a></li>
-      <li><a href="https://autobot.taila24d04.ts.net" class="text-brand-light hover:underline">Live Site (Tailscale MagicDNS)</a></li>
+      <li><a href="http://100.64.0.1:8087/vansh/pi-utility-server" class="text-brand-light hover:underline">Gitea Repository</a></li>
     </ul>
   </section>
 </Base>
