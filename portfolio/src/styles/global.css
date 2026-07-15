@@ -1,19 +1,26 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 @theme {
   --color-brand: var(--brand);
   --color-brand-light: var(--brand-light);
   --color-brand-dark: var(--brand-dark);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
   --color-surface: var(--surface);
   --color-surface-light: var(--surface-light);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
 }
 
 :root {
   --brand: #4f46e5;
   --brand-light: #6366f1;
   --brand-dark: #4338ca;
+  --accent: #ea580c;
+  --accent-light: #fb923c;
   --surface: #ffffff;
   --surface-light: #e2e8f0;
   --text: #0f172a;
@@ -24,6 +31,8 @@
   --brand: #818cf8;
   --brand-light: #a5b4fc;
   --brand-dark: #6366f1;
+  --accent: #fb923c;
+  --accent-light: #fdba74;
   --surface: #0b1120;
   --surface-light: #1c2536;
   --text: #e7ecf5;
@@ -35,6 +44,8 @@
     --brand: #818cf8;
     --brand-light: #a5b4fc;
     --brand-dark: #6366f1;
+    --accent: #fb923c;
+    --accent-light: #fdba74;
     --surface: #0b1120;
     --surface-light: #1c2536;
     --text: #e7ecf5;
@@ -47,10 +58,14 @@ html {
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   background-color: var(--color-surface);
   color: var(--color-text);
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
 }
 
 a {
@@ -77,4 +92,64 @@ a:hover {
 ::selection {
   background-color: var(--color-brand);
   color: white;
+}
+
+/* Scroll-reveal: fade + slide up, respects reduced-motion */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Hero gradient blob */
+.gradient-blob {
+  background: radial-gradient(circle at 30% 30%, var(--brand) 0%, transparent 60%),
+              radial-gradient(circle at 70% 70%, var(--accent) 0%, transparent 55%);
+  filter: blur(60px);
+  opacity: 0.35;
+  animation: blob-float 12s ease-in-out infinite;
+}
+
+[data-theme="dark"] .gradient-blob {
+  opacity: 0.25;
+}
+
+@keyframes blob-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -20px) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-blob {
+    animation: none;
+  }
+}
+
+/* Card hover lift */
+.card-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-lift:hover {
+    transform: none;
+  }
 }

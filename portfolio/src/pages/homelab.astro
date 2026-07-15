@@ -1,0 +1,113 @@
+---
+import Base from '../layouts/Base.astro';
+
+const topologyDiagram = ` Any device on the Headscale mesh
+    |
+    | Direct HTTP, one port per service (WireGuard encrypted, no reverse proxy)
+    v
+[ Pi 4B — autobot — 100.64.0.1 ]
+    |
+    +-- Vaultwarden      :8081
+    +-- Gitea + CI       :8087 / :8088
+    +-- Headscale        :8086  (mesh control plane)
+    +-- Pi-hole          :8053  (+ DNS on :53)
+    +-- Samba            :445   (centralized storage)
+    +-- Syncthing        :22000 (multi-device sync)
+    +-- Uptime Kuma       :8082  (real status source)
+    +-- Netdata          :19999
+    +-- Portfolio (this site) :8090
+
+  Retired entirely (git history only, see ADR-009):
+    Traefik, Portainer, CrowdSec, the full Windows
+    observability/secrets/auth stack (11 containers)
+`;
+
+const services = [
+  { name: 'Vaultwarden', desc: 'Password vault' },
+  { name: 'Gitea', desc: 'Self-hosted git + CI' },
+  { name: 'Headscale', desc: 'Self-hosted mesh control plane' },
+  { name: 'Pi-hole', desc: 'DNS ad-blocking' },
+  { name: 'Samba + Syncthing', desc: 'Centralized storage + sync' },
+  { name: 'Uptime Kuma', desc: 'Service monitoring' },
+  { name: 'Netdata', desc: 'Real-time system metrics' },
+];
+---
+
+<Base title="Homelab Case Study">
+  <h1 class="font-display text-4xl font-bold mb-4 text-brand-dark">The Homelab Rebuild</h1>
+  <p class="text-lg text-text-muted mb-12 max-w-2xl">
+    A homelab built, over-built, and then deliberately cut back down &mdash; on a single Raspberry Pi 4B.
+    Not a showcase of running as many containers as possible. A record of what got tested, what got
+    rejected, and why, with the reasoning kept alongside the code.
+  </p>
+
+  <section class="mb-16 reveal">
+    <h2 class="font-display text-2xl font-semibold mb-6 text-brand">The arc</h2>
+    <div class="space-y-6">
+      <div class="border-l-2 border-surface-light pl-6">
+        <h3 class="font-semibold text-brand-light">v1.0 — Single Pi, Compose only</h3>
+        <p class="text-sm text-text-muted mt-1">Started deliberately minimal: one Pi 4B, 4GB RAM, Docker Compose. No orchestrator.</p>
+      </div>
+      <div class="border-l-2 border-surface-light pl-6">
+        <h3 class="font-semibold text-brand-light">Multi-node ambition, tested and rejected</h3>
+        <p class="text-sm text-text-muted mt-1">
+          K3s, ArgoCD, and Helmfile were evaluated for orchestration, then removed.
+          K3s alone costs ~600&ndash;800MB idle RAM &mdash; too much overhead on a 4GB box
+          before running a single real workload.
+        </p>
+      </div>
+      <div class="border-l-2 border-surface-light pl-6">
+        <h3 class="font-semibold text-brand-light">The big offload</h3>
+        <p class="text-sm text-text-muted mt-1">
+          A second node (Windows, 16GB RAM) took on the full observability + secrets stack:
+          Grafana, Prometheus, Loki, Tempo, Alertmanager, Authelia, Infisical &mdash; 11 containers.
+        </p>
+      </div>
+      <div class="border-l-2 border-accent pl-6">
+        <h3 class="font-semibold text-accent">The retirement</h3>
+        <p class="text-sm text-text-muted mt-1">
+          That full stack ran, then got switched off. Single-operator homelab, no multi-user
+          access-control need, no rotation workflow ever actually used. Uptime Kuma covers what
+          actually gets checked day to day. Documented as ADR-009, not silently deleted.
+        </p>
+      </div>
+      <div class="border-l-2 border-surface-light pl-6">
+        <h3 class="font-semibold text-brand-light">Where it landed</h3>
+        <p class="text-sm text-text-muted mt-1">
+          A lean core of 9 services that get used, a single-container Netdata swapped in for the
+          six-container metrics stack it replaced, and a <code class="text-brand-dark">_retired/</code>
+          folder pattern &mdash; nothing gets silently deleted.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-16 reveal">
+    <h2 class="font-display text-2xl font-semibold mb-6 text-brand">Live services</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {services.map((svc) => (
+        <div class="border border-surface-light rounded-2xl p-4 bg-surface-light/20">
+          <h3 class="font-semibold text-sm">{svc.name}</h3>
+          <p class="text-xs text-text-muted mt-1">{svc.desc}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="mb-16 reveal">
+    <h2 class="font-display text-2xl font-semibold mb-6 text-brand">Topology</h2>
+    <div class="border border-surface-light rounded-2xl p-8 bg-surface-light/20 overflow-x-auto">
+      <pre class="text-sm text-text-muted font-mono leading-relaxed">{topologyDiagram}</pre>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <h2 class="font-display text-2xl font-semibold mb-6 text-brand">Key design decisions</h2>
+    <ul class="space-y-3 text-text-muted">
+      <li class="flex gap-3"><span class="text-accent font-bold shrink-0">No K3s</span><span>Control plane alone costs 600&ndash;800MB idle RAM on a 4GB Pi</span></li>
+      <li class="flex gap-3"><span class="text-accent font-bold shrink-0">No reverse proxy</span><span>Direct mesh-IP:port per service — one less thing that can break access to everything at once</span></li>
+      <li class="flex gap-3"><span class="text-accent font-bold shrink-0">No auth layer</span><span>Mesh membership is the access boundary — no multi-user need to justify SSO infrastructure</span></li>
+      <li class="flex gap-3"><span class="text-accent font-bold shrink-0">Retire, don't delete</span><span>Everything decommissioned moves through <code class="text-brand-dark">_retired/</code> before removal — recoverable via git history</span></li>
+    </ul>
+  </section>
+</Base>

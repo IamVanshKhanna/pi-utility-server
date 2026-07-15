@@ -1,83 +1,64 @@
 ---
 import Base from '../layouts/Base.astro';
 
-const GITEA_BASE = 'http://100.64.0.1:8087/vansh/pi-utility-server/src/branch/main';
-
 const projects = [
   {
-    title: 'Vaultwarden — Password Vault',
-    description: 'Self-hosted Bitwarden-compatible password manager. Direct mesh-IP access, no reverse proxy — the reason this whole rebuild started (a coordination-server outage locked out the previous vault).',
-    tech: ['Vaultwarden', 'Docker', 'Headscale mesh'],
-    stack: 'pi/stacks/apps/',
+    title: 'devpilot',
+    tag: 'AI &middot; Pre-launch MVP',
+    description: 'AI code-review agent that installs as a GitHub App. Reviews PRs, catches bugs, enforces conventions, learns team patterns.',
+    tech: ['Next.js', 'FastAPI', 'PostgreSQL', 'Redis'],
+    href: 'https://github.com/iamvanshkhanna/devpilot',
+    big: true,
   },
   {
-    title: 'Gitea + act_runner — Self-Hosted Git & CI',
-    description: 'Rootless Gitea instance hosting this very repo, plus a systemd-level CI runner. Every fix in the retirement arc is a real commit here, not a claim.',
-    tech: ['Gitea', 'act_runner', 'systemd'],
-    stack: 'pi/stacks/gitops/',
+    title: 'The Homelab Rebuild',
+    tag: 'Infrastructure &middot; Case Study',
+    description: 'Self-hosted homelab: built a two-node stack, then deliberately retired half of it once the RAM cost wasn\'t justified. 9 ADRs, documented reversals, not just wins.',
+    tech: ['Docker', 'Headscale', 'Gitea CI', 'Astro'],
+    href: '/homelab',
+    internal: true,
+    big: true,
   },
   {
-    title: 'Headscale — Self-Hosted Mesh Control Plane',
-    description: 'Replaced Tailscale SaaS after a coordination-server outage. Every device (Mac, Windows, Pi) registers against this instead of a third party.',
-    tech: ['Headscale', 'WireGuard', 'Docker'],
-    stack: 'pi/stacks/headscale/',
+    title: 'Digital Operations Analytics',
+    tag: 'Data &middot; Python/pandas',
+    description: 'Multi-source ops dashboard — ingests, cleans, and correlates support tickets, infrastructure health, and hiring data across three domains.',
+    tech: ['Python', 'pandas', 'Data Pipelines'],
+    href: 'https://github.com/iamvanshkhanna/digital-operations-analytics',
   },
   {
-    title: 'NAS — Samba + Syncthing',
-    description: 'Two file-access patterns, deliberately kept separate: Samba for Pi-only centralized storage, Syncthing for real multi-device local copies. Indexed folder structure, single unified Samba share.',
-    tech: ['Samba', 'Syncthing', 'Alpine Linux'],
-    stack: 'pi/stacks/nas/',
-  },
-  {
-    title: 'Pi-hole — DNS Ad Blocking',
-    description: 'Network-wide DNS ad blocking and local DNS resolution.',
-    tech: ['Pi-hole', 'FTL DNS', 'Docker'],
-    stack: 'pi/stacks/network/',
-  },
-  {
-    title: 'Netdata — Real-Time Monitoring',
-    description: 'Single-container replacement for a six-container Prometheus/Grafana/Loki/Tempo/Alertmanager stack that was disproportionate for one operator. Zero config, auto-discovers every container.',
-    tech: ['Netdata', 'Docker'],
-    stack: 'pi/stacks/monitoring/',
-  },
-  {
-    title: 'TinyBot — Telegram Remote Management',
-    description: 'Telegram bot for remote Pi management: health checks, fan control, Docker container management, from a phone. Built, currently dormant — kept on the side rather than retired.',
-    tech: ['Python', 'python-telegram-bot', 'systemd'],
-    stack: 'pi/tinybot/',
-  },
-  {
-    title: 'Automated Backups',
-    description: 'Restic-based backup script, nightly cron, Telegram notification on success/failure. Fixed mid-project: cron pointed at a stale path and a permission error had silently broken it for three weeks before this rebuild caught it.',
-    tech: ['Restic', 'bash', 'cron'],
-    stack: 'pi/scripts/backup.sh',
+    title: 'vansh-local-ai-stack',
+    tag: 'AI &middot; Local Inference',
+    description: 'Python CLI tooling for running LLMs locally via Ollama — no cloud dependency, no per-token cost.',
+    tech: ['Python', 'Ollama', 'CLI'],
+    href: 'https://github.com/iamvanshkhanna/vansh-local-ai-stack',
   },
 ];
 ---
 
 <Base title="Projects">
-  <h1 class="text-4xl font-bold mb-4 text-brand-light">Projects</h1>
+  <h1 class="font-display text-4xl font-bold mb-4 text-brand-dark">Projects</h1>
   <p class="text-lg text-text-muted mb-12 max-w-2xl">
-    Each project lives in its own Docker Compose stack, independently deployable and version-controlled.
-    Retired projects (Traefik, CrowdSec, Authelia, Infisical, the full observability stack) aren't listed
-    here — see the <a href="/about" class="text-brand-dark hover:underline">retirement arc</a> for what
-    got cut and why.
+    Real repos, real commits. Click through — nothing here is a stub.
   </p>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     {projects.map((project) => (
-      <article class="border border-surface-light rounded-lg p-6 bg-surface-light/20 hover:bg-surface-light/40 transition-colors">
-        <h2 class="text-lg font-semibold mb-2">{project.title}</h2>
+      <a
+        href={project.href}
+        target={project.internal ? '_self' : '_blank'}
+        rel={project.internal ? '' : 'noopener'}
+        class:list={['card-lift block border border-surface-light rounded-2xl p-6 bg-surface-light/20', project.big && 'md:col-span-2']}
+      >
+        <p class="text-xs font-semibold text-accent uppercase tracking-wide mb-2" set:html={project.tag}></p>
+        <h2 class="font-display text-xl font-semibold mb-2">{project.title}</h2>
         <p class="text-sm text-text-muted mb-4">{project.description}</p>
-        <div class="flex flex-wrap gap-2 mb-4">
+        <div class="flex flex-wrap gap-2">
           {project.tech.map((t) => (
-            <span class="text-xs px-2 py-1 rounded-full bg-brand/20 text-brand-light">{t}</span>
+            <span class="text-xs px-2 py-1 rounded-full bg-brand/15 text-brand-dark font-medium">{t}</span>
           ))}
         </div>
-        <a href={`${GITEA_BASE}/${project.stack}`} class="text-xs text-text-muted hover:text-brand-light transition-colors">
-          View source on Gitea &rarr;
-        </a>
-      </article>
+      </a>
     ))}
   </div>
 </Base>

@@ -3,124 +3,55 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base title="Home">
-  <section class="mb-16">
-    <h1 class="text-4xl font-bold mb-4 text-brand-light">pi-utility-server</h1>
-    <p class="text-lg text-text-muted max-w-2xl">
-      A homelab built, over-built, and then deliberately cut back down &mdash;
-      on a single Raspberry Pi 4B. This isn't a showcase of running as many
-      containers as possible. It's a record of what got tested, what got
-      rejected, and why, with the reasoning kept alongside the code.
+  <section class="relative mb-20 pt-8 pb-4">
+    <div class="gradient-blob absolute -top-10 -left-10 w-72 h-72 rounded-full pointer-events-none -z-10"></div>
+    <p class="text-sm font-semibold text-accent mb-3 tracking-wide uppercase">Melbourne, Australia &middot; Open to Grad Roles</p>
+    <h1 class="font-display text-5xl md:text-6xl font-bold mb-6 text-text leading-tight">
+      Hi, I'm Vansh. <br />
+      <span class="text-brand">I build things</span> and write down <span class="text-accent">why</span>.
+    </h1>
+    <p class="text-lg text-text-muted max-w-xl mb-8">
+      Graduate Software Engineer with an Application Security minor. I ship real projects —
+      an AI code-review agent, a self-hosted homelab I rebuilt and then deliberately cut back down,
+      an ops-analytics dashboard — and I document the decisions, not just the outcomes.
     </p>
-  </section>
-
-  <section class="mb-16">
-    <h2 class="text-2xl font-semibold mb-6 text-brand">The arc</h2>
-    <div class="space-y-6">
-      <div class="border-l-2 border-surface-light pl-6">
-        <h3 class="font-semibold text-brand-light">v1.0 — Single Pi, Compose only</h3>
-        <p class="text-sm text-text-muted mt-1">
-          Started deliberately minimal: one Pi 4B, 4GB RAM, Docker Compose. No orchestrator.
-        </p>
-      </div>
-      <div class="border-l-2 border-surface-light pl-6">
-        <h3 class="font-semibold text-brand-light">Multi-node ambition, tested and rejected</h3>
-        <p class="text-sm text-text-muted mt-1">
-          K3s, ArgoCD, and Helmfile were evaluated for orchestration, then removed.
-          K3s alone costs ~600&ndash;800MB idle RAM &mdash; too much overhead on a 4GB box
-          before running a single real workload. Compose won on RAM budget, not features.
-        </p>
-      </div>
-      <div class="border-l-2 border-surface-light pl-6">
-        <h3 class="font-semibold text-brand-light">The big offload</h3>
-        <p class="text-sm text-text-muted mt-1">
-          A second node (Windows, 16GB RAM) took on the full observability + secrets stack:
-          Grafana, Prometheus, Loki, Tempo, Alertmanager, Authelia, Infisical &mdash; 11 containers,
-          migrated off the Pi in sequence to keep it under a 3.5GB budget.
-        </p>
-      </div>
-      <div class="border-l-2 border-brand pl-6">
-        <h3 class="font-semibold text-brand-light">The retirement</h3>
-        <p class="text-sm text-text-muted mt-1">
-          That full stack ran, then got switched off. Single-operator homelab, no multi-user
-          access-control need, no rotation workflow ever actually used, no tracing need that
-          materialized. Uptime Kuma covers what actually gets checked day to day.
-          Documented as ADR-009, not silently deleted.
-        </p>
-      </div>
-      <div class="border-l-2 border-surface-light pl-6">
-        <h3 class="font-semibold text-brand-light">Where it landed</h3>
-        <p class="text-sm text-text-muted mt-1">
-          A lean core of 8 services that get used, a single-container Netdata swapped in for
-          the six-container metrics stack it replaced, and a <code class="text-brand-light">_retired/</code>
-          folder pattern &mdash; nothing gets silently deleted, everything decommissioned stays
-          one git command away.
-        </p>
-      </div>
+    <div class="flex flex-wrap gap-4">
+      <a href="/projects" class="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-brand text-white font-semibold hover:bg-brand-dark transition-colors">
+        See my projects &rarr;
+      </a>
+      <a href="/about" class="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-surface-light font-semibold hover:bg-surface-light/40 transition-colors">
+        About me
+      </a>
     </div>
   </section>
 
-  <section class="mb-16">
-    <h2 class="text-2xl font-semibold mb-6 text-brand">What's actually running</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="border border-surface-light rounded-lg p-6 bg-surface-light/30">
-        <h3 class="text-lg font-semibold mb-2">autobot &mdash; Raspberry Pi 4B</h3>
-        <p class="text-text-muted text-sm mb-3">4GB RAM &mdash; always-on core &mdash; the only node in daily use</p>
-        <ul class="text-sm space-y-1 text-text-muted">
-          <li>Vaultwarden &mdash; password vault</li>
-          <li>Gitea &mdash; self-hosted git + CI</li>
-          <li>Headscale &mdash; self-hosted mesh control plane</li>
-          <li>Pi-hole &mdash; DNS ad-blocking</li>
-          <li>Samba + Syncthing &mdash; file storage &amp; sync</li>
-          <li>Uptime Kuma &mdash; service monitoring</li>
-          <li>Netdata &mdash; real-time system metrics</li>
-        </ul>
-      </div>
-      <div class="border border-surface-light rounded-lg p-6 bg-surface-light/30">
-        <h3 class="text-lg font-semibold mb-2">Built, kept, not running</h3>
-        <p class="text-text-muted text-sm mb-3">Configured and version-controlled &mdash; brought up only if actually needed</p>
-        <ul class="text-sm space-y-1 text-text-muted">
-          <li>Nextcloud + MariaDB + Redis</li>
-          <li>Home automation stack</li>
-        </ul>
-        <p class="text-text-muted text-xs mt-3">
-          Retired entirely (Traefik, Portainer, CrowdSec, Home Assistant,
-          the full Windows observability stack) live in git history, not on disk.
-        </p>
-      </div>
+  <section class="mb-20 reveal">
+    <h2 class="font-display text-2xl font-semibold mb-6 text-brand">Featured work</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <a href="/projects" class="card-lift block border border-surface-light rounded-2xl p-6 bg-surface-light/20">
+        <p class="text-xs font-semibold text-accent uppercase tracking-wide mb-2">AI &middot; Pre-launch MVP</p>
+        <h3 class="font-display font-semibold text-lg mb-2">devpilot</h3>
+        <p class="text-sm text-text-muted">AI code-review agent that installs as a GitHub App — Next.js, FastAPI, PostgreSQL, Redis.</p>
+      </a>
+      <a href="/homelab" class="card-lift block border border-surface-light rounded-2xl p-6 bg-surface-light/20">
+        <p class="text-xs font-semibold text-accent uppercase tracking-wide mb-2">Infra &middot; Case Study</p>
+        <h3 class="font-display font-semibold text-lg mb-2">The Homelab Rebuild</h3>
+        <p class="text-sm text-text-muted">Built it big, then retired half of it on purpose. 9 ADRs, real decisions, real reversals.</p>
+      </a>
+      <a href="/projects" class="card-lift block border border-surface-light rounded-2xl p-6 bg-surface-light/20">
+        <p class="text-xs font-semibold text-accent uppercase tracking-wide mb-2">Data &middot; Python/pandas</p>
+        <h3 class="font-display font-semibold text-lg mb-2">Digital Operations Analytics</h3>
+        <p class="text-sm text-text-muted">Multi-source ops dashboard — support, infra, and hiring data, cleaned and correlated.</p>
+      </a>
     </div>
   </section>
 
-  <section class="mb-16">
-    <h2 class="text-2xl font-semibold mb-6 text-brand">Key Stats</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
-        <div class="text-3xl font-bold text-brand-light">8</div>
-        <div class="text-sm text-text-muted mt-1">Live services</div>
-      </div>
-      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
-        <div class="text-3xl font-bold text-brand-light">9</div>
-        <div class="text-sm text-text-muted mt-1">ADRs written</div>
-      </div>
-      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
-        <div class="text-3xl font-bold text-brand-light">1.9</div>
-        <div class="text-sm text-text-muted mt-1">TB Storage</div>
-      </div>
-      <div class="border border-surface-light rounded-lg p-4 text-center bg-surface-light/20">
-        <div class="text-3xl font-bold text-brand-light">11</div>
-        <div class="text-sm text-text-muted mt-1">Containers retired</div>
-      </div>
+  <section class="reveal">
+    <h2 class="font-display text-2xl font-semibold mb-4 text-brand">What I actually know</h2>
+    <div class="flex flex-wrap gap-2">
+      {['Python', 'TypeScript', 'C++', 'Docker', 'Linux', 'Tailscale/Headscale', 'Astro', 'CI/CD', 'Penetration Testing', 'AI/LLM tooling'].map((skill) => (
+        <span class="text-sm px-3 py-1.5 rounded-full bg-brand/10 text-brand-dark font-medium">{skill}</span>
+      ))}
     </div>
-  </section>
-
-  <section>
-    <h2 class="text-2xl font-semibold mb-4 text-brand">Quick Links</h2>
-    <ul class="space-y-2 text-text-muted">
-      <li><a href="/hub" class="text-brand-light hover:underline">Live Hub &rarr; — all services, health status</a></li>
-      <li><a href="/architecture" class="text-brand-light hover:underline">Architecture diagram &rarr;</a></li>
-      <li><a href="/projects" class="text-brand-light hover:underline">All projects &rarr;</a></li>
-      <li><a href="http://100.64.0.1:8087/vansh/pi-utility-server" class="text-brand-light hover:underline">Gitea repo &rarr;</a></li>
-      <li><a href="https://github.com/iamvanshkhanna" class="text-brand-light hover:underline">GitHub &rarr;</a></li>
-      <li><a href="https://linkedin.com/in/iamvanshkhanna" class="text-brand-light hover:underline">LinkedIn &rarr;</a></li>
-    </ul>
   </section>
 </Base>

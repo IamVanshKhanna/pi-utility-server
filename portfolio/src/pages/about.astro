@@ -3,149 +3,64 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base title="About">
-  <h1 class="text-4xl font-bold mb-4 text-brand-light">About</h1>
+  <h1 class="font-display text-4xl font-bold mb-6 text-brand-dark">About</h1>
 
-  <section class="mb-12">
-    <h2 class="text-2xl font-semibold mb-4 text-brand">Why this project?</h2>
-    <p class="text-text-muted leading-relaxed max-w-2xl mb-4">
-      This homelab started as a single Raspberry Pi 4B running Docker containers for personal services.
-      It grew into a two-node mesh with a full observability + secrets + auth stack on a second machine —
-      then that entire stack got retired once it was clear it wasn't earning its RAM. What's left is a lean
-      core that actually gets used daily, with every major decision (and reversal) documented as it happened.
+  <section class="mb-12 reveal">
+    <p class="text-lg text-text-muted leading-relaxed max-w-2xl mb-4">
+      I'm a Graduate Software Engineer based in Melbourne, with a Cybersecurity minor and a habit
+      of actually finishing what I start &mdash; then going back and cutting the parts that weren't
+      earning their keep. That's not a euphemism: I built an 11-container observability stack for
+      a homelab, ran it, and then retired the whole thing once it was clear it wasn't worth the RAM.
+      I wrote down why, instead of quietly deleting it.
     </p>
     <p class="text-text-muted leading-relaxed max-w-2xl">
-      The project demonstrates infrastructure-as-code practices applied to a homelab:
-      Docker Compose orchestration, mesh VPN networking, DNS filtering, security hardening,
-      and the discipline to cut back down once the actual usage pattern was clear — all on a $35 board.
+      I'm currently building <a href="https://github.com/iamvanshkhanna/devpilot" class="text-brand-dark hover:underline">devpilot</a>,
+      an AI code-review agent, alongside self-hosted infrastructure work and a couple of data/analytics
+      projects. I like systems that are honest about their own trade-offs.
     </p>
   </section>
 
-  <section class="mb-12">
-    <h2 class="text-2xl font-semibold mb-6 text-brand">Tech Stack</h2>
+  <section class="mb-12 reveal">
+    <h2 class="font-display text-2xl font-semibold mb-4 text-brand">Right now</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
+      <div class="border border-surface-light rounded-2xl p-5 bg-surface-light/20">
+        <h3 class="font-semibold mb-1">Education</h3>
+        <p class="text-sm text-text-muted">B.E. Software Engineering (Honours) + Cybersecurity Minor &mdash; Deakin University</p>
+      </div>
+      <div class="border border-surface-light rounded-2xl p-5 bg-surface-light/20">
+        <h3 class="font-semibold mb-1">Work rights</h3>
+        <p class="text-sm text-text-muted">Visa 485 &mdash; full work rights in Australia through October 2027</p>
+      </div>
+      <div class="border border-surface-light rounded-2xl p-5 bg-surface-light/20">
+        <h3 class="font-semibold mb-1">Looking for</h3>
+        <p class="text-sm text-text-muted">Graduate Software Engineering or Application Security roles</p>
+      </div>
+      <div class="border border-surface-light rounded-2xl p-5 bg-surface-light/20">
+        <h3 class="font-semibold mb-1">Based in</h3>
+        <p class="text-sm text-text-muted">Melbourne, Victoria, Australia</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <h2 class="font-display text-2xl font-semibold mb-4 text-brand">Skills</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="border border-surface-light rounded-2xl p-5 bg-surface-light/20">
+        <h3 class="font-semibold mb-2">Languages</h3>
+        <p class="text-sm text-text-muted">Python &middot; TypeScript &middot; C++</p>
+      </div>
+      <div class="border border-surface-light rounded-2xl p-5 bg-surface-light/20">
         <h3 class="font-semibold mb-2">Infrastructure</h3>
-        <ul class="text-sm text-text-muted space-y-1">
-          <li>Raspberry Pi 4B (4GB) + 1.9TB SSD</li>
-          <li>Debian Trixie (aarch64)</li>
-          <li>Docker Compose (no Kubernetes)</li>
-          <li>Tailscale mesh VPN</li>
-        </ul>
+        <p class="text-sm text-text-muted">Docker &middot; Linux &middot; Tailscale/Headscale mesh networking &middot; CI/CD</p>
       </div>
-      <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
-        <h3 class="font-semibold mb-2">Networking</h3>
-        <ul class="text-sm text-text-muted space-y-1">
-          <li>Headscale (self-hosted mesh control plane)</li>
-          <li>Pi-hole DNS ad-blocking</li>
-          <li>Samba + Syncthing (file access &amp; sync)</li>
-          <li>Direct mesh-IP:port per service — no reverse proxy layer</li>
-        </ul>
-      </div>
-      <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
-        <h3 class="font-semibold mb-2">Observability</h3>
-        <ul class="text-sm text-text-muted space-y-1">
-          <li>Uptime Kuma (up/down + response time)</li>
-          <li>Netdata (real-time system + container metrics)</li>
-        </ul>
-        <p class="text-xs text-text-muted mt-2">
-          Prometheus/Grafana/Loki/Tempo/Alertmanager were built, ran, then retired
-          (ADR-009) — full stack was disproportionate for a single-operator setup.
-        </p>
-      </div>
-      <div class="border border-surface-light rounded-lg p-4 bg-surface-light/20">
+      <div class="border border-surface-light rounded-2xl p-5 bg-surface-light/20">
         <h3 class="font-semibold mb-2">Security</h3>
-        <ul class="text-sm text-text-muted space-y-1">
-          <li>Vaultwarden (passwords)</li>
-          <li>Headscale mesh membership as the access boundary</li>
-        </ul>
-        <p class="text-xs text-text-muted mt-2">
-          Authelia/Infisical/CrowdSec were built, then retired — no multi-user
-          need, no rotation workflow ever actually used (ADR-009).
-        </p>
+        <p class="text-sm text-text-muted">Penetration testing fundamentals &middot; threat modelling (STRIDE)</p>
+      </div>
+      <div class="border border-surface-light rounded-2xl p-5 bg-surface-light/20">
+        <h3 class="font-semibold mb-2">AI/Data</h3>
+        <p class="text-sm text-text-muted">LLM tooling &middot; local inference (Ollama) &middot; pandas data pipelines</p>
       </div>
     </div>
-  </section>
-
-  <section class="mb-12">
-    <h2 class="text-2xl font-semibold mb-4 text-brand">Timeline</h2>
-    <div class="space-y-4">
-      <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.0</div>
-        <div class="border-l-2 border-brand pl-4">
-          <p class="font-medium">Initial setup</p>
-          <p class="text-sm text-text-muted">Docker Compose on Pi 4B with basic stacks</p>
-        </div>
-      </div>
-      <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.1</div>
-        <div class="border-l-2 border-brand pl-4">
-          <p class="font-medium">K3s experiment</p>
-          <p class="text-sm text-text-muted">Kubernetes with ArgoCD, Helmfile - too heavy for 4GB Pi</p>
-        </div>
-      </div>
-      <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.2</div>
-        <div class="border-l-2 border-brand pl-4">
-          <p class="font-medium">K3s removed, optimized</p>
-          <p class="text-sm text-text-muted">Docker Compose only, swap off, TinyBot, Tailscale mesh</p>
-        </div>
-      </div>
-      <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.3</div>
-        <div class="border-l-2 border-brand pl-4">
-          <p class="font-medium">Multi-node mesh</p>
-          <p class="text-sm text-text-muted">Pi always-on core + Windows heavy compute, restructured repo</p>
-        </div>
-      </div>
-      <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.4</div>
-        <div class="border-l-2 border-brand pl-4">
-          <p class="font-medium">Container hardening</p>
-          <p class="text-sm text-text-muted">Pinned tags, healthchecks, CPU limits, :ro mounts, stale cleanup</p>
-        </div>
-      </div>
-      <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.5</div>
-        <div class="border-l-2 border-brand pl-4">
-          <p class="font-medium">Security audit</p>
-          <p class="text-sm text-text-muted">STRIDE review, Redis auth, TinyBot hardening, network hardening</p>
-        </div>
-      </div>
-      <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v1.6&ndash;v1.8</div>
-        <div class="border-l-2 border-brand pl-4">
-          <p class="font-medium">Headscale, Gitea, Hub dashboard</p>
-          <p class="text-sm text-text-muted">Self-hosted mesh control plane replaces Tailscale SaaS; self-hosted git + CI/CD; unified service launcher</p>
-        </div>
-      </div>
-      <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v2</div>
-        <div class="border-l-2 border-brand pl-4">
-          <p class="font-medium">Identity + repo consolidation</p>
-          <p class="text-sm text-text-muted">Three drifting repo copies merged into one canonical source, migrated into indexed Samba storage</p>
-        </div>
-      </div>
-      <div class="flex gap-4">
-        <div class="shrink-0 w-24 text-sm text-text-muted text-right">v2.1</div>
-        <div class="border-l-2 border-brand-light pl-4">
-          <p class="font-medium text-brand-light">The retirement (current)</p>
-          <p class="text-sm text-text-muted">
-            Windows observability/secrets/auth stack (11 containers), Traefik, Portainer, CrowdSec,
-            Home Assistant retired per ADR-009 — moved to <code>_retired/</code>, then removed from the
-            working tree entirely (recoverable via git history, nothing deleted). Netdata replaces the
-            six-container metrics stack it made obsolete. Down to 8 services that actually get used.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2 class="text-2xl font-semibold mb-4 text-brand">Links</h2>
-    <ul class="space-y-2 text-text-muted">
-      <li><a href="http://100.64.0.1:8087/vansh/pi-utility-server" class="text-brand-light hover:underline">Gitea Repository</a></li>
-      <li><a href="https://github.com/iamvanshkhanna" class="text-brand-light hover:underline">GitHub</a></li>
-      <li><a href="https://linkedin.com/in/iamvanshkhanna" class="text-brand-light hover:underline">LinkedIn</a></li>
-    </ul>
   </section>
 </Base>
