@@ -147,6 +147,32 @@ const services = [
     </p>
   </section>
 
+  <!-- The mesh -->
+  <section class="mb-20 reveal">
+    <h2 class="font-display text-3xl font-bold mb-2">The <span class="grad-text">mesh</span></h2>
+    <p class="text-text-muted mb-6">
+      The Pi is the hub. Every device connects to it over a self-hosted, WireGuard-encrypted mesh
+      (Headscale) &mdash; no third-party coordinator, reachable from anywhere, private by default.
+    </p>
+    <div class="terminal text-base">
+      <div class="terminal-bar">
+        <span class="terminal-dot" style="background:#ff5f56"></span>
+        <span class="terminal-dot" style="background:#ffbd2e"></span>
+        <span class="terminal-dot" style="background:#27c93f"></span>
+        <span class="ml-2 text-xs text-text-muted">headscale nodes list</span>
+      </div>
+      <div class="p-5 leading-relaxed font-mono-accent">
+        <p class="text-text-muted mb-3"><span class="text-accent" style="font-size:1.3rem;font-weight:700">&#9679;</span> autobot &nbsp;&mdash;&nbsp; <span class="text-accent">100.64.0.1</span> &nbsp;&mdash;&nbsp; Raspberry Pi 4B &nbsp;<span style="color:#22c55e">[hub, always-on]</span></p>
+        <p class="text-text-muted mb-1 pl-4">&#9492;&#9472; mr-stranger &nbsp;&mdash;&nbsp; <span class="text-accent">100.64.0.2</span> &nbsp;&mdash;&nbsp; Windows desktop</p>
+        <p class="text-text-muted mb-1 pl-4">&#9492;&#9472; anonymousbrat &nbsp;&mdash;&nbsp; <span class="text-accent">100.64.0.3</span> &nbsp;&mdash;&nbsp; MacBook</p>
+        <p class="text-text-muted pl-4">&#9492;&#9472; phone &nbsp;&mdash;&nbsp; <span class="text-text-muted">joining</span></p>
+      </div>
+    </div>
+    <p class="text-xs text-text-muted mt-3">
+      Same encrypted network whether I'm at home or on mobile data &mdash; the Pi's services are reachable everywhere, exposed nowhere.
+    </p>
+  </section>
+
   <!-- Live services -->
   <section class="mb-20 reveal">
     <h2 class="font-display text-3xl font-bold mb-2">What's <span class="grad-text">actually</span> running</h2>
