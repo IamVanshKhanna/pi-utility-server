@@ -1,13 +1,45 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #6366f1;
-  --color-brand-light: #818cf8;
-  --color-brand-dark: #4f46e5;
-  --color-surface: #0f172a;
-  --color-surface-light: #1e293b;
-  --color-text: #e2e8f0;
-  --color-text-muted: #94a3b8;
+  --color-brand: var(--brand);
+  --color-brand-light: var(--brand-light);
+  --color-brand-dark: var(--brand-dark);
+  --color-surface: var(--surface);
+  --color-surface-light: var(--surface-light);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+}
+
+:root {
+  --brand: #4f46e5;
+  --brand-light: #6366f1;
+  --brand-dark: #4338ca;
+  --surface: #ffffff;
+  --surface-light: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #55627a;
+}
+
+[data-theme="dark"] {
+  --brand: #818cf8;
+  --brand-light: #a5b4fc;
+  --brand-dark: #6366f1;
+  --surface: #0b1120;
+  --surface-light: #1c2536;
+  --text: #e7ecf5;
+  --text-muted: #98a4bc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand: #818cf8;
+    --brand-light: #a5b4fc;
+    --brand-dark: #6366f1;
+    --surface: #0b1120;
+    --surface-light: #1c2536;
+    --text: #e7ecf5;
+    --text-muted: #98a4bc;
+  }
 }
 
 html {
@@ -18,15 +50,31 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   background-color: var(--color-surface);
   color: var(--color-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 a {
-  color: var(--color-brand-light);
+  color: var(--color-brand-dark);
   text-decoration: none;
   transition: color 0.2s;
+}
+
+[data-theme="dark"] a {
+  color: var(--color-brand-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) a {
+    color: var(--color-brand-light);
+  }
 }
 
 a:hover {
   color: var(--color-brand);
   text-decoration: underline;
+}
+
+::selection {
+  background-color: var(--color-brand);
+  color: white;
 }

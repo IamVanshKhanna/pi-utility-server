@@ -18,19 +18,48 @@ const currentPath = Astro.url.pathname;
     <meta name="description" content={description} />
     <title>{title} | pi-utility-server</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      (function () {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark' || stored === 'light') {
+          document.documentElement.setAttribute('data-theme', stored);
+        }
+      })();
+    </script>
   </head>
   <body class="min-h-screen flex flex-col">
     <nav class="border-b border-surface-light bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
       <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="/" class="text-xl font-bold text-brand-light hover:text-brand transition-colors">
+        <a href="/" class="text-xl font-bold text-brand-dark hover:text-brand transition-colors">
           pi-utility-server
         </a>
-        <div class="flex gap-6 text-sm">
+        <div class="flex items-center gap-6 text-sm">
           <a href="/" class:list={["hover:text-brand-light transition-colors", currentPath === "/" && "text-brand-light font-semibold"]}>Home</a>
           <a href="/hub" class:list={["hover:text-brand-light transition-colors", currentPath === "/hub" && "text-brand-light font-semibold"]}>Hub</a>
           <a href="/projects" class:list={["hover:text-brand-light transition-colors", currentPath === "/projects" && "text-brand-light font-semibold"]}>Projects</a>
           <a href="/architecture" class:list={["hover:text-brand-light transition-colors", currentPath === "/architecture" && "text-brand-light font-semibold"]}>Architecture</a>
           <a href="/about" class:list={["hover:text-brand-light transition-colors", currentPath === "/about" && "text-brand-light font-semibold"]}>About</a>
+          <button
+            id="theme-toggle"
+            type="button"
+            aria-label="Toggle dark mode"
+            class="w-9 h-9 rounded-full border border-surface-light flex items-center justify-center hover:bg-surface-light/40 transition-colors"
+          >
+            <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
         </div>
       </div>
     </nav>
@@ -47,5 +76,36 @@ const currentPath = Astro.url.pathname;
         <a href="https://linkedin.com/in/iamvanshkhanna" class="hover:text-brand-light transition-colors">LinkedIn</a>
       </p>
     </footer>
+
+    <script is:inline>
+      (function () {
+        const btn = document.getElementById('theme-toggle');
+        const sun = document.getElementById('icon-sun');
+        const moon = document.getElementById('icon-moon');
+        const root = document.documentElement;
+
+        function isDark() {
+          const explicit = root.getAttribute('data-theme');
+          if (explicit === 'dark') return true;
+          if (explicit === 'light') return false;
+          return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        function syncIcons() {
+          const dark = isDark();
+          sun.classList.toggle('hidden', !dark);
+          moon.classList.toggle('hidden', dark);
+        }
+
+        btn.addEventListener('click', function () {
+          const next = isDark() ? 'light' : 'dark';
+          root.setAttribute('data-theme', next);
+          localStorage.setItem('theme', next);
+          syncIcons();
+        });
+
+        syncIcons();
+      })();
+    </script>
   </body>
 </html>
