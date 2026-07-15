@@ -6,7 +6,7 @@ interface Props {
   description?: string;
 }
 
-const { title, description = 'Multi-node homelab: Pi + Windows, orchestrated with Docker Compose, mesh via Tailscale' } = Astro.props;
+const { title, description = 'A homelab built, over-built, and cut back down — Raspberry Pi 4B, Docker Compose, mesh via Headscale' } = Astro.props;
 const currentPath = Astro.url.pathname;
 ---
 
@@ -40,7 +40,12 @@ const currentPath = Astro.url.pathname;
     </main>
 
     <footer class="border-t border-surface-light py-8 text-center text-text-muted text-sm">
-      <p>pi-utility-server &mdash; Raspberry Pi 4B + Windows &mdash; Tailscale Mesh</p>
+      <p>pi-utility-server &mdash; Raspberry Pi 4B &mdash; Headscale Mesh</p>
+      <p class="mt-2">
+        <a href="https://github.com/iamvanshkhanna" class="hover:text-brand-light transition-colors">GitHub</a>
+        <span class="mx-2">&middot;</span>
+        <a href="https://linkedin.com/in/iamvanshkhanna" class="hover:text-brand-light transition-colors">LinkedIn</a>
+      </p>
     </footer>
   </body>
 </html>
