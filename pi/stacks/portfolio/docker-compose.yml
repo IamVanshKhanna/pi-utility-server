@@ -16,8 +16,8 @@ services:
         max-file: "3"
     networks:
       - proxy
-    expose:
-      - "8080"
+    ports:
+      - "100.64.0.1:8090:8080"
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
       interval: 30s
@@ -25,9 +25,3 @@ services:
       retries: 3
     mem_limit: 32m
     cpus: 0.25
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.portfolio.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.portfolio.entrypoints=web"
-      - "traefik.http.routers.portfolio.priority=1"
-      - "traefik.http.services.portfolio.loadbalancer.server.port=8080"
