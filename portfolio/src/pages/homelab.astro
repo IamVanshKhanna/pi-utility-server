@@ -6,21 +6,26 @@ const services = [
   { name: 'Gitea', desc: 'Self-hosted git + CI', port: ':8087' },
   { name: 'Headscale', desc: 'Self-hosted mesh control plane', port: ':8086' },
   { name: 'Pi-hole', desc: 'DNS ad-blocking', port: ':8053' },
-  { name: 'Samba + Syncthing', desc: 'Storage + sync', port: ':445/:22000' },
+  { name: 'Samba', desc: 'Centralized file storage', port: ':445' },
+  { name: 'Syncthing', desc: 'Multi-device sync', port: ':22000' },
   { name: 'Uptime Kuma', desc: 'Service monitoring', port: ':8082' },
   { name: 'Netdata', desc: 'Real-time metrics', port: ':19999' },
+  { name: 'Portfolio (Astro)', desc: 'This site', port: ':8090' },
 ];
 ---
 
 <Base title="Homelab Case Study">
-  <p class="mono-chip inline-block mb-5" style="font-size:0.95rem;padding:0.35rem 0.9rem">case-study/homelab &middot; 84 commits &middot; 1 raspberry pi</p>
+  <p class="mono-chip inline-block mb-5" style="font-size:0.95rem;padding:0.35rem 0.9rem">case-study/homelab &middot; ~4 weeks &middot; 80+ commits &middot; 1 raspberry pi</p>
   <h1 class="font-display text-4xl md:text-5xl font-bold mb-6 text-text leading-tight">
     I built a datacenter on a <span class="grad-text">spare $50 board</span>.<br />Then I deleted most of it.
   </h1>
-  <p class="text-lg text-text-muted max-w-2xl mb-16">
+  <p class="text-lg text-text-muted max-w-2xl mb-4">
     This is the honest version &mdash; not the "look how many containers I run" flex.
     It's a story about wanting to own my own stuff, over-building to prove I could,
     realising I'd made it too complex, and learning that the senior move is subtraction.
+  </p>
+  <p class="font-mono-accent text-sm text-text-muted mb-16">
+    <span class="text-accent">//</span> ~80 commits over ~4 weeks, June&ndash;July 2026 &mdash; all public on GitHub.
   </p>
 
   <!-- Stat band -->
@@ -117,7 +122,7 @@ const services = [
   <section class="mb-20 reveal">
     <h2 class="font-display text-3xl font-bold mb-2">The <span class="grad-text">receipts</span></h2>
     <p class="text-text-muted mb-6">Not a mockup. Live numbers from the box, right now.</p>
-    <div class="terminal text-sm">
+    <div class="terminal text-base">
       <div class="terminal-bar">
         <span class="terminal-dot" style="background:#ff5f56"></span>
         <span class="terminal-dot" style="background:#ffbd2e"></span>
@@ -125,13 +130,13 @@ const services = [
         <span class="ml-2 text-xs text-text-muted">vansh@autobot: ~ &mdash; status</span>
       </div>
       <div class="p-5 leading-relaxed">
-        <p><span class="text-accent" style="font-size:1.15rem;font-weight:700">$</span> uptime-kuma --summary</p>
+        <p><span class="text-accent" style="font-size:1.3rem;font-weight:700">$</span> uptime-kuma --summary</p>
         <p class="text-text-muted mb-3">
           10 / 10 monitors <span style="color:#22c55e">UP</span> &nbsp;&middot;&nbsp; 98&ndash;100% uptime across the board
         </p>
-        <p><span class="text-accent" style="font-size:1.15rem;font-weight:700">$</span> netdata --collected</p>
+        <p><span class="text-accent" style="font-size:1.3rem;font-weight:700">$</span> netdata --collected</p>
         <p class="text-text-muted mb-3">5,095 metrics live &nbsp;&middot;&nbsp; 1 node &nbsp;&middot;&nbsp; 14d high-res retention</p>
-        <p><span class="text-accent" style="font-size:1.15rem;font-weight:700">$</span> uname -a &amp;&amp; nproc &amp;&amp; free -h</p>
+        <p><span class="text-accent" style="font-size:1.3rem;font-weight:700">$</span> uname -a &amp;&amp; nproc &amp;&amp; free -h</p>
         <p class="text-text-muted">
           Debian aarch64 (kernel 6.18) &nbsp;&middot;&nbsp; 4 cores @ 1.50GHz &nbsp;&middot;&nbsp; 3.71GB RAM &nbsp;&middot;&nbsp; 2TB SSD
         </p>
