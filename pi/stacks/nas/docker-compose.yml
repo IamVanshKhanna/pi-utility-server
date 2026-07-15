@@ -35,7 +35,7 @@ services:
         echo -e '[samba]\npath = /mnt/nas\nbrowseable = yes\nread only = no' >> /etc/samba/smb.conf &&
         addgroup -g ${PGID:-1000} vansh 2>/dev/null || true &&
         adduser -u ${PUID:-1000} -G vansh -D -H -s /bin/false vansh 2>/dev/null || true &&
-        echo -e '${SAMBA_PASSWORD}\n${SAMBA_PASSWORD}' | smbpasswd -a -s vansh &&
+        (pdbedit -L 2>/dev/null | grep -q '^vansh:' && echo -e '${SAMBA_PASSWORD}\n${SAMBA_PASSWORD}' | smbpasswd -s vansh || echo -e '${SAMBA_PASSWORD}\n${SAMBA_PASSWORD}' | smbpasswd -a -s vansh) &&
         smbd -F
       "
     environment:

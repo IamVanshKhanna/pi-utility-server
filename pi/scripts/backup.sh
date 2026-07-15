@@ -9,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
-ENV_FILE="${ROOT_DIR}/.env"
+ENV_FILE="${PI_ENV_FILE:-${ROOT_DIR}/.env}"
 
 load_env() {
   local f="$1"
