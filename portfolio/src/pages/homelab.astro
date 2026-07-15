@@ -1,52 +1,54 @@
 ---
 import Base from '../layouts/Base.astro';
 
-const topologyDiagram = ` Any device on the Headscale mesh
-    |
-    | Direct HTTP, one port per service (WireGuard encrypted, no reverse proxy)
-    v
-[ Pi 4B — autobot — 100.64.0.1 ]
-    |
-    +-- Vaultwarden      :8081
-    +-- Gitea + CI       :8087 / :8088
-    +-- Headscale        :8086  (mesh control plane)
-    +-- Pi-hole          :8053  (+ DNS on :53)
-    +-- Samba            :445   (centralized storage)
-    +-- Syncthing        :22000 (multi-device sync)
-    +-- Uptime Kuma       :8082  (real status source)
-    +-- Netdata          :19999
-    +-- Portfolio (this site) :8090
-
-  Retired entirely (git history only, see ADR-009):
-    Traefik, Portainer, CrowdSec, the full Windows
-    observability/secrets/auth stack (11 containers)
-`;
-
 const services = [
-  { name: 'Vaultwarden', desc: 'Password vault' },
-  { name: 'Gitea', desc: 'Self-hosted git + CI' },
-  { name: 'Headscale', desc: 'Self-hosted mesh control plane' },
-  { name: 'Pi-hole', desc: 'DNS ad-blocking' },
-  { name: 'Samba + Syncthing', desc: 'Centralized storage + sync' },
-  { name: 'Uptime Kuma', desc: 'Service monitoring' },
-  { name: 'Netdata', desc: 'Real-time system metrics' },
+  { name: 'Vaultwarden', desc: 'Password vault', port: ':8081' },
+  { name: 'Gitea', desc: 'Self-hosted git + CI', port: ':8087' },
+  { name: 'Headscale', desc: 'Self-hosted mesh control plane', port: ':8086' },
+  { name: 'Pi-hole', desc: 'DNS ad-blocking', port: ':8053' },
+  { name: 'Samba + Syncthing', desc: 'Centralized storage + sync', port: ':445 / :22000' },
+  { name: 'Uptime Kuma', desc: 'Service monitoring', port: ':8082' },
+  { name: 'Netdata', desc: 'Real-time system metrics', port: ':19999' },
 ];
 ---
 
 <Base title="Homelab Case Study">
   <h1 class="font-display text-4xl font-bold mb-4 text-brand-dark">The Homelab Rebuild</h1>
-  <p class="text-lg text-text-muted mb-12 max-w-2xl">
-    A homelab built, over-built, and then deliberately cut back down &mdash; on a single Raspberry Pi 4B.
-    Not a showcase of running as many containers as possible. A record of what got tested, what got
-    rejected, and why, with the reasoning kept alongside the code.
+  <p class="text-lg text-text-muted mb-6 max-w-2xl">
+    It started with a locked door. A password vault I couldn't reach, because a third-party
+    coordination server had an outage and took my access with it. I rebuilt the whole thing
+    self-hosted &mdash; then, once it worked, deliberately tore half of it back down.
   </p>
+
+  <div class="flex flex-wrap gap-6 mb-16 reveal">
+    <div class="border border-surface-light rounded-2xl px-6 py-4 bg-surface-light/20">
+      <div class="font-display text-3xl font-bold text-accent">30 &rarr; 9</div>
+      <div class="text-xs text-text-muted mt-1">Containers, peak vs. live today</div>
+    </div>
+    <div class="border border-surface-light rounded-2xl px-6 py-4 bg-surface-light/20">
+      <div class="font-display text-3xl font-bold text-accent">2 &rarr; 1</div>
+      <div class="text-xs text-text-muted mt-1">Nodes, two-machine mesh vs. one Pi</div>
+    </div>
+    <div class="border border-surface-light rounded-2xl px-6 py-4 bg-surface-light/20">
+      <div class="font-display text-3xl font-bold text-accent">1</div>
+      <div class="text-xs text-text-muted mt-1">Leaked API key found and revoked mid-rebuild</div>
+    </div>
+  </div>
 
   <section class="mb-16 reveal">
     <h2 class="font-display text-2xl font-semibold mb-6 text-brand">The arc</h2>
     <div class="space-y-6">
       <div class="border-l-2 border-surface-light pl-6">
+        <h3 class="font-semibold text-brand-light">The outage</h3>
+        <p class="text-sm text-text-muted mt-1">
+          A third-party mesh-networking service (Tailscale's coordination server) went down,
+          and with it went access to a self-hosted password vault. That's the actual reason this
+          exists &mdash; not a weekend project, a real lockout.
+        </p>
+      </div>
+      <div class="border-l-2 border-surface-light pl-6">
         <h3 class="font-semibold text-brand-light">v1.0 — Single Pi, Compose only</h3>
-        <p class="text-sm text-text-muted mt-1">Started deliberately minimal: one Pi 4B, 4GB RAM, Docker Compose. No orchestrator.</p>
+        <p class="text-sm text-text-muted mt-1">Rebuilt deliberately minimal: one Pi 4B, 4GB RAM, Docker Compose. No orchestrator.</p>
       </div>
       <div class="border-l-2 border-surface-light pl-6">
         <h3 class="font-semibold text-brand-light">Multi-node ambition, tested and rejected</h3>
@@ -64,19 +66,28 @@ const services = [
         </p>
       </div>
       <div class="border-l-2 border-accent pl-6">
+        <h3 class="font-semibold text-accent">The security find</h3>
+        <p class="text-sm text-text-muted mt-1">
+          Auditing the rebuild surfaced a live Headscale API key hardcoded in client-side JavaScript
+          on this very site, readable by anyone on the network. Revoked it at the source same day,
+          rewrote the page to stop shipping secrets to the browser.
+        </p>
+      </div>
+      <div class="border-l-2 border-accent pl-6">
         <h3 class="font-semibold text-accent">The retirement</h3>
         <p class="text-sm text-text-muted mt-1">
-          That full stack ran, then got switched off. Single-operator homelab, no multi-user
+          The 11-container stack ran, then got switched off. Single-operator homelab, no multi-user
           access-control need, no rotation workflow ever actually used. Uptime Kuma covers what
-          actually gets checked day to day. Documented as ADR-009, not silently deleted.
+          actually gets checked day to day. Written up as a formal decision record before deleting
+          anything, not after.
         </p>
       </div>
       <div class="border-l-2 border-surface-light pl-6">
         <h3 class="font-semibold text-brand-light">Where it landed</h3>
         <p class="text-sm text-text-muted mt-1">
-          A lean core of 9 services that get used, a single-container Netdata swapped in for the
-          six-container metrics stack it replaced, and a <code class="text-brand-dark">_retired/</code>
-          folder pattern &mdash; nothing gets silently deleted.
+          A lean core of 9 services that get used daily, a single-container Netdata swapped in for the
+          six-container metrics stack it replaced, and a retirement pattern where nothing gets silently
+          deleted &mdash; decommissioned code moves through a holding folder before it's gone for good.
         </p>
       </div>
     </div>
@@ -86,28 +97,39 @@ const services = [
     <h2 class="font-display text-2xl font-semibold mb-6 text-brand">Live services</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {services.map((svc) => (
-        <div class="border border-surface-light rounded-2xl p-4 bg-surface-light/20">
-          <h3 class="font-semibold text-sm">{svc.name}</h3>
-          <p class="text-xs text-text-muted mt-1">{svc.desc}</p>
+        <div class="card-lift border border-surface-light rounded-2xl p-4 bg-surface-light/20">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="font-semibold text-sm">{svc.name}</h3>
+            <span class="text-xs font-mono text-accent">{svc.port}</span>
+          </div>
+          <p class="text-xs text-text-muted">{svc.desc}</p>
         </div>
       ))}
     </div>
-  </section>
-
-  <section class="mb-16 reveal">
-    <h2 class="font-display text-2xl font-semibold mb-6 text-brand">Topology</h2>
-    <div class="border border-surface-light rounded-2xl p-8 bg-surface-light/20 overflow-x-auto">
-      <pre class="text-sm text-text-muted font-mono leading-relaxed">{topologyDiagram}</pre>
-    </div>
+    <p class="text-xs text-text-muted mt-4">
+      Every service above is reachable at its own address directly over an encrypted mesh network &mdash;
+      no reverse proxy, no single point of failure for access to everything at once.
+    </p>
   </section>
 
   <section class="reveal">
     <h2 class="font-display text-2xl font-semibold mb-6 text-brand">Key design decisions</h2>
-    <ul class="space-y-3 text-text-muted">
+    <ul class="space-y-3 text-text-muted mb-8">
       <li class="flex gap-3"><span class="text-accent font-bold shrink-0">No K3s</span><span>Control plane alone costs 600&ndash;800MB idle RAM on a 4GB Pi</span></li>
       <li class="flex gap-3"><span class="text-accent font-bold shrink-0">No reverse proxy</span><span>Direct mesh-IP:port per service — one less thing that can break access to everything at once</span></li>
       <li class="flex gap-3"><span class="text-accent font-bold shrink-0">No auth layer</span><span>Mesh membership is the access boundary — no multi-user need to justify SSO infrastructure</span></li>
-      <li class="flex gap-3"><span class="text-accent font-bold shrink-0">Retire, don't delete</span><span>Everything decommissioned moves through <code class="text-brand-dark">_retired/</code> before removal — recoverable via git history</span></li>
+      <li class="flex gap-3"><span class="text-accent font-bold shrink-0">Retire, don't delete</span><span>Everything decommissioned moves through a holding folder before removal — recoverable via git history</span></li>
     </ul>
+
+    <div class="border border-surface-light rounded-2xl p-6 bg-brand/5">
+      <p class="text-text-muted mb-4">
+        What this actually demonstrates: operating under a hard resource constraint, evaluating
+        real trade-offs instead of defaulting to "more tools," catching a security issue in my own
+        work and fixing it same-day, and reversing a decision in public instead of quietly walking it back.
+      </p>
+      <a href="https://github.com/iamvanshkhanna/homelab-ops-mesh" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-brand-dark font-semibold hover:underline">
+        See the real commit history &rarr;
+      </a>
+    </div>
   </section>
 </Base>
