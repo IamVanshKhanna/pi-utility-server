@@ -1,35 +1,37 @@
 ---
 import Base from '../layouts/Base.astro';
 
-const topologyDiagram = ` Internet
+const topologyDiagram = ` Any device on the Headscale mesh
     |
-    | HTTP over Tailscale mesh (WireGuard encrypted)
+    | Direct HTTP, one port per service (WireGuard encrypted, no reverse proxy)
     v
-[ Traefik (reverse proxy) ]  <--- path-based routing (PathPrefix)
+[ Pi 4B — autobot — 100.64.0.1 ]
     |
-    +--- /vault/
-    +--- /hass/ (homeassistant)
-    +--- /sync/
-    +--- /grafana/     (Windows)
-    +--- /auth/        (Windows)
-    +--- /secrets/     (Windows)
-    |
-    +--- 30 containers total
-    |
- [ Pi 4B : 100.64.0.1 ]  <--- Headscale/Tailscale mesh --->  [ Windows : 100.64.0.2 ]
-    |                                                            |
-    +-- Pi-hole (DNS:53)                                      +-- Docker Desktop
-         +-- Headscale (control server)
-     +-- Gitea (self-hosted git)                              +-- Monitoring + Auth + Secrets
-    +-- TinyBot (Telegram)                                      +-- Heavy compute
-    +-- /mnt/nas/ storage
+    +-- Vaultwarden      :8081
+    +-- Gitea + CI       :8087 / :8088
+    +-- Headscale        :8086  (mesh control plane — every device registers here)
+    +-- Pi-hole          :8053  (+ DNS on :53)
+    +-- Samba            :445   (centralized storage)
+    +-- Syncthing        :22000 (multi-device sync)
+    +-- Uptime Kuma       :8082  (real status source)
+    +-- Netdata          :19999
+    +-- Portfolio (this site) :8090
+
+  Built, version-controlled, not currently running:
+    Nextcloud + MariaDB + Redis, Home Assistant
+
+  Retired entirely (git history only, see ADR-009):
+    Traefik, Portainer, CrowdSec, the full Windows
+    observability/secrets/auth stack (11 containers)
 `;
 ---
 
 <Base title="Architecture">
   <h1 class="text-4xl font-bold mb-4 text-brand-light">Architecture</h1>
   <p class="text-lg text-text-muted mb-12 max-w-2xl">
-    Two nodes connected via Tailscale mesh VPN. The Pi 4B runs 20 containers + 1 systemd service as the always-on core, Windows runs 10 for heavy compute.
+    Single node, direct mesh access. No reverse proxy, no second node in daily use —
+    every service is reachable at its own mesh-IP:port over Headscale. That's a deliberate
+    simplification, not an oversight — see the design decisions below.
   </p>
 
   <section class="mb-16">
@@ -42,10 +44,10 @@ const topologyDiagram = ` Internet
   <section class="mb-16">
     <h2 class="text-2xl font-semibold mb-6 text-brand">Traffic Flow</h2>
     <ol class="list-decimal list-inside space-y-2 text-text-muted">
-      <li>User hits <code class="text-brand-light bg-surface-light px-1.5 py-0.5 rounded text-sm">http://100.64.0.1/service/</code> over Tailscale mesh</li>
-      <li>Traefik matches PathPrefix rule, routes to the correct Docker container on the proxy network</li>
-      <li>StripPrefix middleware removes the path prefix before forwarding to the backend</li>
-      <li>Cross-node traffic uses Headscale-assigned 100.64.0.x IPs (WireGuard encrypted)</li>
+      <li>User (or another mesh device) hits <code class="text-brand-light bg-surface-light px-1.5 py-0.5 rounded text-sm">http://100.64.0.1:PORT</code> directly</li>
+      <li>Headscale-assigned mesh IP routes the connection over WireGuard — encrypted end to end</li>
+      <li>Docker maps that port straight to the container, no routing layer in between</li>
+      <li>Nothing is reachable outside the mesh — access control is mesh membership itself, not an auth layer in front</li>
     </ol>
   </section>
 
@@ -61,17 +63,15 @@ const topologyDiagram = ` Internet
           </tr>
         </thead>
         <tbody class="divide-y divide-surface-light">
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">core</td><td class="px-4 py-2 text-text-muted">traefik, portainer</td><td class="px-4 py-2 text-text-muted">Reverse proxy, Docker UI</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">network</td><td class="px-4 py-2 text-text-muted">pihole, pihole-exporter</td><td class="px-4 py-2 text-text-muted">DNS ad-blocking + metrics</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">apps</td><td class="px-4 py-2 text-text-muted">nextcloud, vaultwarden, mariadb</td><td class="px-4 py-2 text-text-muted">Cloud, passwords</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">nas</td><td class="px-4 py-2 text-text-muted">samba, syncthing</td><td class="px-4 py-2 text-text-muted">File sharing, sync</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">smarthome</td><td class="px-4 py-2 text-text-muted">homeassistant</td><td class="px-4 py-2 text-text-muted">Home automation</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">monitoring</td><td class="px-4 py-2 text-text-muted">promtail, cadvisor, node-exporter</td><td class="px-4 py-2 text-text-muted">Log shipping, metrics (Pi side)</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">crowdsec</td><td class="px-4 py-2 text-text-muted">crowdsec, relay</td><td class="px-4 py-2 text-text-muted">Intrusion detection + alert relay</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">uptime-kuma</td><td class="px-4 py-2 text-text-muted">uptime-kuma</td><td class="px-4 py-2 text-text-muted">Uptime monitoring</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">portfolio</td><td class="px-4 py-2 text-text-muted">astro site</td><td class="px-4 py-2 text-text-muted">Project showcase</td></tr>
-          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">headscale</td><td class="px-4 py-2 text-text-muted">headscale</td><td class="px-4 py-2 text-text-muted">Self-hosted Tailscale control plane</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">headscale</td><td class="px-4 py-2 text-text-muted">headscale</td><td class="px-4 py-2 text-text-muted">Self-hosted mesh control plane</td></tr>
           <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">gitops</td><td class="px-4 py-2 text-text-muted">gitea, act-runner (systemd)</td><td class="px-4 py-2 text-text-muted">Self-hosted Git + CI/CD</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">apps</td><td class="px-4 py-2 text-text-muted">vaultwarden (nextcloud/mariadb/redis kept, not running)</td><td class="px-4 py-2 text-text-muted">Passwords</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">nas</td><td class="px-4 py-2 text-text-muted">samba, syncthing</td><td class="px-4 py-2 text-text-muted">Centralized storage + multi-device sync</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">network</td><td class="px-4 py-2 text-text-muted">pihole, pihole-exporter</td><td class="px-4 py-2 text-text-muted">DNS ad-blocking + metrics</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">monitoring</td><td class="px-4 py-2 text-text-muted">netdata</td><td class="px-4 py-2 text-text-muted">Real-time system + container metrics (single container, replaced a 6-container stack)</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">uptime-kuma</td><td class="px-4 py-2 text-text-muted">uptime-kuma</td><td class="px-4 py-2 text-text-muted">Real up/down status — the actual source of truth</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">portfolio</td><td class="px-4 py-2 text-text-muted">astro site (this one)</td><td class="px-4 py-2 text-text-muted">Project showcase</td></tr>
+          <tr class="hover:bg-surface-light/20"><td class="px-4 py-2 font-medium">smarthome</td><td class="px-4 py-2 text-text-muted">homeassistant</td><td class="px-4 py-2 text-text-muted">Home automation — built, not currently running</td></tr>
         </tbody>
       </table>
     </div>
@@ -81,24 +81,28 @@ const topologyDiagram = ` Internet
     <h2 class="text-2xl font-semibold mb-6 text-brand">Phase Plan</h2>
     <div class="space-y-4">
       <div class="border-l-4 border-green-500 pl-4">
-        <h3 class="font-semibold text-green-400">Phase 1 - Pi Core (Done)</h3>
-        <p class="text-sm text-text-muted">18 containers, NAS, TinyBot, Tailscale, automated backups. K3s removed, swap off, zram only.</p>
+        <h3 class="font-semibold text-green-400">Phase 1 — Pi Core</h3>
+        <p class="text-sm text-text-muted">Docker Compose only. K3s, ArgoCD, and Helmfile evaluated and removed — too much RAM overhead for a 4GB box.</p>
       </div>
       <div class="border-l-4 border-green-500 pl-4">
-        <h3 class="font-semibold text-green-400">Phase 2 - Windows Migration (Done)</h3>
-        <p class="text-sm text-text-muted">Monitoring (Grafana, Prometheus, Loki, Tempo, Alertmanager), auth (Authelia), and secrets (Infisical) on Windows Docker Desktop. 10 containers.</p>
+        <h3 class="font-semibold text-green-400">Phase 2 — Windows Offload</h3>
+        <p class="text-sm text-text-muted">Full observability + secrets + auth stack (Grafana, Prometheus, Loki, Tempo, Alertmanager, Authelia, Infisical) moved to a second node to keep the Pi under budget.</p>
       </div>
       <div class="border-l-4 border-green-500 pl-4">
-        <h3 class="font-semibold text-green-400">Phase 3 - Security Hardening (Done)</h3>
-        <p class="text-sm text-text-muted">STRIDE threat model, Authelia SSO + 2FA, CrowdSec IDS, Redis auth, TinyBot hardening, network hardening.</p>
+        <h3 class="font-semibold text-green-400">Phase 3 — Self-Hosted Control Plane</h3>
+        <p class="text-sm text-text-muted">Headscale replaces Tailscale SaaS after a coordination-server outage locked out the password vault.</p>
       </div>
       <div class="border-l-4 border-green-500 pl-4">
-        <h3 class="font-semibold text-green-400">Phase 4 - Self-Hosted Control Plane (Done)</h3>
-        <p class="text-sm text-text-muted">Headscale self-hosted Tailscale control server, replacing Tailscale SaaS. HTTP-over-mesh architecture.</p>
+        <h3 class="font-semibold text-green-400">Phase 4 — GitOps</h3>
+        <p class="text-sm text-text-muted">Gitea + act_runner for real push-to-deploy, replacing manual bundle+SCP workflow.</p>
       </div>
-      <div class="border-l-4 border-yellow-500 pl-4">
-        <h3 class="font-semibold text-yellow-400">Phase 5 - GitOps (In Progress)</h3>
-        <p class="text-sm text-text-muted">Gitea + act_runner (systemd) on Pi for push-to-deploy CI/CD. Self-hosted Git replaces manual bundle+SCP workflow.</p>
+      <div class="border-l-4 border-brand-light pl-4">
+        <h3 class="font-semibold text-brand-light">Phase 5 — The Retirement (current)</h3>
+        <p class="text-sm text-text-muted">
+          The Phase 2 stack (11 containers), plus Traefik, Portainer, and CrowdSec, retired per ADR-009 —
+          single-operator homelab, the complexity wasn't earning its RAM. Netdata replaces the six-container
+          metrics stack. Down to a lean core that actually gets used daily.
+        </p>
       </div>
     </div>
   </section>
@@ -106,11 +110,12 @@ const topologyDiagram = ` Internet
   <section>
     <h2 class="text-2xl font-semibold mb-6 text-brand">Key Design Decisions</h2>
     <ul class="space-y-3 text-text-muted">
-      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No K3s</span><span>K3s removed - saves ~575MB RAM and 50% idle CPU on 4GB Pi</span></li>
-      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No disk swap</span><span>zram only - compressed RAM swap avoids SSD wear</span></li>
-      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No TLS needed</span><span>WireGuard (Tailscale mesh) encrypts all traffic — TLS redundant inside mesh</span></li>
-      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No AI/LLM</span><span>Free Groq API as fallback - Pi cannot run models with 27 containers</span></li>
-      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No repartitioning</span><span>Uses /mnt/nas/ folders - safer, simpler</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No K3s</span><span>Control plane alone costs 600&ndash;800MB idle RAM — too much before a single real workload runs</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No reverse proxy</span><span>Traefik retired — direct mesh-IP:port per service is simpler at this scale and one less thing that can break access to everything at once</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No auth layer</span><span>Authelia retired — mesh membership is the access boundary; no multi-user need to justify SSO/2FA infrastructure</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No full observability stack</span><span>Prometheus/Grafana/Loki/Tempo/Alertmanager retired — Uptime Kuma + Netdata cover what actually gets checked</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">No TLS needed</span><span>WireGuard (Headscale mesh) encrypts all traffic end to end — TLS termination would be redundant inside the mesh</span></li>
+      <li class="flex gap-3"><span class="text-brand-light font-bold shrink-0">Retire, don't delete</span><span>Everything decommissioned moves through a <code>_retired/</code> folder before removal — recoverable via git history, nothing silently gone</span></li>
     </ul>
   </section>
 </Base>

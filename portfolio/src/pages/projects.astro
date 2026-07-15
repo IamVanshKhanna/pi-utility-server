@@ -1,57 +1,56 @@
 ---
 import Base from '../layouts/Base.astro';
 
+const GITEA_BASE = 'http://100.64.0.1:8087/vansh/pi-utility-server/src/branch/main';
+
 const projects = [
   {
-    title: 'TinyBot - Telegram Remote Management',
-    description: 'Lightweight Telegram bot for remote Pi management. Health checks, fan control, Docker container management, web search - all from a phone.',
-    tech: ['Python', 'python-telegram-bot', 'systemd', 'vcgencmd'],
-    stack: 'tinybot/',
+    title: 'Vaultwarden — Password Vault',
+    description: 'Self-hosted Bitwarden-compatible password manager. Direct mesh-IP access, no reverse proxy — the reason this whole rebuild started (a coordination-server outage locked out the previous vault).',
+    tech: ['Vaultwarden', 'Docker', 'Headscale mesh'],
+    stack: 'pi/stacks/apps/',
   },
   {
-    title: 'Traefik + Tailscale HTTPS',
-    description: 'Zero-cost HTTPS via Tailscale MagicDNS. Traefik v3 reverse proxy handles routing, Tailscale Serve terminates TLS. No paid domain or Let\'s Encrypt needed.',
-    tech: ['Traefik v3', 'Tailscale', 'Docker'],
-    stack: 'stacks/core/',
+    title: 'Gitea + act_runner — Self-Hosted Git & CI',
+    description: 'Rootless Gitea instance hosting this very repo, plus a systemd-level CI runner. Every fix in the retirement arc is a real commit here, not a claim.',
+    tech: ['Gitea', 'act_runner', 'systemd'],
+    stack: 'pi/stacks/gitops/',
   },
   {
-    title: 'Full Observability Stack',
-    description: 'Prometheus metrics, Loki logs, Tempo traces, Grafana dashboards, Alertmanager alerts. Centralized across both nodes via Tailscale mesh.',
-    tech: ['Prometheus', 'Grafana', 'Loki', 'Tempo', 'Alertmanager'],
-    stack: 'stacks/monitoring/',
-    host: 'windows',
+    title: 'Headscale — Self-Hosted Mesh Control Plane',
+    description: 'Replaced Tailscale SaaS after a coordination-server outage. Every device (Mac, Windows, Pi) registers against this instead of a third party.',
+    tech: ['Headscale', 'WireGuard', 'Docker'],
+    stack: 'pi/stacks/headscale/',
   },
   {
-    title: 'CrowdSec + Authelia Security',
-    description: 'Intrusion detection with CrowdSec community blocklists. Authelia SSO with 2FA for all web services. Zero-trust network.',
-    tech: ['CrowdSec', 'Authelia', 'Redis', '2FA'],
-    stack: 'stacks/auth/',
-    host: 'windows',
-  },
-  {
-    title: 'Infisical Secrets Platform',
-    description: 'Self-hosted secrets management with Infisical. Centralized secrets for all stacks, replacing scattered .env files.',
-    tech: ['Infisical', 'PostgreSQL', 'Redis'],
-    stack: 'stacks/secrets/',
-    host: 'windows',
-  },
-  {
-    title: 'NAS - Samba + Syncthing',
-    description: 'Network-attached storage with Samba for LAN file sharing and Syncthing for cross-device sync. Organized under /mnt/nas/ with shared, media, sync, and backup directories.',
+    title: 'NAS — Samba + Syncthing',
+    description: 'Two file-access patterns, deliberately kept separate: Samba for Pi-only centralized storage, Syncthing for real multi-device local copies. Indexed folder structure, single unified Samba share.',
     tech: ['Samba', 'Syncthing', 'Alpine Linux'],
-    stack: 'stacks/nas/',
+    stack: 'pi/stacks/nas/',
   },
   {
-    title: 'Pi-hole DNS Ad Blocking',
-    description: 'Network-wide DNS ad blocking and local DNS resolution. Custom DNS entries for homelab services. Exporter feeds metrics to Prometheus.',
+    title: 'Pi-hole — DNS Ad Blocking',
+    description: 'Network-wide DNS ad blocking and local DNS resolution.',
     tech: ['Pi-hole', 'FTL DNS', 'Docker'],
-    stack: 'stacks/network/',
+    stack: 'pi/stacks/network/',
   },
   {
-    title: 'Automated OS Backups',
-    description: 'Weekly dd image backups via systemd timer. Sunday 3am, 4-week rolling retention. Restic for local config and data backups (B2 cloud-ready).',
-    tech: ['systemd', 'bash', 'Restic'],
-    stack: 'scripts/',
+    title: 'Netdata — Real-Time Monitoring',
+    description: 'Single-container replacement for a six-container Prometheus/Grafana/Loki/Tempo/Alertmanager stack that was disproportionate for one operator. Zero config, auto-discovers every container.',
+    tech: ['Netdata', 'Docker'],
+    stack: 'pi/stacks/monitoring/',
+  },
+  {
+    title: 'TinyBot — Telegram Remote Management',
+    description: 'Telegram bot for remote Pi management: health checks, fan control, Docker container management, from a phone. Built, currently dormant — kept on the side rather than retired.',
+    tech: ['Python', 'python-telegram-bot', 'systemd'],
+    stack: 'pi/tinybot/',
+  },
+  {
+    title: 'Automated Backups',
+    description: 'Restic-based backup script, nightly cron, Telegram notification on success/failure. Fixed mid-project: cron pointed at a stale path and a permission error had silently broken it for three weeks before this rebuild caught it.',
+    tech: ['Restic', 'bash', 'cron'],
+    stack: 'pi/scripts/backup.sh',
   },
 ];
 ---
@@ -60,6 +59,9 @@ const projects = [
   <h1 class="text-4xl font-bold mb-4 text-brand-light">Projects</h1>
   <p class="text-lg text-text-muted mb-12 max-w-2xl">
     Each project lives in its own Docker Compose stack, independently deployable and version-controlled.
+    Retired projects (Traefik, CrowdSec, Authelia, Infisical, the full observability stack) aren't listed
+    here — see the <a href="/about" class="text-brand-dark hover:underline">retirement arc</a> for what
+    got cut and why.
   </p>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -72,8 +74,8 @@ const projects = [
             <span class="text-xs px-2 py-1 rounded-full bg-brand/20 text-brand-light">{t}</span>
           ))}
         </div>
-        <a href={`https://github.com/IamVanshKhanna/homelab-ops-mesh/tree/master/${project.host || 'pi'}/${project.stack}`} class="text-xs text-text-muted hover:text-brand-light transition-colors">
-          View source on GitHub &rarr;
+        <a href={`${GITEA_BASE}/${project.stack}`} class="text-xs text-text-muted hover:text-brand-light transition-colors">
+          View source on Gitea &rarr;
         </a>
       </article>
     ))}
