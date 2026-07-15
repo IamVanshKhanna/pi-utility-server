@@ -98,6 +98,13 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Buttons rendered as links must keep their utility text color, not the global link color */
+a.bg-cta,
+a.bg-cta:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
 ::selection {
   background-color: var(--color-brand);
   color: white;
