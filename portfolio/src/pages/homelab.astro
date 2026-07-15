@@ -15,27 +15,27 @@ const services = [
 <Base title="Homelab Case Study">
   <p class="mono-chip inline-block mb-5" style="font-size:0.95rem;padding:0.35rem 0.9rem">case-study/homelab &middot; 84 commits &middot; 1 raspberry pi</p>
   <h1 class="font-display text-4xl md:text-5xl font-bold mb-6 text-text leading-tight">
-    I built a whole datacenter on a <span class="grad-text">$35 board</span>.<br />Then I deleted most of it.
+    I built a datacenter on a <span class="grad-text">spare $50 board</span>.<br />Then I deleted most of it.
   </h1>
   <p class="text-lg text-text-muted max-w-2xl mb-16">
     This is the honest version &mdash; not the "look how many containers I run" flex.
-    It's a story about wanting control, over-building to get it, getting humbled by an outage,
-    and learning that the senior move is subtraction.
+    It's a story about wanting to own my own stuff, over-building to prove I could,
+    realising I'd made it too complex, and learning that the senior move is subtraction.
   </p>
 
   <!-- Stat band -->
   <div class="flex flex-wrap gap-6 mb-20 reveal">
     <div class="border border-surface-light rounded-2xl px-6 py-4 bg-surface-light/20">
       <div class="font-display text-4xl font-bold grad-text">30&rarr;9</div>
-      <div class="mono-chip inline-block mt-2">containers: peak vs. live</div>
+      <div class="mono-chip inline-block mt-2" style="font-size:0.82rem">containers: peak vs. live</div>
     </div>
     <div class="border border-surface-light rounded-2xl px-6 py-4 bg-surface-light/20">
       <div class="font-display text-4xl font-bold grad-text">2&rarr;1</div>
-      <div class="mono-chip inline-block mt-2">nodes: mesh vs. one pi</div>
+      <div class="mono-chip inline-block mt-2" style="font-size:0.82rem">nodes: mesh vs. one pi</div>
     </div>
     <div class="border border-surface-light rounded-2xl px-6 py-4 bg-surface-light/20">
       <div class="font-display text-4xl font-bold grad-text">6&rarr;1</div>
-      <div class="mono-chip inline-block mt-2">metrics stack &rarr; netdata</div>
+      <div class="mono-chip inline-block mt-2" style="font-size:0.82rem">metrics stack &rarr; netdata</div>
     </div>
   </div>
 
@@ -44,72 +44,76 @@ const services = [
     <div class="reveal mb-12">
       <p class="mono-chip inline-block mb-3" style="font-size:0.85rem">00 — the itch</p>
       <h2 class="font-display text-2xl font-bold mb-3">I didn't want to rent my own life.</h2>
-      <p class="text-text-muted leading-relaxed">
-        My passwords lived on someone else's server. My files, my photos, my DNS &mdash; all rented from
-        companies that could rate-limit me, price-hike me, or lock me out on a whim. I wanted the boring
-        stuff to be <em>mine</em>. A Raspberry Pi 4B costs about $35 and never sleeps, so that's where it started.
+      <p class="text-text-muted leading-relaxed mb-3">
+        Google Drive gives you 15GB free, then it's pay-to-continue. iCloud is $5/month for 200GB,
+        or around $15/month for 2TB &mdash; forever, for storage I'd already paid for once. My
+        passwords, my files, my photos, my DNS all lived on someone else's server, rented indefinitely.
+      </p>
+      <p class="text-text-muted leading-relaxed mb-3">
+        I did the maths. A Raspberry Pi 4B &mdash; even at today's ~$180 &mdash; plus an SSD pays for
+        itself inside about three years versus those subscriptions, runs on a few dollars of electricity
+        a year, and does <em>far</em> more than storage. And I didn't even need to buy one: I had a
+        <span class="text-accent font-medium">spare 4GB Pi 4B from 2021 (about $50 at the time) sitting in a drawer</span>,
+        so I paired it with a 2TB SATA SSD and a small fan cooler and started building.
       </p>
     </div>
 
     <div class="reveal mb-12">
       <p class="mono-chip inline-block mb-3" style="font-size:0.85rem">01 — naive ambition</p>
-      <h2 class="font-display text-2xl font-bold mb-3">Then I tried to be "a real engineer."</h2>
+      <h2 class="font-display text-2xl font-bold mb-3">Fresh graduate. I over-built everything.</h2>
       <p class="text-text-muted leading-relaxed mb-3">
-        I threw everything onto the Pi, then got greedy and reached for Kubernetes &mdash; K3s, ArgoCD,
-        Helmfile &mdash; because that's what "serious" infra looks like on paper. I watched the control
-        plane alone eat 600&ndash;800MB of a 4GB box doing absolutely nothing useful.
+        As a new grad I figured: if I'm going to run a server, I should use it to its absolute fullest.
+        So I went all in &mdash; nearly <strong>30 containers</strong>: authentication, monitoring,
+        secrets management, dashboards, the works. On paper it looked like a real production platform,
+        and honestly it felt great to have built it.
       </p>
       <p class="text-text-muted leading-relaxed">
-        So I ripped it all out. <span class="text-accent font-medium">Lesson one: don't cargo-cult tools
-        you don't need.</span> Docker Compose did everything I actually required, on a fraction of the RAM.
+        Then reality caught up. A 4GB Pi was completely overburdened carrying all of that at once.
+        <span class="text-accent font-medium">Lesson one: capability isn't the same as a good idea.</span>
       </p>
     </div>
 
     <div class="reveal mb-12">
-      <p class="mono-chip inline-block mb-3" style="font-size:0.85rem">02 — the empire phase</p>
-      <h2 class="font-display text-2xl font-bold mb-3">I built an ops team for one person.</h2>
+      <p class="mono-chip inline-block mb-3" style="font-size:0.85rem">02 — the offload</p>
+      <h2 class="font-display text-2xl font-bold mb-3">So I threw hardware at it.</h2>
       <p class="text-text-muted leading-relaxed">
-        Added a second machine. Stood up a <em>full</em> observability + auth + secrets stack &mdash;
-        Grafana, Prometheus, Loki, Tempo, Alertmanager, Authelia, Infisical. Thirty containers across two
-        nodes. Dashboards everywhere. It felt like running a real platform. It was also wildly
-        over-engineered for a homelab with exactly one user, and somewhere in the back of my head I knew it.
+        My first instinct wasn't to cut &mdash; it was to add more machine. I moved the heavy containers
+        off the Pi onto my Windows desktop (32GB RAM, Ryzen 7 4800H) for the heavy lifting and mesh-linked
+        the two. <strong>Eleven heavy containers</strong> migrated across; the Pi finally breathed again.
+        It worked. It also quietly doubled the complexity.
       </p>
     </div>
 
     <div class="reveal mb-12">
-      <p class="mono-chip inline-block mb-3" style="font-size:0.85rem">03 — the outage that changed everything</p>
-      <h2 class="font-display text-2xl font-bold mb-3">Then I got locked out of my own vault.</h2>
-      <p class="text-text-muted leading-relaxed mb-3">
-        The whole point of self-hosting was <em>not</em> depending on someone else. But my mesh network
-        still ran through a third-party coordination server &mdash; and one day it went down and took my
-        access to my own password vault with it. The exact failure I'd been trying to avoid.
-      </p>
+      <p class="mono-chip inline-block mb-3" style="font-size:0.85rem">03 — the honest look</p>
+      <h2 class="font-display text-2xl font-bold mb-3">"Two-node mesh" sounded better than it was.</h2>
       <p class="text-text-muted leading-relaxed">
-        So I replaced the last piece I didn't control: I self-hosted the mesh control plane itself
-        (Headscale). <span class="text-accent font-medium">Lesson two: a dependency you can't see is still
-        a dependency.</span>
+        The Pi-plus-Windows mesh was impressive in name only. Too many moving parts, too much complexity,
+        and I still wasn't using half of what I'd stood up. Worst of all, it chained my always-on Pi to a
+        laptop I actually use every day &mdash; a 24/7 dependency on a machine that needs to sleep, move,
+        and get shut down. <span class="text-accent font-medium">Lesson two: fewer moving parts beats more capability.</span>
       </p>
     </div>
 
     <div class="reveal mb-4">
       <p class="mono-chip inline-block mb-3" style="font-size:0.85rem">04 — the maturity move</p>
-      <h2 class="font-display text-2xl font-bold mb-3">I asked which of these I actually open.</h2>
+      <h2 class="font-display text-2xl font-bold mb-3">I kept only what I actually use.</h2>
       <p class="text-text-muted leading-relaxed mb-3">
-        Thirty containers. I sat down and asked an uncomfortable question: which of these do I genuinely
-        use? The answer was nine. So I retired the other twenty-one &mdash; the entire observability empire,
-        the auth layer, the reverse proxy &mdash; and replaced a six-container metrics stack with one
-        (Netdata).
+        I migrated and retired everything that wasn't earning its place, and self-hosted the last piece I
+        didn't control &mdash; the mesh coordinator itself &mdash; so nothing external could lock me out.
+        What's left is nine services on one Pi: easy to manage, low overhead, and genuinely aligned with
+        how I work day to day.
       </p>
       <p class="text-text-muted leading-relaxed">
-        I didn't <code class="font-mono-accent text-accent">rm -rf</code> it. Everything decommissioned
-        moved through a holding folder, documented in a decision record, recoverable via git history.
-        <span class="text-accent font-medium">Lesson three: the flex isn't the build &mdash; it's the
+        I didn't <code class="font-mono-accent text-accent">rm -rf</code> the rest &mdash; everything
+        decommissioned moved through a holding folder, documented in a decision record, recoverable via git
+        history. <span class="text-accent font-medium">Lesson three: the flex isn't the build, it's the
         restraint.</span> Juniors add. Seniors remove.
       </p>
     </div>
   </section>
 
-  <!-- Receipts: real live numbers pulled from the running dashboards -->
+  <!-- Receipts -->
   <section class="mb-20 reveal">
     <h2 class="font-display text-3xl font-bold mb-2">The <span class="grad-text">receipts</span></h2>
     <p class="text-text-muted mb-6">Not a mockup. Live numbers from the box, right now.</p>
@@ -121,15 +125,15 @@ const services = [
         <span class="ml-2 text-xs text-text-muted">vansh@autobot: ~ &mdash; status</span>
       </div>
       <div class="p-5 leading-relaxed">
-        <p><span class="text-accent">$</span> uptime-kuma --summary</p>
+        <p><span class="text-accent" style="font-size:1.15rem;font-weight:700">$</span> uptime-kuma --summary</p>
         <p class="text-text-muted mb-3">
           10 / 10 monitors <span style="color:#22c55e">UP</span> &nbsp;&middot;&nbsp; 98&ndash;100% uptime across the board
         </p>
-        <p><span class="text-accent">$</span> netdata --collected</p>
+        <p><span class="text-accent" style="font-size:1.15rem;font-weight:700">$</span> netdata --collected</p>
         <p class="text-text-muted mb-3">5,095 metrics live &nbsp;&middot;&nbsp; 1 node &nbsp;&middot;&nbsp; 14d high-res retention</p>
-        <p><span class="text-accent">$</span> uname -a &amp;&amp; nproc &amp;&amp; free -h</p>
+        <p><span class="text-accent" style="font-size:1.15rem;font-weight:700">$</span> uname -a &amp;&amp; nproc &amp;&amp; free -h</p>
         <p class="text-text-muted">
-          Debian aarch64 (kernel 6.18) &nbsp;&middot;&nbsp; 4 cores @ 1.50GHz &nbsp;&middot;&nbsp; 3.71GB RAM &nbsp;&middot;&nbsp; 1.86TB SSD
+          Debian aarch64 (kernel 6.18) &nbsp;&middot;&nbsp; 4 cores @ 1.50GHz &nbsp;&middot;&nbsp; 3.71GB RAM &nbsp;&middot;&nbsp; 2TB SSD
         </p>
       </div>
     </div>
@@ -144,12 +148,12 @@ const services = [
     <p class="text-text-muted mb-6">Nine services. Each at its own address, over an encrypted mesh &mdash; no reverse proxy, no single point of failure.</p>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {services.map((svc) => (
-        <div class="card-lift border border-surface-light rounded-2xl p-4 bg-surface-light/20">
+        <div class="card-lift border border-surface-light rounded-2xl p-5 bg-surface-light/20">
           <div class="flex items-center justify-between mb-1">
-            <h3 class="font-semibold text-sm">{svc.name}</h3>
-            <span class="font-mono-accent text-xs text-accent">{svc.port}</span>
+            <h3 class="font-semibold text-base">{svc.name}</h3>
+            <span class="font-mono-accent text-sm text-accent font-medium">{svc.port}</span>
           </div>
-          <p class="text-xs text-text-muted">{svc.desc}</p>
+          <p class="text-sm text-text-muted">{svc.desc}</p>
         </div>
       ))}
     </div>
