@@ -3,6 +3,8 @@
 ## Status
 Accepted
 
+> **Superseded by ADR-009** (2026-07-15) — Windows-hosted Infisical retired. .env remains the real secrets store; this ADR documents the original (unrealized) intent only.
+
 ## Context
 v1.1 used a single `.env` file with all secrets in plaintext. This approach has several problems:
 - Secrets in plaintext on disk (readable by any process with file access)

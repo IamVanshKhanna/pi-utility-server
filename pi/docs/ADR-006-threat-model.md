@@ -3,6 +3,8 @@
 ## Status
 Accepted
 
+> **Partially superseded by ADR-009** (2026-07-15) — Authelia-based mitigations no longer apply. Mesh membership is the sole access boundary now.
+
 ## Context
 The homelab-ops-mesh v1.5 introduces a full STRIDE security audit, Redis authentication on all stacks, TinyBot command hardening, network port binding to localhost, and removal of unjustified capabilities.
 
