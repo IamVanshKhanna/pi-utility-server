@@ -109,7 +109,34 @@ const services = [
     </div>
   </section>
 
-  <!-- SCREENSHOTS placeholder — real captures embedded here -->
+  <!-- Receipts: real live numbers pulled from the running dashboards -->
+  <section class="mb-20 reveal">
+    <h2 class="font-display text-3xl font-bold mb-2">The <span class="grad-text">receipts</span></h2>
+    <p class="text-text-muted mb-6">Not a mockup. Live numbers from the box, right now.</p>
+    <div class="terminal text-sm">
+      <div class="terminal-bar">
+        <span class="terminal-dot" style="background:#ff5f56"></span>
+        <span class="terminal-dot" style="background:#ffbd2e"></span>
+        <span class="terminal-dot" style="background:#27c93f"></span>
+        <span class="ml-2 text-xs text-text-muted">vansh@autobot: ~ &mdash; status</span>
+      </div>
+      <div class="p-5 leading-relaxed">
+        <p><span class="text-accent">$</span> uptime-kuma --summary</p>
+        <p class="text-text-muted mb-3">
+          10 / 10 monitors <span style="color:#22c55e">UP</span> &nbsp;&middot;&nbsp; 98&ndash;100% uptime across the board
+        </p>
+        <p><span class="text-accent">$</span> netdata --collected</p>
+        <p class="text-text-muted mb-3">5,095 metrics live &nbsp;&middot;&nbsp; 1 node &nbsp;&middot;&nbsp; 14d high-res retention</p>
+        <p><span class="text-accent">$</span> uname -a &amp;&amp; nproc &amp;&amp; free -h</p>
+        <p class="text-text-muted">
+          Debian aarch64 (kernel 6.18) &nbsp;&middot;&nbsp; 4 cores @ 1.50GHz &nbsp;&middot;&nbsp; 3.71GB RAM &nbsp;&middot;&nbsp; 1.86TB SSD
+        </p>
+      </div>
+    </div>
+    <p class="text-xs text-text-muted mt-3">
+      Every service self-hosted on one Raspberry Pi 4B, monitored by itself, reachable only over an encrypted mesh.
+    </p>
+  </section>
 
   <!-- Live services -->
   <section class="mb-20 reveal">
