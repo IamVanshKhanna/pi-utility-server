@@ -1,12 +1,15 @@
-# STACK: MONITORING v2
-# Service: Netdata — single-container real-time system + container monitoring
-# Replaces v1.1 (Node Exporter + cAdvisor + Promtail), which fed a Windows
-# Prometheus/Loki stack retired per ADR-009.
+# STACK: MONITORING v3
+# Service: Beszel ??? lightweight system monitoring (hub + agent)
+# Replaces Netdata (v2) which used ~177MB RAM + 1.26GB image.
+# Hub bound to Tailscale IP (mesh only); agent uses host networking and a
+# shared unix socket for the local system.
+# First-run admin is auto-created from BESZEL_EMAIL / BESZEL_PASSWORD.
+# Agent auto-registers using the universal token (BESZEL_UNIVERSAL_TOKEN).
 
 services:
-  netdata:
-    image: netdata/netdata:latest
-    container_name: netdata
+  beszel:
+    image: henrygd/beszel:latest
+    container_name: beszel
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -14,35 +17,38 @@ services:
         max-size: "10m"
         max-file: "3"
     ports:
-      - "100.64.0.1:19999:19999"
-    cap_add:
-      - SYS_PTRACE
-      - SYS_ADMIN
-    security_opt:
-      - apparmor:unconfined
-    volumes:
-      - netdataconfig:/etc/netdata
-      - netdatalib:/var/lib/netdata
-      - netdatacache:/var/cache/netdata
-      - /etc/passwd:/host/etc/passwd:ro
-      - /etc/group:/host/etc/group:ro
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /etc/os-release:/host/etc/os-release:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - "127.0.0.1:8092:8090"
+      - "100.84.60.109:8092:8090"
     environment:
       - TZ=${TZ:-Australia/Melbourne}
-      - NETDATA_CLAIM_TOKEN=
-      - DOCKER_HOST=/var/run/docker.sock
-    mem_limit: 256m
-    cpus: 0.5
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - USER_EMAIL=${BESZEL_EMAIL}
+      - USER_PASSWORD=${BESZEL_PASSWORD}
+    volumes:
+      - beszel_data:/beszel_data
+      - beszel_socket:/beszel_socket
+    mem_limit: 128m
+    cpus: 0.25
+
+  beszel-agent:
+    image: henrygd/beszel-agent:latest
+    container_name: beszel-agent
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    network_mode: host
+    environment:
+      - KEY=${BESZEL_HUB_KEY}
+      - TOKEN=${BESZEL_UNIVERSAL_TOKEN}
+      - HUB_URL=http://localhost:8092
+      - LISTEN=/beszel_socket/beszel.sock
+    volumes:
+      - beszel_socket:/beszel_socket
+    mem_limit: 64m
+    cpus: 0.1
 
 volumes:
-  netdataconfig:
-  netdatalib:
-  netdatacache:
+  beszel_data:
+  beszel_socket:

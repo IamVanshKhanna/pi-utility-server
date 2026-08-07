@@ -1,6 +1,9 @@
 # STACK: NAS - Samba + Syncthing
 # Local network file storage for the homelab
 # Access via SMB (\\autobot\shared)
+# samba: proper image (alpine + samba baked), config version-controlled at
+# config/samba/smb.conf, password set once into the config volume (not reset
+# on every start). Exposure restricted via DOCKER-USER firewall to LAN + Tailscale.
 
 networks:
   proxy:
@@ -12,7 +15,8 @@ volumes:
 
 services:
   samba:
-    image: alpine:3.24
+    build: ./samba
+    image: local/samba:alpine3.24
     container_name: samba
     restart: unless-stopped
     logging:
@@ -23,26 +27,11 @@ services:
     networks:
       - proxy
     ports:
-      - "139:139"
       - "445:445"
     volumes:
       - /mnt/nas:/mnt/nas:rw
       - samba_config:/etc/samba
-    command: >
-      sh -c "
-        apk add --no-cache samba &&
-        echo -e '[global]\nworkgroup = HOMELAB\nsecurity = user\nmap to guest = bad user\n' > /etc/samba/smb.conf &&
-        echo -e '[samba]\npath = /mnt/nas\nbrowseable = yes\nread only = no' >> /etc/samba/smb.conf &&
-        addgroup -g ${PGID:-1000} vansh 2>/dev/null || true &&
-        adduser -u ${PUID:-1000} -G vansh -D -H -s /bin/false vansh 2>/dev/null || true &&
-        (pdbedit -L 2>/dev/null | grep -q '^vansh:' && echo -e '${SAMBA_PASSWORD}\n${SAMBA_PASSWORD}' | smbpasswd -s vansh || echo -e '${SAMBA_PASSWORD}\n${SAMBA_PASSWORD}' | smbpasswd -a -s vansh) &&
-        smbd -F
-      "
-    environment:
-      - TZ=${TZ:-Australia/Melbourne}
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - SAMBA_PASSWORD=${SAMBA_PASSWORD:?SAMBA_PASSWORD must be set}
+      - ../../config/samba/smb.conf:/etc/samba/smb.conf:ro
     mem_limit: 128m
     cpus: 0.25
     healthcheck:
@@ -65,7 +54,7 @@ services:
         max-file: "3"
     ports:
       - "127.0.0.1:8384:8384"
-      - "100.64.0.1:22000:22000/tcp"
+      - "100.84.60.109:22000:22000/tcp"
     volumes:
       - syncthing_data:/var/syncthing
       - "/mnt/nas/01. sync:/data/sync:rw"
