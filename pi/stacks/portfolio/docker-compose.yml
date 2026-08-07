@@ -17,7 +17,7 @@ services:
     networks:
       - proxy
     ports:
-      - "100.64.0.1:8090:8080"
+      - "100.84.60.109:8090:8080"
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
       interval: 30s

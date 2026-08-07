@@ -1,7 +1,7 @@
 # Service Endpoints Reference
 
-> Last updated: 2026-07-01 | Pi: autobot (100.64.0.1) | Windows: mr-stranger (100.64.0.2)
-> All web services use path-based routing: `http://100.64.0.1/<path>/`
+> Last updated: 2026-07-01 | Pi: autobot (100.84.60.109) | Windows: mr-stranger (100.84.60.109)
+> All web services use path-based routing: `http://100.84.60.109/<path>/`
 > HTTP over Tailscale/Headscale mesh (WireGuard encrypts all traffic)
 
 ---
@@ -9,7 +9,7 @@
 ## Quick Health Check
 
 ```bash
-ssh vansh@100.64.0.1
+ssh vansh@100.84.60.109
 cd ~/homelab-ops-mesh/pi && bash scripts/health-check.sh
 ```
 
@@ -32,12 +32,12 @@ Green = OK, Red = problem.
 | 7 | Uptime Kuma | `127.0.0.1:8082` | Set on first visit | All monitors show green "UP" |
 | 8 | Syncthing | `127.0.0.1:8384` | API key in UI | Devices connected |
 | 9 | Promtail | No UI | None | Logs flow to Loki on Windows |
-| 10 | Node Exporter | `100.64.0.1:9100/metrics` | None | Metrics endpoint returns data |
-| 11 | cAdvisor | `100.64.0.1:8083/containers` | None | Container metrics visible |
-| 12 | Pi-hole Exporter | `100.64.0.1:9617/metrics` | None | Metrics endpoint returns data |
+| 10 | Node Exporter | `100.84.60.109:9100/metrics` | None | Metrics endpoint returns data |
+| 11 | cAdvisor | `100.84.60.109:8083/containers` | None | Container metrics visible |
+| 12 | Pi-hole Exporter | `100.84.60.109:9617/metrics` | None | Metrics endpoint returns data |
 | 13 | CrowdSec | No UI | CLI: `cscli decisions list` | Shows active decisions |
 | 14 | CrowdSec Relay | No UI | Bearer token auth | 200 on valid POST, 401 on bad |
-| 15 | Headscale | `0.0.0.0:8086` | API key in `.env` | `curl http://100.64.0.1:8086/health` |
+| 15 | Headscale | `0.0.0.0:8086` | API key in `.env` | `curl http://100.84.60.109:8086/health` |
 | 16 | Gitea | `/git/` | Set on first visit | Login page appears |
 | 17 | act_runner | No UI | Token in `.config/act-runner/` | `systemctl --user status act-runner` |
 
@@ -49,7 +49,7 @@ Green = OK, Red = problem.
 | 2 | Prometheus | `127.0.0.1:9090/targets` | None | All 8 targets show "UP" |
 | 3 | Alertmanager | `127.0.0.1:9093` | None | Status page shows silences/receivers |
 | 4 | Loki | `127.0.0.1:3100/ready` | None | Returns "ready" |
-| 5 | Tempo | `100.64.0.2:3200/ready` | None | Returns "ready" |
+| 5 | Tempo | `100.84.60.109:3200/ready` | None | Returns "ready" |
 | 6 | Authelia | `/auth/` | See `users_database.yml` | Login page appears |
 | 7 | Infisical | `/secrets/` | Set on first visit | Project secrets visible |
 
@@ -84,13 +84,13 @@ Green = OK, Red = problem.
 
 | Port | Service | Binding | Purpose |
 |------|---------|---------|---------|
-| 3000 | Grafana | 100.64.0.2 | Dashboards (Tailscale-only) |
-| 3200 | Tempo | 100.64.0.2 | Traces (Tailscale-only) |
+| 3000 | Grafana | 100.84.60.109 | Dashboards (Tailscale-only) |
+| 3200 | Tempo | 100.84.60.109 | Traces (Tailscale-only) |
 | 3100 | Loki | 127.0.0.1 | Log storage |
 | 4317 | Tempo OTLP | 127.0.0.1 | gRPC trace ingest |
-| 8083 | Infisical | 100.64.0.2 | Secrets UI (Tailscale-only) |
+| 8083 | Infisical | 100.84.60.109 | Secrets UI (Tailscale-only) |
 | 9090 | Prometheus | 127.0.0.1 | Metrics |
-| 9091 | Authelia | 100.64.0.2 | SSO (Tailscale-only) |
+| 9091 | Authelia | 100.84.60.109 | SSO (Tailscale-only) |
 | 9093 | Alertmanager | 127.0.0.1 | Alerts |
 
 ---
@@ -101,7 +101,7 @@ Green = OK, Red = problem.
 |---------|------------|
 | Website 404 | Check Traefik dashboard — is the router listed? |
 | Website 502 | Backend container may be down. Run `docker ps` |
-| Can't reach any service | Pi powered on? Try `ping 100.64.0.1` via Tailscale |
+| Can't reach any service | Pi powered on? Try `ping 100.84.60.109` via Tailscale |
 | Pi-hole not blocking ads | `nslookup doubleclick.net 192.168.68.59` should return `0.0.0.0` |
 | Low disk space | `df -h /` — clear old backups in `/mnt/nas/backup/` |
 | Service keeps restarting | `docker logs containername --tail 50` |
