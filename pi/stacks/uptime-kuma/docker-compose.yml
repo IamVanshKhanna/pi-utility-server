@@ -18,7 +18,7 @@ services:
         max-size: "10m"
         max-file: "3"
     ports:
-      - "100.64.0.1:8082:3001"
+      - "100.84.60.109:8082:3001"
     networks:
       - proxy
     volumes:

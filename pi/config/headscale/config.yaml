@@ -1,4 +1,4 @@
-server_url: http://192.168.68.59:8086
+server_url: http://203.123.106.92:8086
 listen_addr: 0.0.0.0:8080
 metrics_listen_addr: 0.0.0.0:9090
 grpc_listen_addr: 127.0.0.1:50443
@@ -19,7 +19,9 @@ prefixes:
 
 derp:
   server:
-    enabled: false
+    enabled: true
+    stun_listen_addr: 0.0.0.0:3478
+    private_key_path: /var/lib/headscale/derp_server_private.key
   urls:
     - https://controlplane.tailscale.com/derpmap/default
   paths: []

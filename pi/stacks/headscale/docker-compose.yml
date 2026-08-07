@@ -1,7 +1,6 @@
 # STACK: HEADSCALE
 # Self-hosted Tailscale control server (replaces Tailscale SaaS)
-# HTTP only — TLS is unnecessary inside the Tailscale mesh (WireGuard encrypts all traffic)
-# Windows nodes register via http://100.64.0.1:8086
+# Public URL: http://203.123.106.92:8086 (port forward required on router)
 # Image: https://github.com/juanfont/headscale/pkgs/container/headscale
 
 volumes:
@@ -26,9 +25,8 @@ services:
       - ../../config/headscale/policy.hujson:/etc/headscale/policy.hujson:ro
       - headscale_lib:/var/lib/headscale
     ports:
-      -  100.64.0.1:8086:8080
-      - 192.168.68.59:8086:8080
-      - 100.64.0.1:9092:9090
+      - "0.0.0.0:8086:8080"
+      - "127.0.0.1:9092:9090"
     environment:
       - TZ=
     mem_limit: 128m

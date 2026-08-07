@@ -3,11 +3,11 @@ networks:
     external: true
 
 services:
-  portfolio:
+  vansh-portfolio:
     build:
-      context: ../../../portfolio
+      context: /mnt/nas/02. shared/01. PI Files/vansh-portfolio
       dockerfile: Dockerfile
-    container_name: portfolio
+    container_name: vansh-portfolio
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -17,7 +17,7 @@ services:
     networks:
       - proxy
     ports:
-      - "100.84.60.109:8090:8080"
+      - "100.84.60.109:8091:8080"
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
       interval: 30s

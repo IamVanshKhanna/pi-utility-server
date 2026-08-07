@@ -36,3 +36,9 @@ pi/config/gitea/.runner
 windows/backups/
 pi/backups/
 *.swp
+# macOS junk
+.DS_Store
+._.DS_Store
+# Backup scratch
+*.bak
+pi/stacks/vansh-portfolio/redeploy.log
