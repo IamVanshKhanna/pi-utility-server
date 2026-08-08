@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # update.sh - Pull latest images and recreate all stacks
 # Schedule (optional cron): 0 4 * * 0 PI_ENV_FILE=... pi/scripts/update.sh
-# Pulls from the origin remote, then for each stack: docker compose pull +
-# up. Pre/post health checks and a pre-update backup guard the rollout.
+# Pulls from the origin remote, then refreshes digest-pinned images (pull the
+# latest tag for each "pinned-from" ref and re-pin the compose files), then for
+# each stack: docker compose pull + up. Pre/post health checks and a pre-update
+# backup guard the rollout.
 
 set -euo pipefail
 
@@ -79,6 +81,28 @@ bash "$SCRIPT_DIR/health-check.sh" || log "WARNING: Pre-update health check had 
 
 log "Running pre-update backup..."
 bash "$SCRIPT_DIR/backup.sh" || log "WARNING: Pre-update backup had failures"
+
+# Image refs are digest-pinned (see pin-images-to-digest.sh). Pull the latest
+# tag for each pinned-from ref, re-pin the compose files to the new digests,
+# and commit the re-pin so the recreate step below uses current images.
+PINNED_REFS=$(grep -rhoE 'pinned-from:[[:space:]]*[^ ]+' "$STACKS_DIR" --include='docker-compose.yml' 2>/dev/null | sed -E 's/.*pinned-from:[[:space:]]*//' | sort -u)
+if [[ -n "$PINNED_REFS" ]]; then
+  log "Refreshing pinned image tags..."
+  for ref in $PINNED_REFS; do
+    if docker pull "$ref" >/dev/null 2>&1; then
+      log "  pulled $ref"
+    else
+      log "WARNING: pull failed for $ref (keeping current pin)"
+    fi
+  done
+  log "Re-pinning compose files to updated digests..."
+  bash "$SCRIPT_DIR/pin-images-to-digest.sh" >/dev/null 2>&1 || log "WARNING: re-pin script failed"
+  if ! git -C "$ROOT_DIR" diff --quiet -- pi/stacks; then
+    git -C "$ROOT_DIR" add pi/stacks
+    git -C "$ROOT_DIR" commit -q -m "chore: re-pin image digests after update"
+    log "Committed re-pinned digests"
+  fi
+fi
 
 log "Starting update of all stacks (env-file: $ENV_FILE)..."
 

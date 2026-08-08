@@ -9,7 +9,8 @@ volumes:
 
 services:
   uptime-kuma:
-    image: louislam/uptime-kuma:1.23.9
+# pinned-from: louislam/uptime-kuma:1.23.9
+    image: louislam/uptime-kuma@sha256:e601feb4e4e57c53cb80289546b0f96cf78c808e43284c3afb7f00972e1e5156
     container_name: uptime-kuma
     restart: unless-stopped
     logging:
