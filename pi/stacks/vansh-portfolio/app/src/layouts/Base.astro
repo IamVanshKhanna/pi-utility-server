@@ -1,0 +1,205 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Vansh Khanna — job search tracker. Public-safe daily summaries, published from vansh-talent-ops.' } = Astro.props;
+
+const THEMES = [
+  { id: "teal", label: "Teal / Violet", swatch: "#0d9488" },
+  { id: "indigo", label: "Indigo / Orange", swatch: "#4f46e5" },
+  { id: "rose", label: "Rose / Amber", swatch: "#e11d48" },
+  { id: "blue", label: "Blue / Cyan", swatch: "#2563eb" },
+  { id: "emerald", label: "Emerald / Gold", swatch: "#059669" },
+  { id: "slate-sky", label: "Slate / Sky", swatch: "#0369a1" },
+  { id: "purple", label: "Purple / Pink", swatch: "#7e22ce" },
+  { id: "amber", label: "Amber / Red", swatch: "#b45309" },
+  { id: "cyan-fuchsia", label: "Cyan / Fuchsia", swatch: "#0e7490" },
+  { id: "forest-gold", label: "Forest / Gold", swatch: "#166534" },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0d9488" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#17212f" media="(prefers-color-scheme: dark)" />
+    <title>{title} | Vansh Khanna</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      (function () {
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'dark' || storedTheme === 'light') {
+          document.documentElement.setAttribute('data-theme', storedTheme);
+        }
+        const storedColor = localStorage.getItem('colorTheme');
+        if (storedColor) {
+          document.documentElement.setAttribute('data-color-theme', storedColor);
+        }
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen flex flex-col relative">
+    <div class="grid-texture fixed inset-0 -z-20 pointer-events-none"></div>
+    <nav class="border-b border-surface-light bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
+      <div class="max-w-[1800px] mx-auto px-8 py-3 flex items-center justify-between">
+        <a href="/" class="font-display text-lg font-bold text-brand-dark hover:text-brand transition-colors">
+          Vansh Khanna &mdash; Job Search
+        </a>
+        <div class="flex items-center gap-4 text-sm">
+          <button
+            id="theme-panel-toggle"
+            type="button"
+            aria-label="Choose color theme"
+            class="w-8 h-8 rounded-full border border-surface-light flex items-center justify-center hover:bg-surface-light/40 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="13.5" cy="6.5" r=".5"></circle>
+              <circle cx="17.5" cy="10.5" r=".5"></circle>
+              <circle cx="8.5" cy="7.5" r=".5"></circle>
+              <circle cx="6.5" cy="12.5" r=".5"></circle>
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+            </svg>
+          </button>
+          <button
+            id="theme-toggle"
+            type="button"
+            aria-label="Toggle dark mode"
+            class="w-8 h-8 rounded-full border border-surface-light flex items-center justify-center hover:bg-surface-light/40 transition-colors"
+          >
+            <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div id="theme-panel-backdrop" class="fixed inset-0 bg-black/20 z-50 hidden"></div>
+    <aside id="theme-panel" class="theme-panel">
+      <p class="font-mono-accent text-xs text-text-muted mb-3">COLOR THEME</p>
+      <div class="flex flex-col gap-1">
+        {THEMES.map((t) => (
+          <button type="button" class="theme-swatch" data-theme-id={t.id}>
+            <span class="theme-swatch-dot" style={`background:${t.swatch}`}></span>
+            {t.label}
+          </button>
+        ))}
+      </div>
+    </aside>
+
+    <main class="flex-1 max-w-[1800px] mx-auto w-full px-8 py-8">
+      <slot />
+    </main>
+
+    <footer class="border-t border-surface-light py-5 text-center text-text-muted text-xs">
+      <p>Vansh Khanna &mdash; Melbourne, Australia</p>
+    </footer>
+
+    <script is:inline>
+      (function () {
+        const btn = document.getElementById('theme-toggle');
+        const sun = document.getElementById('icon-sun');
+        const moon = document.getElementById('icon-moon');
+        const root = document.documentElement;
+
+        function isDark() {
+          const explicit = root.getAttribute('data-theme');
+          if (explicit === 'dark') return true;
+          if (explicit === 'light') return false;
+          return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        function syncIcons() {
+          const dark = isDark();
+          sun.classList.toggle('hidden', !dark);
+          moon.classList.toggle('hidden', dark);
+        }
+
+        btn.addEventListener('click', function () {
+          const next = isDark() ? 'light' : 'dark';
+          root.setAttribute('data-theme', next);
+          localStorage.setItem('theme', next);
+          syncIcons();
+        });
+
+        syncIcons();
+      })();
+    </script>
+
+    <script is:inline>
+      (function () {
+        const panel = document.getElementById('theme-panel');
+        const backdrop = document.getElementById('theme-panel-backdrop');
+        const toggle = document.getElementById('theme-panel-toggle');
+        const root = document.documentElement;
+
+        function open() {
+          panel.classList.add('is-open');
+          backdrop.classList.remove('hidden');
+          syncActive();
+        }
+        function close() {
+          panel.classList.remove('is-open');
+          backdrop.classList.add('hidden');
+        }
+        function syncActive() {
+          const current = root.getAttribute('data-color-theme') || 'teal';
+          panel.querySelectorAll('.theme-swatch').forEach(function (btn) {
+            btn.classList.toggle('is-active', btn.dataset.themeId === current);
+          });
+        }
+
+        toggle.addEventListener('click', function () {
+          panel.classList.contains('is-open') ? close() : open();
+        });
+        backdrop.addEventListener('click', close);
+
+        panel.querySelectorAll('.theme-swatch').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const id = btn.dataset.themeId;
+            root.setAttribute('data-color-theme', id);
+            localStorage.setItem('colorTheme', id);
+            syncActive();
+          });
+        });
+
+        syncActive();
+      })();
+    </script>
+
+    <script is:inline>
+      (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var els = document.querySelectorAll('.reveal');
+        if (!els.length) return;
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1 });
+        els.forEach(function (el) { io.observe(el); });
+      })();
+    </script>
+  </body>
+</html>

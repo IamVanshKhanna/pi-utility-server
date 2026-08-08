@@ -1,26 +1,59 @@
 #!/usr/bin/env bash
-# update.sh - Pull latest images and recreate all stacks with Telegram notifications
-# Schedule: 0 4 * * 0 bash /home/vansh/homelab-ops-mesh/pi/scripts/update.sh >> /var/log/homelab-update.log 2>&1
+# update.sh - Pull latest images and recreate all stacks
+# Schedule (optional cron): 0 4 * * 0 PI_ENV_FILE=... pi/scripts/update.sh
+# Pulls from the origin remote, then for each stack: docker compose pull +
+# up. Pre/post health checks and a pre-update backup guard the rollout.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
-ENV_FILE="${REPO_DIR}/.env"
+ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+STACKS_DIR="${ROOT_DIR}/pi/stacks"
+
+# Stacks in dependency order: headscale first (mesh/DERP), then network
+# (unbound + pihole), then gitops/apps, nas, monitoring, uis, portfolio.
+STACKS=(
+  headscale
+  network
+  gitops
+  apps
+  nas
+  monitoring
+  uptime-kuma
+  portfolio
+  vansh-portfolio
+)
+
+# Resolve env file: explicit override > repo-root .env > live secrets file
+if [[ -n "${PI_ENV_FILE:-}" ]]; then
+  ENV_FILE="$PI_ENV_FILE"
+elif [[ -f "${ROOT_DIR}/.env" ]]; then
+  ENV_FILE="${ROOT_DIR}/.env"
+elif [[ -f /home/vansh/.secrets/pi-utility-server.env ]]; then
+  ENV_FILE=/home/vansh/.secrets/pi-utility-server.env
+elif [[ -f "${ROOT_DIR}/pi/.env" ]]; then
+  ENV_FILE="${ROOT_DIR}/pi/.env"
+else
+  echo "ERROR: no env file found (set PI_ENV_FILE)" >&2
+  exit 1
+fi
 
 load_env() {
   local f="$1"
-  if [[ -f "$f" ]]; then
-    while IFS='=' read -r key val; do
-      [[ -z "$key" || "$key" == \#* ]] && continue
-      val="${val#\"}" val="${val%\"}"
-      val="${val#\'}" val="${val%\'}"
-      export "$key=$val"
-    done < "$f"
+  if [[ ! -f "$f" ]]; then
+    echo "ERROR: env file not found at $f" >&2
+    exit 1
   fi
+  while IFS='=' read -r key val; do
+    [[ -z "$key" || "$key" == \#* ]] && continue
+    val="${val#\"}" val="${val%\"}"
+    val="${val#\'}" val="${val%\'}"
+    export "$key=$val"
+  done < "$f"
 }
 
 load_env "$ENV_FILE"
+
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 
@@ -36,51 +69,43 @@ send_telegram() {
   fi
 }
 
-STACKS=(
-  "pi/stacks/core/docker-compose.yml"
-  "pi/stacks/network/docker-compose.yml"
-  "pi/stacks/headscale/docker-compose.yml"
-  "pi/stacks/gitops/docker-compose.yml"
-  "pi/stacks/apps/docker-compose.yml"
-  "pi/stacks/smarthome/docker-compose.yml"
-  "pi/stacks/uptime-kuma/docker-compose.yml"
-  "pi/stacks/crowdsec/docker-compose.yml"
-  "pi/stacks/nas/docker-compose.yml"
-  "pi/stacks/portfolio/docker-compose.yml"
-  "pi/stacks/monitoring/docker-compose.yml"
-)
-
-log "Starting pre-update health check..."
 send_telegram "🔄 <b>Update started</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"
-bash "$REPO_DIR/pi/scripts/health-check.sh" || log "WARNING: Pre-update health check had failures"
+
+log "Pulling latest from origin..."
+git -C "$ROOT_DIR" pull --ff-only || log "WARNING: git pull failed (continuing with local files)"
+
+log "Running pre-update health check..."
+bash "$SCRIPT_DIR/health-check.sh" || log "WARNING: Pre-update health check had failures"
 
 log "Running pre-update backup..."
-bash "$REPO_DIR/pi/scripts/backup.sh" || log "WARNING: Pre-update backup had failures"
+bash "$SCRIPT_DIR/backup.sh" || log "WARNING: Pre-update backup had failures"
 
-log "Starting update of all stacks..."
+log "Starting update of all stacks (env-file: $ENV_FILE)..."
 
-for STACK in "${STACKS[@]}"; do
-  FULL_PATH="$REPO_DIR/$STACK"
-  if [[ -f "$FULL_PATH" ]]; then
-    log "Updating: $STACK"
-    docker compose -f "$FULL_PATH" --env-file "$ENV_FILE" pull
-    docker compose -f "$FULL_PATH" --env-file "$ENV_FILE" up -d --remove-orphans
-    log "  OK: $STACK"
+for stack in "${STACKS[@]}"; do
+  COMPOSE_FILE="${STACKS_DIR}/${stack}/docker-compose.yml"
+  if [[ ! -f "$COMPOSE_FILE" ]]; then
+    log "SKIP (not found): $stack"
+    continue
+  fi
+  log "Updating: $stack"
+  if docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" pull; then
+    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans \
+      || log "WARNING: '$stack' up failed"
   else
-    log "  SKIP (not found): $FULL_PATH"
+    log "WARNING: '$stack' pull failed (still attempting up)"
+    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans \
+      || log "WARNING: '$stack' up failed"
   fi
 done
 
 log "Pruning unused images..."
 docker image prune -f
 
-log "Ensuring act-runner systemd service is running..."
-systemctl --user is-active act-runner.service >/dev/null 2>&1 || systemctl --user start act-runner.service
-
 log "Running post-update health check..."
 sleep 30
 HEALTH_OK=true
-bash "$REPO_DIR/pi/scripts/health-check.sh" || HEALTH_OK=false
+bash "$SCRIPT_DIR/health-check.sh" || HEALTH_OK=false
 
 if $HEALTH_OK; then
   send_telegram "✅ <b>Update completed</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"

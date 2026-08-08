@@ -1,14 +1,15 @@
 # STACK: MONITORING v3
-# Service: Beszel ??? lightweight system monitoring (hub + agent)
-# Replaces Netdata (v2) which used ~177MB RAM + 1.26GB image.
-# Hub bound to Tailscale IP (mesh only); agent uses host networking and a
-# shared unix socket for the local system.
+# Service: Beszel -- lightweight system monitoring (hub + agent)
+# Replaces Netdata (v2) which used ~177MB RAM + 1.26GB image. See ADR-010.
+# Hub bound to loopback + mesh IP (mesh only); agent uses host networking and
+# a shared unix socket for the local system.
 # First-run admin is auto-created from BESZEL_EMAIL / BESZEL_PASSWORD.
 # Agent auto-registers using the universal token (BESZEL_UNIVERSAL_TOKEN).
+# Images pinned to 0.18.7 (ADR-010).
 
 services:
   beszel:
-    image: henrygd/beszel:latest
+    image: henrygd/beszel:0.18.7
     container_name: beszel
     restart: unless-stopped
     logging:
@@ -30,7 +31,7 @@ services:
     cpus: 0.25
 
   beszel-agent:
-    image: henrygd/beszel-agent:latest
+    image: henrygd/beszel-agent:0.18.7
     container_name: beszel-agent
     restart: unless-stopped
     logging:

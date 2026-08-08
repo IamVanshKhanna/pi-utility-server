@@ -1,0 +1,201 @@
+---
+import fs from "node:fs";
+import path from "node:path";
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+
+const days = await getCollection("job-search");
+const sorted = days.sort((a, b) => b.data.date.localeCompare(a.data.date));
+
+const totalDiscovered = sorted.reduce((sum, d) => sum + d.data.jobsDiscovered, 0);
+const totalVerified = sorted.reduce((sum, d) => sum + d.data.jobsVerified, 0);
+const totalEligible = sorted.reduce((sum, d) => sum + d.data.jobsEligible, 0);
+const latestDate = sorted[0]?.data.date ?? null;
+
+const byDate = new Map(sorted.map((d) => [d.data.date, d]));
+
+const anchor = latestDate ? new Date(latestDate + "T00:00:00") : new Date();
+const year = anchor.getFullYear();
+const month = anchor.getMonth();
+const monthName = anchor.toLocaleString("en-US", { month: "long" });
+const firstDay = new Date(year, month, 1);
+const daysInMonth = new Date(year, month + 1, 0).getDate();
+const startWeekday = firstDay.getDay();
+
+const cells = [];
+for (let i = 0; i < startWeekday; i++) cells.push(null);
+for (let d = 1; d <= daysInMonth; d++) {
+  const iso = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  cells.push({ day: d, iso, entry: byDate.get(iso) ?? null });
+}
+
+const stats = [
+  { label: "Days published", value: sorted.length },
+  { label: "Jobs discovered", value: totalDiscovered },
+  { label: "Jobs verified", value: totalVerified },
+  { label: "Jobs eligible", value: totalEligible },
+];
+
+// Real build-time read of public/resumes/<job_id>/resume.pdf - no fabricated
+// entries. Only lists what publisher.py has actually copied here.
+const resumesDir = path.join(process.cwd(), "public", "resumes");
+let resumeEntries = [];
+if (fs.existsSync(resumesDir)) {
+  resumeEntries = fs
+    .readdirSync(resumesDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => {
+      const files = fs.readdirSync(path.join(resumesDir, d.name));
+      return { jobId: d.name, files };
+    })
+    .filter((e) => e.files.length > 0);
+}
+
+const publicProfile = {
+  name: "Vansh Khanna",
+  tagline: "Graduate Software Engineer, Melbourne",
+  location: "Melbourne, Australia",
+  skills: [
+    "Python", "Java", "TypeScript", "Docker", "Kubernetes", "Linux",
+    "Active Directory", "SIEM", "CI/CD", "REST APIs",
+  ],
+};
+---
+<Base title="Job Search Dashboard">
+  <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
+    <!-- Left column: calendar + profile card -->
+    <aside class="flex flex-col gap-6">
+      <div class="border border-surface-light rounded-xl p-3 bg-surface-light/10">
+        <h2 class="font-display text-sm font-bold mb-2">
+          <span class="grad-text">{monthName} {year}</span>
+        </h2>
+        <div class="grid grid-cols-7 gap-1 mb-1 text-center">
+          {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
+            <span class="font-mono-accent text-[10px] text-text-muted">{d}</span>
+          ))}
+        </div>
+        <div class="grid grid-cols-7 gap-1">
+          {cells.map((c) =>
+            c === null ? (
+              <div />
+            ) : c.entry ? (
+              <a
+                href={`/job-search/${c.entry.slug}/`}
+                class="card-lift aspect-square flex flex-col items-center justify-center rounded-md border border-brand-light bg-brand/10 text-xs font-mono-accent"
+                title={c.entry.data.title}
+                aria-label={`${c.entry.data.date}: ${c.entry.data.title}`}
+              >
+                <span class="font-semibold text-brand-dark">{c.day}</span>
+                <span class="w-1 h-1 rounded-full bg-accent mt-0.5"></span>
+              </a>
+            ) : (
+              <div class="aspect-square flex items-center justify-center rounded-md text-xs text-text-muted/50 font-mono-accent">
+                {c.day}
+              </div>
+            )
+          )}
+        </div>
+      </div>
+
+      <div class="border border-surface-light rounded-xl p-4 bg-surface-light/10 reveal">
+        <p class="mono-chip inline-block mb-3">profile</p>
+        <h3 class="font-display text-lg font-bold mb-0.5">{publicProfile.name}</h3>
+        <p class="text-sm text-text-muted mb-3">{publicProfile.tagline}</p>
+        <div class="flex flex-wrap gap-1.5">
+          {publicProfile.skills.map((s) => (
+            <span class="font-mono-accent text-[11px] px-2 py-1 rounded-md bg-brand/10 text-brand-dark font-medium">{s}</span>
+          ))}
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main column -->
+    <div class="min-w-0">
+      <section class="mb-6">
+        <h1 class="font-display text-3xl md:text-4xl font-bold mb-2 text-text leading-tight">
+          Job search <span class="grad-text">dashboard</span>
+        </h1>
+        <p class="text-base text-text-muted max-w-2xl">
+          Public-safe daily automation output. Aggregate counts and summaries only.
+        </p>
+      </section>
+
+      <section class="mb-8 reveal">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stats.map((s) => (
+            <div class="border border-surface-light rounded-xl p-4 bg-surface-light/20">
+              <p class="font-mono-accent text-2xl font-bold text-brand-dark mb-0.5">{s.value}</p>
+              <p class="text-sm text-text-muted">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="mb-8 reveal">
+        <h2 class="font-display text-lg font-bold mb-3">Recent <span class="grad-text">activity</span></h2>
+        {sorted.length === 0 ? (
+          <div class="terminal max-w-md text-sm">
+            <div class="terminal-bar">
+              <span class="terminal-dot" style="background:#ff5f56"></span>
+              <span class="terminal-dot" style="background:#ffbd2e"></span>
+              <span class="terminal-dot" style="background:#27c93f"></span>
+              <span class="ml-2 text-xs text-text-muted">vansh@job-search: ~</span>
+            </div>
+            <div class="p-3">
+              <p><span class="text-accent font-bold">$</span> ls days-published/</p>
+              <p class="text-text-muted">nothing published yet</p>
+            </div>
+          </div>
+        ) : (
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {sorted.slice(0, 6).map((day) => (
+              <a href={`/job-search/${day.slug}/`} class="card-lift block border border-surface-light rounded-xl p-4 bg-surface-light/20">
+                <div class="flex items-center gap-2 mb-2">
+                  <p class="mono-chip">{day.data.date}</p>
+                  {day.data.jobsVerified > 0 && (
+                    <p class="mono-chip">{day.data.jobsVerified} verified</p>
+                  )}
+                </div>
+                <h3 class="font-display font-semibold text-base mb-1">{day.data.title}</h3>
+                <p class="text-sm text-text-muted">{day.data.summary}</p>
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section class="reveal">
+        <h2 class="font-display text-lg font-bold mb-3">Resume / CV <span class="grad-text">repository</span></h2>
+        {resumeEntries.length === 0 ? (
+          <div class="terminal max-w-md text-sm">
+            <div class="terminal-bar">
+              <span class="terminal-dot" style="background:#ff5f56"></span>
+              <span class="terminal-dot" style="background:#ffbd2e"></span>
+              <span class="terminal-dot" style="background:#27c93f"></span>
+              <span class="ml-2 text-xs text-text-muted">vansh@job-search: ~</span>
+            </div>
+            <div class="p-3">
+              <p><span class="text-accent font-bold">$</span> ls resumes/</p>
+              <p class="text-text-muted">nothing published yet - approved resumes land here via PUBLISH PORTFOLIO</p>
+            </div>
+          </div>
+        ) : (
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {resumeEntries.map((e) => (
+              <div class="border border-surface-light rounded-xl p-4 bg-surface-light/20">
+                <p class="mono-chip mb-2">{e.jobId}</p>
+                <ul class="text-sm">
+                  {e.files.map((f) => (
+                    <li>
+                      <a href={`/resumes/${e.jobId}/${f}`} class="hover:text-brand-light transition-colors">{f}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  </div>
+</Base>

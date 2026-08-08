@@ -1,133 +1,189 @@
 #!/usr/bin/env bash
-# health-check.sh - Verify all homelab containers are running
-# Schedule: */15 * * * * /home/vansh/homelab-ops-mesh/pi/scripts/health-check.sh >> /var/log/homelab-health.log 2>&1
-# Usage: ./health-check.sh [--strict] [--quiet]
+# health-check.sh - Verify the Pi server is healthy
+# Checks: required containers running, pihole DNS resolves, ports reachable,
+#         beszel/uptime-kuma responding. Exits non-zero on any failure.
+# Usage: ./health-check.sh
 
 set -euo pipefail
 
-GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[1;33m'; NC='\033[0m'
-STRICT=false
-QUIET=false
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
-for arg in "$@"; do
-  case $arg in
-    --strict) STRICT=true ;;
-    --quiet) QUIET=true ;;
-  esac
-done
+if [[ -n "${PI_ENV_FILE:-}" ]]; then
+  ENV_FILE="$PI_ENV_FILE"
+elif [[ -f "${ROOT_DIR}/.env" ]]; then
+  ENV_FILE="${ROOT_DIR}/.env"
+elif [[ -f /home/vansh/.secrets/pi-utility-server.env ]]; then
+  ENV_FILE=/home/vansh/.secrets/pi-utility-server.env
+elif [[ -f "${ROOT_DIR}/pi/.env" ]]; then
+  ENV_FILE="${ROOT_DIR}/pi/.env"
+else
+  ENV_FILE=""
+fi
+if [[ -n "$ENV_FILE" ]]; then
+  while IFS='=' read -r key val; do
+    [[ -z "$key" || "$key" == \#* ]] && continue
+    val="${val#\"}" val="${val%\"}"
+    val="${val#\'}" val="${val%\'}"
+    export "$key=$val"
+  done < "$ENV_FILE"
+fi
 
-log() { $QUIET || echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"; }
-
+# Required containers for a healthy server
 EXPECTED_CONTAINERS=(
-  traefik portainer
-  node-exporter cadvisor promtail
-  nextcloud mariadb redis vaultwarden
-  pihole pihole-exporter
-  homeassistant
-  uptime-kuma
-  crowdsec crowdsec-relay
+  unbound
+  pihole
   headscale
   gitea
-  samba syncthing
+  vaultwarden
+  samba
+  syncthing
+  beszel
+  beszel-agent
+  uptime-kuma
   portfolio
+  vansh-portfolio
 )
 
-CHECK_CROWDSEC=true
-CHECK_PROMETHEUS=true
-CHECK_UPTIME_KUMA=true
+# Optional components (their absence is a warning, not a failure)
+OPTIONAL_CONTAINERS=(
+  act-runner
+)
 
-FAILED=0
-WARNINGS=0
+PASS=0
+FAIL=0
+WARN=0
 
-log "--- Homelab Health Check ---"
-printf "%-22s %-12s\n" "CONTAINER" "STATUS"
-printf "%-22s %-12s\n" "----------------------" "----------"
+check() {
+  local status="$1" msg="$2"
+  case "$status" in
+    PASS)
+      PASS=$((PASS + 1))
+      echo "  [PASS] $msg"
+      ;;
+    WARN)
+      WARN=$((WARN + 1))
+      echo "  [WARN] $msg"
+      ;;
+    *)
+      FAIL=$((FAIL + 1))
+      echo "  [FAIL] $msg"
+      ;;
+  esac
+}
 
-for NAME in "${EXPECTED_CONTAINERS[@]}"; do
-  STATUS=$(docker inspect --format='{{.State.Status}}' "$NAME" 2>/dev/null || echo "missing")
-  if [[ "$STATUS" == "running" ]]; then
-    printf "${GREEN}%-22s %-12s${NC}\n" "$NAME" "$STATUS"
-    HEALTH=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$NAME" 2>/dev/null || echo "unknown")
-    if [[ "$HEALTH" == "unhealthy" ]]; then
-      printf "${RED}  -> Health: unhealthy${NC}\n"
-      FAILED=$((FAILED + 1))
-    elif [[ "$HEALTH" == "starting" ]]; then
-      printf "${YELLOW}  -> Health: starting${NC}\n"
-      WARNINGS=$((WARNINGS + 1))
-    fi
+echo "=== Health Check: $(date '+%Y-%m-%d %H:%M:%S') ==="
+echo "=== Container checks ==="
+
+RUNNING=$(docker ps --format '{{.Names}}' 2>/dev/null || true)
+
+for container in "${EXPECTED_CONTAINERS[@]}"; do
+  if echo "$RUNNING" | grep -qx "$container"; then
+    check PASS "Container '$container' is running"
   else
-    printf "${RED}%-22s %-12s${NC}\n" "$NAME" "$STATUS"
-    FAILED=$((FAILED + 1))
+    check FAIL "Container '$container' is NOT running"
   fi
 done
 
-TOTAL=${#EXPECTED_CONTAINERS[@]}
-RUNNING=$((TOTAL - FAILED))
-
-# Check CrowdSec (internal only - no host port)
-if $CHECK_CROWDSEC; then
-  log ""
-  log "--- CrowdSec IDS Check ---"
-  if docker exec crowdsec wget -qO- http://localhost:8080/health >/dev/null 2>&1; then
-    printf "${GREEN}CrowdSec reachable${NC}\n"
+for container in "${OPTIONAL_CONTAINERS[@]}"; do
+  if echo "$RUNNING" | grep -qx "$container"; then
+    check PASS "Optional container '$container' is running"
   else
-    printf "${RED}CrowdSec not reachable${NC}\n"
-    FAILED=$((FAILED + 1))
+    check WARN "Optional container '$container' is not running (acceptable if unused)"
   fi
-fi
+done
 
-# Check Prometheus alerting
-if $CHECK_PROMETHEUS; then
-  log ""
-  log "--- Prometheus Alerting Check ---"
-  ALERTING=$(curl -sf "http://localhost:9090/api/v1/query?query=ALERTING" | jq -r '.data.result | length' 2>/dev/null || echo "0")
-  if [[ "$ALERTING" -gt 0 ]]; then
-    printf "${YELLOW}Active alerts: %s${NC}\n" "$ALERTING"
-    WARNINGS=$((WARNINGS + 1))
+echo ""
+echo "=== DNS checks (via pihole @127.0.0.1, host-network port 53) ==="
+
+if command -v dig >/dev/null 2>&1; then
+  if dig +short @127.0.0.1 google.com A >/dev/null 2>&1; then
+    check PASS "pihole DNS resolves google.com"
   else
-    printf "${GREEN}No active alerts${NC}\n"
+    check FAIL "pihole DNS could not resolve google.com"
   fi
-fi
-
-# Check Uptime Kuma
-if $CHECK_UPTIME_KUMA; then
-  log ""
-  log "--- Uptime Kuma Check ---"
-  if curl -sf "http://localhost:8082" >/dev/null 2>&1; then
-    printf "${GREEN}Uptime Kuma responsive${NC}\n"
+  if dig +short @127.0.0.1 example.com A >/dev/null 2>&1; then
+    check PASS "pihole DNS resolves example.com"
   else
-    printf "${RED}Uptime Kuma not responsive${NC}\n"
-    FAILED=$((FAILED + 1))
+    check FAIL "pihole DNS could not resolve example.com"
   fi
-fi
-
-# Check act_runner systemd service
-log ""
-RUNNER_STATUS=$(systemctl --user is-active act-runner.service 2>/dev/null || echo "inactive")
-if [[ "$RUNNER_STATUS" == "active" ]]; then
-  printf "${GREEN}%-22s %-12s${NC}\n" "act-runner (systemd)" "active"
 else
-  printf "${RED}%-22s %-12s${NC}\n" "act-runner (systemd)" "$RUNNER_STATUS"
-  FAILED=$((FAILED + 1))
+  if getent hosts google.com >/dev/null 2>&1; then
+    check PASS "system DNS resolves google.com"
+  else
+    check FAIL "system DNS could not resolve google.com"
+  fi
 fi
 
 echo ""
-TOTAL=$((TOTAL + 1))
-RUNNING=$((TOTAL - FAILED))
-log "Result: $RUNNING/$TOTAL containers running."
-if [[ $WARNINGS -gt 0 ]]; then
-  log "Warnings: $WARNINGS"
+echo "=== Web UI / service checks ==="
+
+if curl -sf -o /dev/null --max-time 5 "http://100.84.60.109:8081/"; then
+  check PASS "vaultwarden responding on :8081"
+else
+  check FAIL "vaultwarden not responding on :8081"
 fi
 
-if [[ $FAILED -gt 0 ]]; then
-  log "ERROR: $FAILED container(s) are NOT running!"
-  log "Check: docker ps -a"
-  log "Logs:  docker logs <container_name>"
-  exit 1
-elif [[ $STRICT && $WARNINGS -gt 0 ]]; then
-  log "STRICT mode: warnings treated as failures"
+if curl -sf -o /dev/null --max-time 5 "http://100.84.60.109:8082/"; then
+  check PASS "uptime-kuma responding on :8082"
+else
+  check FAIL "uptime-kuma not responding on :8082"
+fi
+
+if curl -sf -o /dev/null --max-time 5 "http://127.0.0.1:8092/"; then
+  check PASS "beszel responding on :8092"
+else
+  check FAIL "beszel not responding on :8092"
+fi
+
+if curl -sf -o /dev/null --max-time 5 "http://100.84.60.109:8091/"; then
+  check PASS "vansh-portfolio responding on :8091"
+else
+  check FAIL "vansh-portfolio not responding on :8091"
+fi
+
+echo ""
+echo "=== Port checks ==="
+
+if command -v nc >/dev/null 2>&1; then
+  for port in 445 8384; do
+    if nc -z 127.0.0.1 "$port" >/dev/null 2>&1; then
+      check PASS "port $port reachable"
+    else
+      check FAIL "port $port not reachable"
+    fi
+  done
+else
+  echo "  (nc not installed; skipping port checks)"
+fi
+
+echo ""
+echo "=== Resource checks ==="
+
+LOAD1=$(awk '{print $1}' /proc/loadavg)
+echo "  1-minute load average: $LOAD1 (4 cores)"
+
+DISK_PCT=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
+if [[ "$DISK_PCT" -gt 90 ]]; then
+  check FAIL "root disk usage ${DISK_PCT}% (over 90%)"
+elif [[ "$DISK_PCT" -gt 80 ]]; then
+  check WARN "root disk usage ${DISK_PCT}% (over 80%)"
+else
+  check PASS "root disk usage ${DISK_PCT}%"
+fi
+
+echo ""
+echo "=== Summary ==="
+echo "  PASS: $PASS"
+echo "  FAIL: $FAIL"
+echo "  WARN: $WARN"
+
+if [[ $FAIL -gt 0 ]]; then
+  echo ""
+  echo "Health check FAILED with $FAIL error(s)"
   exit 1
 else
-  log "All containers healthy."
+  echo ""
+  echo "Health check PASSED"
   exit 0
 fi

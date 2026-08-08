@@ -1,20 +1,36 @@
 #!/usr/bin/env bash
 # backup.sh - Restic backup with Telegram notifications
 # Supports: local path, B2, or any restic backend
-# Schedule: 0 3 * * * /home/vansh/homelab-ops-mesh/pi/scripts/backup.sh >> /var/log/homelab-backup.log 2>&1
-# Requires: RESTIC_REPOSITORY, RESTIC_PASSWORD, DATA_DIR, BACKUP_DIR in .env
-# Optional: B2_ACCOUNT_ID, B2_ACCOUNT_KEY (for B2 repos)
+# Schedule (cron):
+#   0 3 * * * PI_ENV_FILE=/home/vansh/.secrets/pi-utility-server.env \
+#     /mnt/nas/02. shared/01. PI Files/01. pi-utility-server/pi/scripts/backup.sh
+# Backs up: repo config/stacks/scripts/docs, docker named volumes (service data),
+#           NAS user data (sync/shared/media), and the live secrets env.
+# Requires: RESTIC_REPOSITORY, RESTIC_PASSWORD, DATA_DIR, BACKUP_DIR in env.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
-ENV_FILE="${PI_ENV_FILE:-${ROOT_DIR}/.env}"
+
+# Resolve env file: explicit override > repo-root .env > live secrets file
+if [[ -n "${PI_ENV_FILE:-}" ]]; then
+  ENV_FILE="$PI_ENV_FILE"
+elif [[ -f "${ROOT_DIR}/.env" ]]; then
+  ENV_FILE="${ROOT_DIR}/.env"
+elif [[ -f /home/vansh/.secrets/pi-utility-server.env ]]; then
+  ENV_FILE=/home/vansh/.secrets/pi-utility-server.env
+elif [[ -f "${ROOT_DIR}/pi/.env" ]]; then
+  ENV_FILE="${ROOT_DIR}/pi/.env"
+else
+  echo "ERROR: no env file found (set PI_ENV_FILE)" >&2
+  exit 1
+fi
 
 load_env() {
   local f="$1"
   if [[ ! -f "$f" ]]; then
-    echo "ERROR: .env not found at $f" >&2
+    echo "ERROR: env file not found at $f" >&2
     exit 1
   fi
   while IFS='=' read -r key val; do
@@ -29,10 +45,9 @@ load_env "$ENV_FILE"
 
 : "${RESTIC_REPOSITORY:?RESTIC_REPOSITORY not set}"
 : "${RESTIC_PASSWORD:?RESTIC_PASSWORD not set}"
-: "${DATA_DIR:?DATA_DIR not set}"
 : "${BACKUP_DIR:?BACKUP_DIR not set}"
 
-RESTIC_CACHE_DIR="${RESTIC_CACHE_DIR:-${DATA_DIR}/restic-cache}"
+RESTIC_CACHE_DIR="${RESTIC_CACHE_DIR:-${BACKUP_DIR}/restic-cache}"
 RESTIC_KEEP_DAILY="${RESTIC_KEEP_DAILY:-7}"
 RESTIC_KEEP_WEEKLY="${RESTIC_KEEP_WEEKLY:-4}"
 RESTIC_KEEP_MONTHLY="${RESTIC_KEEP_MONTHLY:-6}"
@@ -60,6 +75,7 @@ send_telegram() {
 echo "=== Backup started: $(date -Is) ==="
 echo "Repository: $RESTIC_REPOSITORY"
 echo "Cache dir:  $RESTIC_CACHE_DIR"
+echo "Env file:   $ENV_FILE"
 
 send_telegram "📦 <b>Backup started</b> on $(hostname) at $(date '+%Y-%m-%d %H:%M:%S')"
 
@@ -92,16 +108,51 @@ if ! "$RESTIC_BIN" snapshots >/dev/null 2>&1; then
   fi
 fi
 
-BACKUP_PATHS=(
-  "${DATA_DIR}/vaultwarden"
-  "${DATA_DIR}/homeassistant"
-  "${ROOT_DIR}/pi/config"
-  "${ROOT_DIR}/pi/stacks"
-  "${ROOT_DIR}/pi/scripts"
-  "${ROOT_DIR}/pi/docs"
-  "${ROOT_DIR}/pi/.env.example"
-  "${ROOT_DIR}/README.md"
-)
+# ---- Backup sources --------------------------------------------------------
+BACKUP_PATHS=()
+DATA_PATHS=()
+
+# 1) Repo config / stacks / scripts / docs (the source of truth)
+for p in \
+  "${ROOT_DIR}/pi/config" \
+  "${ROOT_DIR}/pi/stacks" \
+  "${ROOT_DIR}/pi/scripts" \
+  "${ROOT_DIR}/pi/docs" \
+  "${ROOT_DIR}/pi/systemd" \
+  "${ROOT_DIR}/pi/.env.example"; do
+  [[ -e "$p" ]] && BACKUP_PATHS+=("$p")
+done
+
+# 2) Live secrets env (encrypted by restic, needed for restore)
+[[ -f "$ENV_FILE" ]] && BACKUP_PATHS+=("$ENV_FILE")
+
+# 3) Docker named volumes. Volume data lives under /var/lib/docker/volumes
+#    (root-owned, mode 700) so we cannot read it directly. Stream each
+#    volume through a throwaway alpine container as a tar pipe straight
+#    into restic (--stdin). Restic content-dedup keeps this cheap across
+#    runs. Requires the local 'alpine:3.24' image (already present as the
+#    base for the samba/unbound builds).
+if command -v docker >/dev/null 2>&1 && [[ -x "$RESTIC_BIN" ]]; then
+  while read -r vol; do
+    [[ -z "$vol" ]] && continue
+    echo "Backing up docker volume: $vol"
+    if docker run --rm -v "${vol}:/data:ro" alpine:3.24 tar -C /data -cf - . \
+      | "$RESTIC_BIN" backup --stdin --stdin-filename "volumes/${vol}.tar" \
+        --tag "volume-${vol}" \
+        --compression max --quiet; then
+      :
+    else
+      echo "WARNING: volume '$vol' backup had errors (continuing)"
+    fi
+  done < <(docker volume ls -q)
+fi
+
+# 4) NAS user data (shared dirs). Excludes handled below.
+for d in "/mnt/nas/01. sync" "/mnt/nas/02. shared" "/mnt/nas/04. media"; do
+  [[ -e "$d" ]] && DATA_PATHS+=("$d")
+done
+
+BACKUP_PATHS+=("${DATA_PATHS[@]}")
 
 EXISTING_PATHS=()
 for p in "${BACKUP_PATHS[@]}"; do
@@ -118,9 +169,17 @@ if [[ ${#EXISTING_PATHS[@]} -eq 0 ]]; then
 fi
 
 echo "Backing up ${#EXISTING_PATHS[@]} paths..."
+printf '  %s\n' "${EXISTING_PATHS[@]}"
 
+# ---- Exclusions ------------------------------------------------------------
+# Never back up the restic repo / cache / logs back into themselves.
 BACKUP_EXCLUDE=(
-  --exclude="**/crowdsec/notifications"
+  --exclude="${BACKUP_DIR}"
+  --exclude="${RESTIC_CACHE_DIR}"
+  --exclude="/mnt/nas/03. backup"
+  --exclude="/mnt/nas/bench*"
+  --exclude="/mnt/nas/02. shared/01. PI Files/04. archive"
+  --exclude="*.log"
 )
 
 BACKUP_EXIT=0

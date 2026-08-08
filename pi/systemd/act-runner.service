@@ -1,0 +1,16 @@
+[Unit]
+Description=Gitea Actions Runner (act_runner) - pi-runner
+After=docker.service
+
+[Service]
+ExecStart=/home/vansh/bin/act_runner daemon --config /home/vansh/.config/act-runner/config.yaml
+ExecReload=/bin/kill -s HUP $MAINPID
+WorkingDirectory=/mnt/nas/02. shared/01. PI Files/01. pi-utility-server
+TimeoutSec=0
+RestartSec=10
+Restart=always
+Environment=HOME=/home/vansh
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/vansh/bin
+
+[Install]
+WantedBy=default.target

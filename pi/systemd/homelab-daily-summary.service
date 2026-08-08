@@ -7,13 +7,14 @@ Wants=network-online.target
 Type=oneshot
 User=vansh
 Group=vansh
-WorkingDirectory=/home/vansh/homelab-ops-mesh/pi
-ExecStart=/home/vansh/homelab-ops-mesh/pi/scripts/daily-health-summary.sh
+Environment=PI_ENV_FILE=/home/vansh/.secrets/pi-utility-server.env
+WorkingDirectory=/mnt/nas/02. shared/01. PI Files/01. pi-utility-server/pi
+ExecStart="/mnt/nas/02. shared/01. PI Files/01. pi-utility-server/pi/scripts/daily-health-summary.sh"
 Environment=HOME=/home/vansh
 
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=/home/vansh/homelab-ops-mesh /mnt/nas/backup/logs
+ReadWritePaths=/mnt/nas/backup/logs
 
 [Install]
 WantedBy=multi-user.target
