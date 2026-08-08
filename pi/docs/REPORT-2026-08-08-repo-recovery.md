@@ -118,7 +118,7 @@ badly. Concrete problems found:
 
 | # | Gap | Effort | Priority |
 |---|-----|--------|----------|
-| 1 | **B2 offsite live** — blocked: the env holds the `.env.example` placeholders (`your_b2_account_id` / `your_b2_application_key`), so B2 was never actually configured. Paste a real Backblaze app key (bucket `homelab-prod-backup`), set `B2_ENABLED=true`, then seed the offsite copy and verify `restic copy` + offsite retention | low (once creds exist) | **high** |
+| ~~1~~ | ~~**B2 offsite live**~~ — **SKIPPED 2026-08-08 (user decision, cost)**: B2 was never configured (env holds `.env.example` placeholders). Offsite cloud copy intentionally not set up. Implication: runbook **Scenario B** (Pi + NAS both lost) is not recoverable — only copy lives on the NAS. `B2_ENABLED=false` stays so `backup.sh` never attempts it; can be enabled any time a bucket + app key exists | skipped | high |
 | ~~2~~ | ~~**Restore drill + recovery runbook**~~ — **DONE 2026-08-08**: beszel volume + secrets env restored from a snapshot to throwaway targets and verified; procedure documented in `pi/docs/restore-runbook.md` (incl. full DR scenarios A/B) | done | done |
 | ~~3~~ | ~~**Prune legacy secrets**~~ — **DONE 2026-08-08**: removed 23 retired Grafana/MySQL/Nextcloud/Redis/WG/Traefik/CrowdSec/Windows keys from the live env (`/home/vansh/.secrets/pi-utility-server.env`, atomic rewrite + `.bak-20260808-134332` backup); added `B2_ENABLED=false`; verified all 9 stacks `compose config`, restic auth, and health-check (21 PASS / 0 FAIL). `.env.example` was already the clean 29-key SSOT | done | done |
 | ~~4~~ | ~~**Pin images to digests**~~ — **DONE 2026-08-08**: all 8 registry images pinned to local-store digests (behaviour-preserving) with a `# pinned-from: image:tag` comment above each; `pin-images-to-digest.sh` now supports re-pinning after updates and skips `local/*` builds (still tags); `update.sh` pulls each pinned-from tag, re-pins, and auto-commits. Verified: 9 stacks `compose config` OK, pin idempotent, health-check 21 PASS / 0 FAIL | done | done |
@@ -131,7 +131,7 @@ badly. Concrete problems found:
 
 ## 5. Recommended order
 
-1. Fix B2 credentials → seed offsite copy → verify offsite snapshots. (#1)
+1. ~~B2 offsite~~ — **skipped (cost, user decision)**. Everything else on the list is done.
 2. ~~Restore drill + runbook~~ — **done**.
    ~~Prune legacy keys from the live env~~ — **done 2026-08-08** (23 keys removed, verified). (#3)
 3. ~~Enable digest pinning~~ — **done 2026-08-08** (8 registry images pinned; update flow keeps working). (#4)

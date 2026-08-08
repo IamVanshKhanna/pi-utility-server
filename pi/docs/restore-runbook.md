@@ -14,12 +14,12 @@ to throwaway targets, contents verified).
 | Restic repo | `/mnt/nas/backup/restic-repo` (`RESTIC_REPOSITORY`) |
 | Restic cache | `/mnt/nas/02. shared/02. Pi_ServiceData/restic-cache` |
 | Restic binary | `/home/vansh/bin/restic` (0.17.x, not on PATH) |
-| Offsite (B2, pending) | `b2:homelab-prod-backup:pi-utility-server/restic` |
+| Offsite (B2) — **not set up** | skipped 2026-08-08 (cost); no cloud copy exists |
 | Containers / stacks | 12 healthy containers / 9 stacks in `pi/stacks/*` |
 
-**Critical:** `RESTIC_PASSWORD` (and B2 credentials) live inside the encrypted
-env file. The backup is useless without them — **keep copies in your password
-manager**. This is the one value no restore can recover for you.
+**Critical:** `RESTIC_PASSWORD` lives inside the encrypted env file. The backup
+is useless without it — **keep a copy in your password manager**. This is the
+one value no restore can recover for you.
 
 ## 2. What the backups contain
 
@@ -105,15 +105,21 @@ git clone https://github.com/IamVanshKhanna/pi-utility-server.git \
 10. Verify: `bash pi/scripts/health-check.sh` and `docker ps` (12 healthy).
 
 ### Scenario B — Pi and NAS both lost
-The NAS restic repo is gone too; recovery now depends on the **B2 offsite**
-repo (once it is live — pending valid credentials):
+**Not currently covered.** The B2 offsite feature is deliberately not configured
+(skipped 2026-08-08 — cost). The only restic copy lives on the NAS
+(`/mnt/nas/backup/restic-repo`) — same box as the data — so if Pi **and** NAS
+are lost together, there is no backup left to restore.
+
+To make this scenario recoverable later: create a Backblaze bucket + app key,
+set `B2_ENABLED=true` plus `B2_ACCOUNT_ID` / `B2_ACCOUNT_KEY` /
+`B2_REPOSITORY` in the secrets env, and run `backup.sh` once to seed the
+offsite copy. Recovery would then be:
 ```bash
 export B2_ACCOUNT_ID B2_ACCOUNT_KEY RESTIC_PASSWORD
 ~/bin/restic -r b2:homelab-prod-backup:pi-utility-server/restic snapshots
 ~/bin/restic -r b2:homelab-prod-backup:pi-utility-server/restic restore latest --target /mnt/nas
 ```
-then continue from Scenario A step 4. Until B2 is verified, this scenario is
-**not** covered — the single copy lives on the same box as the data.
+then continue from Scenario A step 4.
 
 ## 5. Verification checklist (after any restore)
 - [ ] `docker ps` shows 12 containers, healthy.
@@ -131,4 +137,4 @@ then continue from Scenario A step 4. Until B2 is verified, this scenario is
   after a restore.
 - The daily-summary unit uses `ProtectSystem=strict`; `/tmp` is read-only
   there. The rotation unit deliberately omits it (needs the docker socket).
-- Keep `RESTIC_PASSWORD` + B2 credentials in a password manager.
+- Keep `RESTIC_PASSWORD` in a password manager.
