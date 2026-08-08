@@ -6,7 +6,7 @@
 #     /mnt/nas/02. shared/01. PI Files/01. pi-utility-server/pi/scripts/backup.sh
 # Backs up: repo config/stacks/scripts/docs, docker named volumes (service data),
 #           NAS user data (sync/shared/media), and the live secrets env.
-# Requires: RESTIC_REPOSITORY, RESTIC_PASSWORD, DATA_DIR, BACKUP_DIR in env.
+# Requires: RESTIC_REPOSITORY, RESTIC_PASSWORD, BACKUP_DIR, RESTIC_CACHE_DIR, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID in env.
 
 set -euo pipefail
 
