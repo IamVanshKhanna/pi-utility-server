@@ -70,12 +70,10 @@ sync workflow.
   commit. Push auth uses a scoped `pi-push` token read from the secrets env
   (never stored in the repo); existing gitea repos remain GitHub pull
   mirrors.
-- **CI gate**: the gitea workflow `.gitea/workflows/deploy.yml` runs on
-  `main` push (runner label `pi:host`): pulls the commit into the live repo,
-  validates shell/compose syntax, deploys stacks via `update.sh`, then
-  health-checks. A git `pre-push` hook (installed from `pi/githooks/`)
-  blocks pushes to the **github** remote unless gitea CI for that commit is
-  green.
+- **CI validation**: the gitea workflow `.gitea/workflows/deploy.yml` runs
+  on `main` push (runner label `pi`): validates shell script syntax and
+  compose config for every stack, then runs `health-check.sh`. The GitHub
+  mirror is pushed manually after gitea CI goes green.
 
 ### 7. Offsite backup (Backblaze B2)
 - `backup.sh` now mirrors the local restic repo to a B2 repo
@@ -94,7 +92,7 @@ sync workflow.
   (accepted: headscale is reachable over the mesh, which is the normal path).
 - Secret rotation is live for the admin token; the new value is delivered
   over Telegram.
-- GitHub pushes are blocked until gitea CI goes green.
+- GitHub pushes are manual and happen after gitea CI is green.
 
 ## Superseded ADRs
 - None. Extends ADR-007 (headscale) and ADR-009 (Windows stack retirement).
