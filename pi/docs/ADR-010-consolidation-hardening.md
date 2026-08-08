@@ -46,8 +46,12 @@ sync workflow.
 - `act-runner` repointed and verified (registered runner id 4 on gitea).
 - `tinybot` restored from repo source (code had migrated but was never
   redeployed); venv recreated, env loaded via launcher.
-- `homelab-secrets-rotation` **disabled**: `secrets-rotation.sh` does not
-  exist in the migrated repo. Re-enable only after authoring the script.
+- `homelab-secrets-rotation` **enabled** (2026-08-08): `secrets-rotation.sh`
+  authored and the Sunday 03:00 timer armed. It rotates only
+  `VAULTWARDEN_ADMIN_TOKEN` and recreates the vaultwarden container so the
+  token takes effect; the new token is Telegram-notified. `SAMBA_PASSWORD`
+  and `PIHOLE_WEBPASSWORD` are intentionally untouched (weekly rotation
+  would lock out SMB clients / the pihole UI).
 
 ### 5. Repo housekeeping
 - Removed `.bak`/scratch files; refreshed `.env.example` to the current
@@ -59,22 +63,38 @@ sync workflow.
 - Documentation ADR-007 added (headscale over mesh; previously referenced
   but missing).
 
-### 6. Dual-remote git workflow
+### 6. Dual-remote git workflow and CI gate
 - Canonical remote is **GitHub** (`IamVanshKhanna/pi-utility-server`).
 - Self-hosted **gitea** (`100.84.60.109:8087/vansh/pi-utility-server`) is a
   direct-push second remote, kept in sync by pushing to both after each
   commit. Push auth uses a scoped `pi-push` token read from the secrets env
   (never stored in the repo); existing gitea repos remain GitHub pull
   mirrors.
+- **CI gate**: the gitea workflow `.gitea/workflows/deploy.yml` runs on
+  `main` push (runner label `pi:host`): pulls the commit into the live repo,
+  validates shell/compose syntax, deploys stacks via `update.sh`, then
+  health-checks. A git `pre-push` hook (installed from `pi/githooks/`)
+  blocks pushes to the **github** remote unless gitea CI for that commit is
+  green.
+
+### 7. Offsite backup (Backblaze B2)
+- `backup.sh` now mirrors the local restic repo to a B2 repo
+  (`b2:<bucket>:pi-utility-server/restic`) after every successful run,
+  applying the same retention policy, gated by `B2_ENABLED=true` plus valid
+  `B2_ACCOUNT_ID`/`B2_ACCOUNT_KEY`. The B2 repo is initialized on first
+  use. **Pending**: the credentials currently in the secrets env return
+  HTTP 401 — set `B2_ENABLED=true` only once valid application-key
+  credentials are in place.
 
 ## Consequences
 - Backups now restore the actual service data; a restore drill is still a
   follow-up (P1).
 - Monitoring is lightweight (~200 MB savings vs the retired stack).
-- Public headscale endpoint remains plain HTTP — TLS is a hardening follow-up.
-- Secret rotation is intentionally off until the script is authored.
-- Two remotes means pushes must target both; CI (P1) should gate on the
-  GitHub remote.
+- Public headscale endpoint remains plain HTTP — TLS is a hardening follow-up
+  (accepted: headscale is reachable over the mesh, which is the normal path).
+- Secret rotation is live for the admin token; the new value is delivered
+  over Telegram.
+- GitHub pushes are blocked until gitea CI goes green.
 
 ## Superseded ADRs
 - None. Extends ADR-007 (headscale) and ADR-009 (Windows stack retirement).
