@@ -76,13 +76,14 @@ sync workflow.
   mirror is pushed manually after gitea CI goes green.
 
 ### 7. Offsite backup (Backblaze B2)
-- `backup.sh` now mirrors the local restic repo to a B2 repo
+- `backup.sh` mirrors the local restic repo to a B2 repo
   (`b2:<bucket>:pi-utility-server/restic`) after every successful run,
   applying the same retention policy, gated by `B2_ENABLED=true` plus valid
   `B2_ACCOUNT_ID`/`B2_ACCOUNT_KEY`. The B2 repo is initialized on first
-  use. **Pending**: the credentials currently in the secrets env return
-  HTTP 401 — set `B2_ENABLED=true` only once valid application-key
-  credentials are in place.
+  use. **Decision (2026-08-08): skipped for cost.** B2 was never configured —
+  the env holds `.env.example` placeholders and `B2_ENABLED=false` is kept so
+  `backup.sh` never attempts the mirror. Can be enabled later by adding a
+  valid bucket + application key and setting `B2_ENABLED=true`.
 
 ## Consequences
 - Backups now restore the actual service data; a restore drill is still a
