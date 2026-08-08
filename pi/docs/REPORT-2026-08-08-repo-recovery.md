@@ -119,7 +119,7 @@ badly. Concrete problems found:
 | # | Gap | Effort | Priority |
 |---|-----|--------|----------|
 | 1 | **B2 offsite live** — needs a valid B2 app key (current one is 401); then seed the offsite copy and verify `restic copy` + offsite retention | low (once creds exist) | **high** |
-| 2 | **Restore drill + recovery runbook** — actually restore one volume + the env from a snapshot, and document the procedure in `pi/docs/` | medium | **high** |
+| ~~2~~ | ~~**Restore drill + recovery runbook**~~ — **DONE 2026-08-08**: beszel volume + secrets env restored from a snapshot to throwaway targets and verified; procedure documented in `pi/docs/restore-runbook.md` (incl. full DR scenarios A/B) | done | done |
 | 3 | **Prune legacy secrets** — drop the ~23 retired Grafana/MySQL/Nextcloud/WG/Traefik keys from the live env; keep `.env.example` in sync | low | medium |
 | 4 | **Pin images to digests** — `pin-images-to-digest.sh` exists but is unused; images are tags only | low | medium |
 | 5 | **GitHub-side CI** — gitea CI is green but the GitHub mirror is manual; optional Actions mirror to keep parity | medium | low |
@@ -132,8 +132,7 @@ badly. Concrete problems found:
 ## 5. Recommended order
 
 1. Fix B2 credentials → seed offsite copy → verify offsite snapshots. (#1)
-2. Restore drill: pull one named volume + the secrets env from a snapshot,
-   write `pi/docs/restore-runbook.md`. (#2)
-3. Prune legacy keys from the live env + update `.env.example`. (#3)
-4. Enable digest pinning (dry-run first). (#4)
-5. Then the lower-priority items (#5–#8).
+2. ~~Restore drill + runbook~~ — **done**. Next: prune legacy keys from the
+   live env + update `.env.example`. (#3)
+3. Enable digest pinning (dry-run first). (#4)
+4. Then the lower-priority items (#5–#8).
