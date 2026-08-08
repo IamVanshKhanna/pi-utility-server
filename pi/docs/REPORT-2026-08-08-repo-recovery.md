@@ -122,8 +122,8 @@ badly. Concrete problems found:
 | ~~2~~ | ~~**Restore drill + recovery runbook**~~ — **DONE 2026-08-08**: beszel volume + secrets env restored from a snapshot to throwaway targets and verified; procedure documented in `pi/docs/restore-runbook.md` (incl. full DR scenarios A/B) | done | done |
 | ~~3~~ | ~~**Prune legacy secrets**~~ — **DONE 2026-08-08**: removed 23 retired Grafana/MySQL/Nextcloud/Redis/WG/Traefik/CrowdSec/Windows keys from the live env (`/home/vansh/.secrets/pi-utility-server.env`, atomic rewrite + `.bak-20260808-134332` backup); added `B2_ENABLED=false`; verified all 9 stacks `compose config`, restic auth, and health-check (21 PASS / 0 FAIL). `.env.example` was already the clean 29-key SSOT | done | done |
 | ~~4~~ | ~~**Pin images to digests**~~ — **DONE 2026-08-08**: all 8 registry images pinned to local-store digests (behaviour-preserving) with a `# pinned-from: image:tag` comment above each; `pin-images-to-digest.sh` now supports re-pinning after updates and skips `local/*` builds (still tags); `update.sh` pulls each pinned-from tag, re-pins, and auto-commits. Verified: 9 stacks `compose config` OK, pin idempotent, health-check 21 PASS / 0 FAIL | done | done |
-| 5 | **GitHub-side CI** — gitea CI is green but the GitHub mirror is manual; optional Actions mirror to keep parity | medium | low |
-| 6 | **Legacy volume tars** (portainer, crowdsec, homeassistant, nextcloud) still in snapshots — decide keep or prune old snapshots | low | low |
+| ~~5~~ | ~~**GitHub-side CI**~~ — **DECLINED 2026-08-08**: GitHub Actions runners cannot reach the Tailscale mesh (no public route to `100.84.60.109`), the Pi's act_runner is registered to gitea only, and a second GitHub-hosted runner would duplicate validation + add load. gitea CI validates every push; GitHub remains a mirror (manual push after CI green) | declined | low |
+| ~~6~~ | ~~**Legacy volume tars**~~ — **DONE 2026-08-08**: removed 5 retired named volumes (`core_portainer_data`, `crowdsec_crowdsec_config`, `crowdsec_crowdsec_data`, `smarthome_homeassistant_config`, orphan `samba_config`) + 5 orphan anonymous volumes. Historical snapshots (archived through 08-08 11:06) retain the data under normal retention, so nothing is lost. Backup now leaner (14 volume snapshots vs ~23); new backup verified clean + repo check passed | done | done |
 | 7 | **TLS for public headscale** — deferred by choice (mesh-only access) | medium | low |
 | 8 | **Wider secret rotation** (pihole/samba) — intentionally not done (would lock out devices) | low | low |
 
@@ -135,4 +135,4 @@ badly. Concrete problems found:
 2. ~~Restore drill + runbook~~ — **done**.
    ~~Prune legacy keys from the live env~~ — **done 2026-08-08** (23 keys removed, verified). (#3)
 3. ~~Enable digest pinning~~ — **done 2026-08-08** (8 registry images pinned; update flow keeps working). (#4)
-4. Then the lower-priority items (#5–#8).
+4. ~~Lower-priority items~~ — **#5 declined** (Actions can't reach the mesh; gitea CI validates), **#6 done** (retired volumes removed, archive kept), **#7/#8 deferred by choice** (documented above).
