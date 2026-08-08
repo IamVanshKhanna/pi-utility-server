@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: pi:host
+    runs-on: pi
     env:
       PI_ENV_FILE: /home/vansh/.secrets/pi-utility-server.env
     steps:
