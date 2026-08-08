@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # pin-images-to-digest.sh - Migrate compose files from tags to digest pinning
 # Usage: ./pin-images-to-digest.sh [--dry-run] [--backup]
+#
+# Pins tagged image refs to the digest currently in the local Docker store,
+# and records a "# pinned-from: image:tag" comment above each pinned line so
+# update.sh can later pull the latest tag and re-pin (via this same script).
 
 set -euo pipefail
 
@@ -19,7 +23,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")/pi/stacks"
 BACKUP_DIR=".backup-$(date +%Y%m%d-%H%M%S)"
 
-# Find all compose files
 mapfile -t COMPOSE_FILES < <(find "$COMPOSE_DIR" -name "docker-compose.yml" -o -name "docker-compose.yaml" 2>/dev/null)
 
 if [[ ${#COMPOSE_FILES[@]} -eq 0 ]]; then
@@ -34,77 +37,131 @@ echo "Found ${#COMPOSE_FILES[@]} compose files"
 TOTAL_CHANGED=0
 TOTAL_ALREADY_PINNED=0
 
+resolve_digest() {
+  # $1 = image:tag -> prints sha256:... from local store (or empty)
+  docker image inspect "$1" --format='{{index .RepoDigests 0}}' 2>/dev/null | cut -d@ -f2
+}
+
 for file in "${COMPOSE_FILES[@]}"; do
   echo ""
   echo "Processing: $file"
 
-  # Create backup if requested
   if [[ "$BACKUP" == true ]]; then
     mkdir -p "$BACKUP_DIR"
     cp "$file" "$BACKUP_DIR/$(basename "$file").bak"
   fi
 
-  # Process the file
-  # Use a temporary file for modifications
   TEMP_FILE=$(mktemp)
   CHANGED=0
   ALREADY_PINNED=0
+  PENDING_IMAGE=""
+  PENDING_TAG=""
 
   while IFS= read -r line; do
-    # Match image: lines with tags but not digests
-    if [[ "$line" =~ ^([[:space:]]*image:[[:space:]]*)([^@[:space:]]+):([^@[:space:]]+)([[:space:]]*.*)$ ]]; then
+    # Remember "# pinned-from: image:tag" comments so the next image line can
+    # be re-pinned to the current tag digest after an update.
+    if [[ "$line" =~ ^[[:space:]]*#[[:space:]]*pinned-from:[[:space:]]*([^:[:space:]]+):([^[:space:]]+) ]]; then
+      PENDING_IMAGE="${BASH_REMATCH[1]}"
+      PENDING_TAG="${BASH_REMATCH[2]}"
+      echo "$line" >> "$TEMP_FILE"
+      continue
+    fi
+
+    # Already-pinned line: image: repo@sha256:...
+    if [[ "$line" =~ ^([[:space:]]*)image:[[:space:]]*([^@[:space:]]+)@sha256:[0-9a-f]{64}([[:space:]]*.*)$ ]]; then
+      INDENT="${BASH_REMATCH[1]}"
+      IMAGE="${BASH_REMATCH[2]}"
+      REST="${BASH_REMATCH[3]}"
+      if [[ -n "$PENDING_IMAGE" ]]; then
+        OLD="${line#*@}"
+        NEW="$(resolve_digest "${PENDING_IMAGE}:${PENDING_TAG}")"
+        if [[ -n "$NEW" && "$NEW" != "$OLD" ]]; then
+          if [[ "$DRY_RUN" == true ]]; then
+            echo "  🔄 Would re-pin ${PENDING_IMAGE}:${PENDING_TAG} to $NEW"
+            echo "$line" >> "$TEMP_FILE"
+          else
+            echo "  🔄 Re-pinned ${PENDING_IMAGE}:${PENDING_TAG}"
+            echo "${INDENT}image: ${IMAGE}@${NEW}${REST}" >> "$TEMP_FILE"
+            ((CHANGED=CHANGED+1))
+            ((TOTAL_CHANGED=TOTAL_CHANGED+1))
+          fi
+        elif [[ -n "$NEW" ]]; then
+          echo "  ✅ ${PENDING_IMAGE}:${PENDING_TAG} already current"
+          echo "$line" >> "$TEMP_FILE"
+        else
+          echo "  ⚠️  Could not resolve ${PENDING_IMAGE}:${PENDING_TAG} - keeping existing pin"
+          echo "$line" >> "$TEMP_FILE"
+        fi
+      else
+        echo "  Already pinned: $IMAGE"
+        ((ALREADY_PINNED=ALREADY_PINNED+1))
+        echo "$line" >> "$TEMP_FILE"
+      fi
+      PENDING_IMAGE=""
+      PENDING_TAG=""
+      continue
+    fi
+
+    # Tagged line: image: image:tag
+    if [[ "$line" =~ ^([[:space:]]*)image:[[:space:]]*([^@[:space:]]+):([^@[:space:]]+)([[:space:]]*.*)$ ]]; then
       INDENT="${BASH_REMATCH[1]}"
       IMAGE="${BASH_REMATCH[2]}"
       TAG="${BASH_REMATCH[3]}"
       REST="${BASH_REMATCH[4]}"
 
-      # Skip if already has digest
-      if [[ "$line" =~ @sha256: ]]; then
-        echo "  Already pinned: $IMAGE:$TAG"
-        ((ALREADY_PINNED++))
-        echo "$line" >> "$TEMP_FILE"
-        continue
-      fi
-
-      # Skip special tags that shouldn't be pinned (like latest, stable)
+      # Skip floating tags that should not be pinned
       if [[ "$TAG" =~ ^(latest|stable|edge|main|master)$ ]]; then
-        echo "  ⚠️  Skipping special tag: $IMAGE:$TAG (consider pinning manually)"
+        echo "  Skipping floating tag: $IMAGE:$TAG (not pinned)"
         echo "$line" >> "$TEMP_FILE"
+        PENDING_IMAGE=""
+        PENDING_TAG=""
         continue
       fi
 
-      echo "  🔍 Resolving digest for $IMAGE:$TAG..."
+      # Skip locally built images (reproducible from version-controlled
+      # build context/Dockerfile; their digest is just the local image ID).
+      if [[ "$IMAGE" == local/* ]]; then
+        echo "  Skipping local build: $IMAGE:$TAG (not pinned)"
+        echo "$line" >> "$TEMP_FILE"
+        PENDING_IMAGE=""
+        PENDING_TAG=""
+        continue
+      fi
 
-      # Try to get digest from local Docker or registry
+      echo "  Resolving digest for $IMAGE:$TAG..."
       DIGEST=""
       if [[ "$DRY_RUN" == false ]]; then
-        # Try local image first
-        DIGEST=$(docker image inspect "$IMAGE:$TAG" --format='{{index .RepoDigests 0}}' 2>/dev/null | cut -d@ -f2 || true)
+        DIGEST="$(resolve_digest "${IMAGE}:${TAG}")"
       fi
 
       if [[ -n "$DIGEST" ]]; then
-        echo "  ✅ Resolved digest: $DIGEST"
-        NEW_LINE="${INDENT}image: ${IMAGE}@${DIGEST}${REST}"
-        echo "$NEW_LINE" >> "$TEMP_FILE"
-        ((CHANGED++))
-        ((TOTAL_CHANGED++))
+        echo "  Pinned $IMAGE:$TAG -> $DIGEST"
+        if [[ "$DRY_RUN" == true ]]; then
+          echo "$line" >> "$TEMP_FILE"
+        else
+          echo "# pinned-from: ${IMAGE}:${TAG}" >> "$TEMP_FILE"
+          echo "${INDENT}image: ${IMAGE}@${DIGEST}${REST}" >> "$TEMP_FILE"
+          ((CHANGED=CHANGED+1))
+          ((TOTAL_CHANGED=TOTAL_CHANGED+1))
+        fi
       else
-        echo "  ⚠️  Could not resolve digest for $IMAGE:$TAG (image not local or not found)"
-        echo "      Keeping tag, consider manual pinning"
+        echo "  Could not resolve digest for $IMAGE:$TAG (image not local) - keeping tag"
         echo "$line" >> "$TEMP_FILE"
       fi
-    else
-      echo "$line" >> "$TEMP_FILE"
+      PENDING_IMAGE=""
+      PENDING_TAG=""
+      continue
     fi
+
+    echo "$line" >> "$TEMP_FILE"
   done < "$file"
 
-  # Apply changes
   if [[ $CHANGED -gt 0 ]]; then
     if [[ "$DRY_RUN" == true ]]; then
       echo "  Would change $CHANGED image references (dry run)"
     else
       mv "$TEMP_FILE" "$file"
-      echo "  ✅ Updated $CHANGED image references in $file"
+      echo "  Updated $CHANGED image references in $file"
     fi
   else
     echo "  No changes needed"
@@ -125,6 +182,6 @@ echo "  Already pinned: $TOTAL_ALREADY_PINNED"
 echo ""
 echo "Next steps:"
 echo "1. Review changes: git diff"
-echo "2. Test: make config"
-echo "3. Deploy: make up-all"
-echo "4. Verify: make verify-v1"
+echo "2. Test: docker compose --env-file <env> config (each stack)"
+echo "3. Verify: pi/scripts/health-check.sh"
+echo "4. Update flow: update.sh pulls pinned-from tags, re-pins, then recreates"

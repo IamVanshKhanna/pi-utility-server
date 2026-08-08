@@ -11,7 +11,8 @@ volumes:
 services:
 
   vaultwarden:
-    image: vaultwarden/server:1.32.0
+# pinned-from: vaultwarden/server:1.32.0
+    image: vaultwarden/server@sha256:71668d20d4208d70919cf8cb3caf3071d41ed4b7d95afe71125ccad8408b040d
     container_name: vaultwarden
     restart: unless-stopped
     logging:

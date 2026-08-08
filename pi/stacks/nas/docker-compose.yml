@@ -44,7 +44,8 @@ services:
 
 
   syncthing:
-    image: syncthing/syncthing:2.1.1
+# pinned-from: syncthing/syncthing:2.1.1
+    image: syncthing/syncthing@sha256:775c4aac486263ca8653055bba7d3061799281974b706695e17bc798da3f4e92
     container_name: syncthing
     restart: unless-stopped
     logging:

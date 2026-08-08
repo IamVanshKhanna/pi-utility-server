@@ -10,7 +10,8 @@ volumes:
 
 services:
   headscale:
-    image: headscale/headscale:v0.29.1
+# pinned-from: headscale/headscale:v0.29.1
+    image: headscale/headscale@sha256:8453e47ea6bf69cd2c550d230ad23f4cf9d0e7daa31c652da3cbb88dca059c62
     container_name: headscale
     restart: unless-stopped
     logging:
