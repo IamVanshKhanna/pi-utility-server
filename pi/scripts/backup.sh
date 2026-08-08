@@ -210,6 +210,41 @@ echo "Applying retention policy: daily=$RESTIC_KEEP_DAILY weekly=$RESTIC_KEEP_WE
   --keep-monthly "$RESTIC_KEEP_MONTHLY" \
   --prune
 
+# ---- Offsite copy (Backblaze B2) ----------------------------------------
+# Mirror the local repository to the B2 offsite repo after every successful
+# backup. 'restic copy' is incremental: it only transfers snapshots and pack
+# files missing at the destination. Requires B2_REPOSITORY plus B2_ACCOUNT_ID /
+# B2_ACCOUNT_KEY in env. The B2 repo is initialized on first use; retention is
+# applied offsite too so the two repos stay in lock-step.
+OFFSITE_REPO="${B2_REPOSITORY:-}"
+if [[ "${B2_ENABLED:-}" == "true" && -n "$OFFSITE_REPO" && -n "${B2_ACCOUNT_ID:-}" && -n "${B2_ACCOUNT_KEY:-}" ]]; then
+  echo "=== Offsite copy to B2 started: $(date -Is) ==="
+  echo "Offsite repo:  $OFFSITE_REPO"
+  if ! "$RESTIC_BIN" -r "$OFFSITE_REPO" snapshots >/dev/null 2>&1; then
+    echo "Initializing offsite repository..."
+    if ! "$RESTIC_BIN" -r "$OFFSITE_REPO" init; then
+      echo "ERROR: could not initialize offsite repo" >&2
+      send_telegram "❌ <b>Offsite copy (B2) FAILED</b> on $(hostname) — could not init repo"
+    else
+      "$RESTIC_BIN" copy --repo2 "$OFFSITE_REPO" \
+        || echo "WARNING: restic copy failed" >&2
+    fi
+  elif "$RESTIC_BIN" copy --repo2 "$OFFSITE_REPO"; then
+    echo "Offsite copy completed"
+    send_telegram "☁️ <b>Offsite copy (B2) completed</b> on $(hostname)"
+    "$RESTIC_BIN" -r "$OFFSITE_REPO" forget \
+      --keep-daily "$RESTIC_KEEP_DAILY" \
+      --keep-weekly "$RESTIC_KEEP_WEEKLY" \
+      --keep-monthly "$RESTIC_KEEP_MONTHLY" \
+      --prune
+  else
+    echo "Offsite copy FAILED (local backup continues)" >&2
+    send_telegram "⚠️ <b>Offsite copy (B2) failed</b> on $(hostname)"
+  fi
+else
+  echo "Offsite copy skipped (B2_REPOSITORY or B2 credentials not set)"
+fi
+
 echo "Verifying repository (5% sample)..."
 "$RESTIC_BIN" check --read-data-subset=5% 2>&1 || echo "Check skipped (slow on large repos)"
 
