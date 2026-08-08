@@ -1,102 +1,118 @@
 #!/usr/bin/env bash
-# daily-health-summary.sh - Generate and send daily health summary via Telegram
-# Intended to run via systemd timer daily at 08:00 (homelab-daily-summary.timer)
+# daily-health-summary.sh - Send a daily Telegram health summary for the Pi
+# Schedule (systemd timer):
+#   homelab-daily-summary.timer -> homelab-daily-summary.service
+# Requires: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, RESTIC_REPOSITORY,
+#           RESTIC_PASSWORD in env (PI_ENV_FILE).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
-ENV_FILE="${ROOT_DIR}/.env"
 
-load_env() {
-  local f="$1"
-  if [[ ! -f "$f" ]]; then
-    echo "ERROR: .env not found at $f" >&2
-    exit 1
-  fi
-  while IFS='=' read -r key val; do
-    [[ -z "$key" || "$key" == \#* ]] && continue
-    val="${val#\"}" val="${val%\"}"
-    val="${val#\'}" val="${val%\'}"
-    export "$key=$val"
-  done < "$f"
-}
+# Resolve env file: explicit override > repo-root .env > live secrets file
+if [[ -n "${PI_ENV_FILE:-}" ]]; then
+  ENV_FILE="$PI_ENV_FILE"
+elif [[ -f "${ROOT_DIR}/.env" ]]; then
+  ENV_FILE="${ROOT_DIR}/.env"
+elif [[ -f /home/vansh/.secrets/pi-utility-server.env ]]; then
+  ENV_FILE=/home/vansh/.secrets/pi-utility-server.env
+elif [[ -f "${ROOT_DIR}/pi/.env" ]]; then
+  ENV_FILE="${ROOT_DIR}/pi/.env"
+else
+  echo "ERROR: no env file found (set PI_ENV_FILE)" >&2
+  exit 1
+fi
 
-load_env "$ENV_FILE"
+while IFS='=' read -r key val; do
+  [[ -z "$key" || "$key" == \#* ]] && continue
+  val="${val#\"}" val="${val%\"}"
+  val="${val#\'}" val="${val%\'}"
+  export "$key=$val"
+done < "$ENV_FILE"
 
-# Required
 : "${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN not set}"
 : "${TELEGRAM_CHAT_ID:?TELEGRAM_CHAT_ID not set}"
 
+TEMP_FILE=$(mktemp "${HOME}/.health-summary.XXXXXX")
 
-generate_summary() {
-  local date_str=$(date '+%Y-%m-%d %H:%M:%S')
-  local hostname=$(hostname)
-  
-  # Pi system metrics
-  local mem_info=$(free -h | awk '/Mem:/ {print $3 "/" $2}')
-  local disk_nas=$(df -h /mnt/nas | awk 'NR==2 {print $3 "/" $2 " (" $5 ")"}')
-  local cpu_temp=$(vcgencmd measure_temp 2>/dev/null | cut -d= -f2 | cut -d"'" -f1 || echo "N/A")
-  
-  # Pi container status
-  local pi_total=$(docker ps -q | wc -l)
-  local pi_unhealthy=$(docker ps --filter "health=unhealthy" -q | wc -l)
-  
-  # Windows metrics from Prometheus
-  local win_targets_up="N/A"
-  local alerts_firing="N/A"
-  if [[ -n "${WINDOWS_IP:-}" ]]; then
-    win_targets_up=$(curl -s --max-time 5 "http://${WINDOWS_IP}:9090/api/v1/query?query=count(up==1)" 2>/dev/null \
-      | jq -r '.data.result[0].value[1] // empty' 2>/dev/null || echo "N/A")
-    alerts_firing=$(curl -s --max-time 5 "http://${WINDOWS_IP}:9090/api/v1/alerts" 2>/dev/null \
-      | jq -r '[.data.alerts[] | select(.state=="firing")] | length' 2>/dev/null || echo "N/A")
+# Rest of the script in a subshell so TEMP_FILE cleanup is preserved
+(
+  set -uo pipefail
+
+  HOSTNAME="$(hostname)"
+  UPTIME_INFO=$(uptime -p)
+  LOAD_AVG=$(cut -d' ' -f1-3 /proc/loadavg)
+  DATE_STR=$(date '+%Y-%m-%d %H:%M:%S %Z')
+
+  # CPU temp + throttling
+  TEMP=$(vcgencmd measure_temp 2>/dev/null | cut -d= -f2 || echo "N/A")
+  THROTTLED=$(vcgencmd get_throttled 2>/dev/null | sed "s/throttled=//" || echo "N/A")
+
+  # Memory + disk
+  MEM_TOTAL=$(free -m | awk '/Mem:/{printf "%.0f", $2}')
+  MEM_USED=$(free -m | awk '/Mem:/{printf "%.0f", $3}')
+  MEM_PCT=$(awk -v u="$MEM_USED" -v t="$MEM_TOTAL" 'BEGIN {printf "%.0f", u/t*100}')
+  DISK_PCT=$(df / | awk 'NR==2 {print $5}')
+  NAS_PCT=$(df /mnt/nas | awk 'NR==2 {print $5}')
+  DISK_USED=$(df -h / | awk 'NR==2 {print $3}')
+
+  # Uptime / last restic snapshot
+  LAST_RESTIC="N/A"
+  if command -v restic >/dev/null 2>&1 || [[ -x "$HOME/bin/restic" ]]; then
+    R_BIN="$HOME/bin/restic"; [[ -x "$R_BIN" ]] || R_BIN="$(command -v restic)"
+    LAST_RESTIC=$(RESTIC_PASSWORD="$RESTIC_PASSWORD" RESTIC_REPOSITORY="$RESTIC_REPOSITORY" RESTIC_CACHE_DIR="${RESTIC_CACHE_DIR:-}" "$R_BIN" snapshots --latest 1 --no-lock 2>/dev/null | awk 'NR==4{print $3" "$4}' || echo "N/A")
   fi
-  
-  # Backup info
-  local restic_bin="${HOME}/bin/restic"
-  if [[ -x "$restic_bin" ]]; then
-    :
-  elif command -v restic >/dev/null 2>&1; then
-    restic_bin=$(command -v restic)
+
+  # Containers
+  TOTAL_CONTAINERS=$(docker ps -q | wc -l)
+  HEALTHY_CONTAINERS=$(docker ps --filter "health=healthy" -q | wc -l)
+  RESTARTED=$(docker ps --format '{{.Names}} {{.Status}}' | grep -i "restart" || true)
+
+  # Network (tailscale + ethernet)
+  TS_STATUS="N/A"
+  if command -v tailscale >/dev/null 2>&1; then
+    TS_STATUS=$(tailscale status 2>/dev/null | head -n 1 || true)
   fi
-  local last_backup=$("$restic_bin" snapshots --latest 1 --json 2>/dev/null | jq -r '.[0].time' 2>/dev/null | cut -dT -f1 || echo "Unknown")
-  
-  # Load average
-  local load=$(cat /proc/loadavg | awk '{print $1 " " $2 " " $3}')
-  
-  cat <<EOF
-🏠 <b>Daily Homelab Health</b> — $date_str
+  IPV4=$(ip -4 addr show eth0 | awk '/inet /{print $2}' | cut -d/ -f1)
 
-<b>📗 autobot (Pi 4B)</b>
-• RAM: $mem_info
-• NAS: $disk_nas
-• Temp: ${cpu_temp}°C | Load: $load
-• Containers: $pi_total$( [[ $pi_unhealthy -gt 0 ]] && echo " ⚠️${pi_unhealthy} unhealthy" || echo "")
+  # Backups within last 36h?
+  LAST_BACKUP_FILE=$(find "${BACKUP_DIR:-/mnt/nas/backup}/logs" -name "backup-*.log" -mmin -2160 2>/dev/null | sort | tail -n 1 || true)
+  if [[ -n "$LAST_BACKUP_FILE" ]]; then
+    BACKUP_STATUS="within last 36h (see $LAST_BACKUP_FILE)"
+  else
+    BACKUP_STATUS="NONE in last 36h -- check!"
+  fi
 
-<b>📘 mr-stranger (Windows)</b>
-• Prometheus targets: $win_targets_up/9 up
-• Firing alerts: $alerts_firing
+  MESSAGE="<b>Pi Health Summary</b> - ${DATE_STR}
+<b>Host:</b> ${HOSTNAME}
+<b>Uptime:</b> ${UPTIME_INFO}
+<b>CPU Temp:</b> ${TEMP} | <b>Throttled:</b> ${THROTTLED}
+<b>Load (1/5/15):</b> ${LOAD_AVG}
 
-<b>💾 Backup</b>
-• Last snapshot: $last_backup
+<b>Memory:</b> ${MEM_USED}/${MEM_TOTAL} MB (${MEM_PCT}%)
+<b>Root disk:</b> ${DISK_USED} used (${DISK_PCT})
+<b>NAS disk:</b> ${NAS_PCT}
 
-🤖 <i>homelab-ops-mesh v1.6</i>
-EOF
-}
+<b>Containers:</b> ${TOTAL_CONTAINERS} running, ${HEALTHY_CONTAINERS} healthy
+<b>Tailscale:</b> ${TS_STATUS}
+<b>Ethernet IP:</b> ${IPV4}
 
-send_telegram() {
-  local message="$1"
+<b>Last restic snapshot:</b> ${LAST_RESTIC}
+<b>Backup status:</b> ${BACKUP_STATUS}
+"
+
+  if [[ -n "$RESTARTED" ]]; then
+    MESSAGE="${MESSAGE}
+<b>⚠️ Restarting containers:</b>
+${RESTARTED}
+"
+  fi
+
   curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
     -d chat_id="${TELEGRAM_CHAT_ID}" \
-    -d text="$message" \
-    -d parse_mode="HTML" \
-    -d disable_web_page_preview="true" >/dev/null
-}
+    -d text="${MESSAGE}" \
+    -d parse_mode="HTML" >/dev/null 2>&1 || true
+) >"$TEMP_FILE" 2>&1 || true
 
-main() {
-  local summary=$(generate_summary)
-  send_telegram "$summary"
-  echo "Daily health summary sent at $(date)"
-}
-
-main "$@"
+rm -f "$TEMP_FILE"

@@ -1,3 +1,7 @@
+# STACK: VANSH-PORTFOLIO
+# Personal portfolio site (Astro). Source vendored into this repo (./app)
+# so builds are reproducible without the old absolute path (see ADR-010).
+
 networks:
   proxy:
     external: true
@@ -5,7 +9,7 @@ networks:
 services:
   vansh-portfolio:
     build:
-      context: /mnt/nas/02. shared/01. PI Files/vansh-portfolio
+      context: ./app
       dockerfile: Dockerfile
     container_name: vansh-portfolio
     restart: unless-stopped

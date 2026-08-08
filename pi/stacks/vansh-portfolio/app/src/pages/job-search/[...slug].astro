@@ -1,0 +1,54 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("job-search");
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const stats = [
+  { label: "Discovered", value: entry.data.jobsDiscovered },
+  { label: "Verified", value: entry.data.jobsVerified },
+  { label: "Eligible", value: entry.data.jobsEligible },
+];
+---
+<Base title={entry.data.title}>
+  <p class="mb-4 text-sm"><a href="/" class="hover:text-brand-light transition-colors">&larr; dashboard</a></p>
+
+  <section class="relative mb-6 reveal">
+    <p class="mono-chip inline-block mb-3">{entry.data.date}</p>
+    <h1 class="font-display text-3xl md:text-4xl font-bold mb-1 text-text leading-tight">
+      {entry.data.title}
+    </h1>
+  </section>
+
+  <section class="mb-6 reveal">
+    <h2 class="font-display text-lg font-bold mb-3">Overview</h2>
+    <div class="grid grid-cols-3 gap-2 max-w-sm">
+      {stats.map((s) => (
+        <div class="border border-surface-light rounded-xl p-3 bg-surface-light/20 text-center">
+          <p class="font-mono-accent text-lg font-bold text-brand-dark">{s.value}</p>
+          <p class="text-[10px] text-text-muted mt-0.5">{s.label}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="mb-6 reveal">
+    <h2 class="font-display text-lg font-bold mb-3">Summary</h2>
+    <p class="text-sm text-text-muted leading-relaxed max-w-2xl">{entry.data.summary}</p>
+  </section>
+
+  <section class="reveal">
+    <h2 class="font-display text-lg font-bold mb-3">Details</h2>
+    <div class="md-content border border-surface-light rounded-xl p-4 bg-surface-light/10 text-sm">
+      <Content />
+    </div>
+  </section>
+</Base>
