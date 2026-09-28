@@ -18,6 +18,7 @@
 - [Repository Structure](#repository-structure)
 - [Quick Start](#quick-start)
 - [Backups](#backups)
+- [How to Verify](#how-to-verify)
 - [Skills This Project Shows](#skills-this-project-shows)
 - [License](#license)
 
@@ -127,6 +128,24 @@ Restic, encrypted, scheduled daily via cron (03:00):
 ```
 
 Retention: 7 daily, 4 weekly, 6 monthly. See [`pi/scripts/backup.sh`](pi/scripts/backup.sh).
+
+---
+
+## How to Verify
+
+Two scripts produce evidence that the server runs as described, without exposing any secrets:
+
+```bash
+# 1. Health + status evidence report (sanitized Markdown, safe to share)
+pi/scripts/status-report.sh
+# -> evidence/verification-<date>.md
+
+# 2. Prove backups actually restore (byte-for-byte check, temp dir only)
+PI_ENV_FILE=/path/to/pi-utility-server.env \
+  pi/scripts/backup-restore-test.sh evidence/verification-$(date +%F).md
+```
+
+CI on every push/PR validates all Compose files (`docker compose config`) and lints every shell script with ShellCheck.
 
 ---
 
