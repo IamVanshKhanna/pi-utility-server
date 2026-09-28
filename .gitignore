@@ -42,3 +42,6 @@ pi/backups/
 # Backup scratch
 *.bak
 pi/stacks/vansh-portfolio/redeploy.log
+
+# Rendered Headscale config; contains the private public-IP setting
+pi/config/headscale/config.yaml

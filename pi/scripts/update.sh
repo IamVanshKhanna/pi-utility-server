@@ -113,6 +113,9 @@ for stack in "${STACKS[@]}"; do
     continue
   fi
   log "Updating: $stack"
+  if [[ "$stack" == headscale ]]; then
+    PI_ENV_FILE="$ENV_FILE" bash "$SCRIPT_DIR/render-headscale-config.sh"
+  fi
   if docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" pull; then
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans \
       || log "WARNING: '$stack' up failed"

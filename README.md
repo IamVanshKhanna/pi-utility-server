@@ -103,9 +103,10 @@ git clone https://github.com/IamVanshKhanna/pi-utility-server.git
 cd pi-utility-server
 
 cp pi/.env.example pi/.env
-# edit pi/.env with real values — never commit this file
+# edit pi/.env with real values, including HEADSCALE_PUBLIC_IP — never commit this file
 
-docker compose -f pi/stacks/headscale/docker-compose.yml up -d
+PI_ENV_FILE=pi/.env pi/scripts/render-headscale-config.sh
+docker compose --env-file pi/.env -f pi/stacks/headscale/docker-compose.yml up -d
 docker compose -f pi/stacks/network/docker-compose.yml up -d
 docker compose -f pi/stacks/gitops/docker-compose.yml up -d
 docker compose -f pi/stacks/nas/docker-compose.yml up -d
